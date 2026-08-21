@@ -7361,7 +7361,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v466</div>
+<div class="footer-note no-print">Character Sheet v473</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -17073,24 +17073,79 @@
     return Number.isFinite(parsed) ? parsed : NaN;
   }
 
-  // Age From rules are intentionally deferred while the player is actively
-  // editing that field. This prevents ordering, age-zero, and Area-gap
-  // warnings from flashing before the entry is finished.
+  // Area/Subculture age validation is row-based rather than field-based.
+  // A player can move naturally through Location/Subculture -> Age From -> Age To
+  // without being warned mid-row. New warnings are evaluated only after focus
+  // actually leaves that row. Rows that were already invalid keep their visible
+  // warning while the player corrects them, so focusing a field never clears it.
   let backgroundAgeFromEditing = null;
-  let subculturePendingAgeWarningId = null;
+  const backgroundPendingAgeValidation = {areas:null, subcultures:null};
+
+  function deferBackgroundAgeValidation(kind, itemId) {
+    if (kind in backgroundPendingAgeValidation) backgroundPendingAgeValidation[kind] = itemId;
+  }
+
+  function backgroundAgeValidationPending(kind, itemId) {
+    return backgroundPendingAgeValidation[kind] === itemId;
+  }
+
+  function releaseBackgroundAgeValidation(kind, itemId) {
+    if (!backgroundAgeValidationPending(kind, itemId)) return false;
+    backgroundPendingAgeValidation[kind] = null;
+    return true;
+  }
+
+  function backgroundRowHasMeaningfulContent(item) {
+    return Boolean(
+      String(item?.ageFrom ?? '').trim() ||
+      String(item?.ageTo ?? '').trim() ||
+      String(item?.location ?? '').trim()
+    );
+  }
+
+  function backgroundAgePairIsIncomplete(item) {
+    if (!backgroundRowHasMeaningfulContent(item)) return false;
+    return !Number.isFinite(strictNumericValue(item?.ageFrom)) ||
+      !Number.isFinite(strictNumericValue(item?.ageTo));
+  }
 
   function backgroundAgeFromValidationDeferred(kind) {
-    return backgroundAgeFromEditing?.kind === kind;
+    return backgroundAgeFromEditing?.kind === kind &&
+      backgroundAgeFromEditing?.deferPairUntilBlur === true;
   }
 
-  function beginBackgroundAgeFromEdit(kind, itemId) {
-    backgroundAgeFromEditing = {kind, itemId};
-    validateBackgroundRules();
+  function backgroundAgePairValidationDeferred(kind, itemId) {
+    return backgroundAgeFromEditing?.kind === kind &&
+      backgroundAgeFromEditing?.itemId === itemId &&
+      backgroundAgeFromEditing?.deferPairUntilBlur === true;
   }
 
-  function finishBackgroundAgeFromEdit(kind, itemId) {
-    if (backgroundAgeFromEditing?.kind !== kind || backgroundAgeFromEditing?.itemId !== itemId) return;
+  function beginBackgroundRowEdit(kind, itemId, row) {
+    if (
+      backgroundAgeFromEditing?.kind === kind &&
+      backgroundAgeFromEditing?.itemId === itemId
+    ) return;
+
+    const hadExistingAgeWarning = Boolean(row?.querySelector(
+      '[data-field="ageFrom"].background-rule-violation, [data-field="ageTo"].background-rule-violation'
+    ));
+    backgroundAgeFromEditing = {
+      kind,
+      itemId,
+      field:'row',
+      // If the row was clean when entered, don't introduce any age warning
+      // until the player leaves the row. Existing warnings remain visible.
+      deferPairUntilBlur: !hadExistingAgeWarning
+    };
+  }
+
+  function finishBackgroundRowEdit(kind, itemId) {
+    if (
+      backgroundAgeFromEditing?.kind !== kind ||
+      backgroundAgeFromEditing?.itemId !== itemId
+    ) return;
     backgroundAgeFromEditing = null;
+    releaseBackgroundAgeValidation(kind, itemId);
     calculate();
   }
 
@@ -17198,26 +17253,18 @@
         const fromInput = backgroundField(kind, item, 'ageFrom');
         const toInput = backgroundField(kind, item, 'ageTo');
         const ageFromIsBeingEdited = deferredItemId === item.id;
-        const isNewestSubculture =
-          kind === 'subcultures' && index === items.length - 1;
-        const newestSubcultureWarningRequired =
-          subculturePendingAgeWarningId === item.id;
-        const deferNewestSubcultureAges =
-          isNewestSubculture && !newestSubcultureWarningRequired;
-        const deferAgeFromWhileEditing =
-          ageFromIsBeingEdited && !newestSubcultureWarningRequired;
+        const deferNewRowAges = backgroundAgeValidationPending(kind, item.id);
+        const deferAgePairWhileEditing = backgroundAgePairValidationDeferred(kind, item.id);
+        const rowHasContent = backgroundRowHasMeaningfulContent(item);
+        const agePairIncomplete = rowHasContent && (!Number.isFinite(ageFrom) || !Number.isFinite(ageTo));
 
-        if (
-          !Number.isFinite(ageFrom) &&
-          !deferAgeFromWhileEditing &&
-          !deferNewestSubcultureAges
-        ) {
+        // Once row-level validation applies, highlight only the specific age
+        // field(s) that are actually missing or non-numeric. A valid companion
+        // value should stay visually neutral.
+        if (agePairIncomplete && !deferNewRowAges && !deferAgePairWhileEditing) {
           hasInvalidAge = true;
-          markBackgroundViolation(fromInput);
-        }
-        if (!Number.isFinite(ageTo) && !deferNewestSubcultureAges) {
-          hasInvalidAge = true;
-          markBackgroundViolation(toInput);
+          if (!Number.isFinite(ageFrom)) markBackgroundViolation(fromInput);
+          if (!Number.isFinite(ageTo)) markBackgroundViolation(toInput);
         }
         if (!ageFromIsBeingEdited && Number.isFinite(ageFrom) && Number.isFinite(ageTo) && ageTo <= ageFrom) {
           hasInvalidRange = true;
@@ -17247,14 +17294,32 @@
 
     const areaItems = state.areas || [];
     const characterAge = strictNumericValue(state.identity?.age);
-    const validAreaIntervals = areaItems.map(item => ({
+    const pendingAreaId = backgroundPendingAgeValidation.areas;
+    const parsedAreaIntervals = areaItems.map(item => ({
       item,
       from: strictNumericValue(item.ageFrom),
       to: strictNumericValue(item.ageTo)
-    })).filter(interval => Number.isFinite(interval.from) && Number.isFinite(interval.to) && interval.to > interval.from)
+    }));
+    const validAreaIntervals = parsedAreaIntervals
+      .filter(interval => Number.isFinite(interval.from) && Number.isFinite(interval.to) && interval.to > interval.from)
       .sort((a, b) => a.from - b.from || a.to - b.to);
+    // A newly created row that is still in its first-field grace period should
+    // not temporarily erase a real coverage warning from the completed rows.
+    // Once that row has a complete valid range, it participates immediately.
+    // Any other incomplete/invalid Area suppresses coverage until its own age
+    // validation is resolved, avoiding redundant warnings.
+    const areaHasBlockingInvalid = parsedAreaIntervals.some(interval => {
+      if (!backgroundRowHasMeaningfulContent(interval.item)) return false;
+      const valid = Number.isFinite(interval.from) && Number.isFinite(interval.to) && interval.to > interval.from;
+      return !valid && interval.item.id !== pendingAreaId;
+    });
+    const areaCoverageReady = validAreaIntervals.length > 0 && !areaHasBlockingInvalid;
+    const editingAreaId = backgroundAgeFromEditing?.kind === 'areas' ? backgroundAgeFromEditing.itemId : null;
+    const areaCoverageEditDeferred = Boolean(
+      editingAreaId && editingAreaId !== 'draft' && editingAreaId !== pendingAreaId
+    );
 
-    if (!backgroundAgeFromValidationDeferred('areas') && areaItems.length && validAreaIntervals.length) {
+    if (!areaCoverageEditDeferred && areaCoverageReady) {
       const targetEnd = Number.isFinite(characterAge)
         ? Math.max(0, characterAge)
         : Math.max(...validAreaIntervals.map(interval => interval.to));
@@ -17268,7 +17333,6 @@
         const end = Math.min(targetEnd, interval.to);
         if (start > coverageEnd + 1e-9) {
           gaps.push([coverageEnd, start]);
-          markBackgroundViolation(backgroundField('areas', interval.item, 'ageFrom'));
         }
         if (end > coverageEnd) {
           coverageEnd = end;
@@ -17279,15 +17343,12 @@
 
       if (coverageEnd < targetEnd - 1e-9) {
         gaps.push([coverageEnd, targetEnd]);
-        if (lastCoveringInterval) markBackgroundViolation(backgroundField('areas', lastCoveringInterval.item, 'ageTo'));
       }
 
       if (gaps.length) {
         const ranges = gaps.map(([from, to]) => `${formatAgeRangeValue(from)}–${formatAgeRangeValue(to)}`).join(', ');
         addMessage(`Areas: every age from 0 through the character's current age must be covered. Gaps: ${ranges}.`);
       }
-    } else if (!backgroundAgeFromValidationDeferred('areas') && areaItems.length && Number.isFinite(characterAge) && characterAge > 0) {
-      addMessage(`Areas: every age from 0 through the character's current age must be covered.`);
     }
 
     const subcultureCalculation = calculatedSubcultureData();
@@ -17381,26 +17442,6 @@
     const promote = field => {
       if (promoted || isSectionLocked('background') || isPlayMode()) return;
 
-      if (kind === 'subcultures' && state.subcultures.length) {
-        const previous = state.subcultures[state.subcultures.length - 1];
-        const previousAgeFrom = strictNumericValue(previous.ageFrom);
-        const previousAgeTo = strictNumericValue(previous.ageTo);
-
-        if (
-          !Number.isFinite(previousAgeFrom) ||
-          !Number.isFinite(previousAgeTo)
-        ) {
-          subculturePendingAgeWarningId = previous.id;
-          calculate();
-
-          const missingField = !Number.isFinite(previousAgeFrom)
-            ? 'ageFrom'
-            : 'ageTo';
-          focusLifeField('subcultures', previous.id, missingField);
-          return;
-        }
-      }
-
       promoted = true;
       const item = {
         id:uid(),
@@ -17415,22 +17456,30 @@
         item.involvement = 'primary';
       }
       state[kind].push(item);
-      if (field === 'ageFrom' && backgroundAgeFromEditing?.kind === kind) {
-        backgroundAgeFromEditing = {kind, itemId:item.id};
-      }
+      // Do not flag blank ages while the player is still working across the
+      // newly created row. The grace period ends only when focus leaves the row.
+      deferBackgroundAgeValidation(kind, item.id);
       renderLifeRows(kind);
+
+      // The draft row was just replaced in the DOM. Restore focus immediately
+      // (rather than waiting for animationFrame) so the browser never has a
+      // chance to fall back to the table's first focusable Age field.
+      const promotedRow = body.querySelector(`tr[data-id="${CSS.escape(item.id)}"]`);
+      const promotedControl = promotedRow?.querySelector(`[data-field="${CSS.escape(field)}"]`);
+      promotedControl?.focus({preventScroll:true});
+      if (promotedControl?.setSelectionRange && promotedControl.type !== 'number') {
+        const end = String(promotedControl.value || '').length;
+        try { promotedControl.setSelectionRange(end, end); } catch (_) {}
+      }
+
       calculate();
       queueSave();
-      focusLifeField(kind, item.id, field);
+      requestAnimationFrame(() => promotedRow?.scrollIntoView({block:'nearest', behavior:'smooth'}));
     };
     row.querySelectorAll('input[data-field]:not([data-primary-subculture-level]):not([data-calculated-area-level]):not([data-calculated-subculture-level])').forEach(input => {
-      if (input.dataset.field === 'ageFrom') {
-        input.addEventListener('focus', () => beginBackgroundAgeFromEdit(kind, 'draft'));
-        input.addEventListener('blur', () => finishBackgroundAgeFromEdit(kind, 'draft'));
-      }
+      const field = input.dataset.field;
       input.addEventListener('input', () => {
-        if (input.dataset.field === 'ageFrom') backgroundAgeFromEditing = {kind, itemId:'draft'};
-        promote(input.dataset.field);
+        promote(field);
       });
     });
   }
@@ -17524,26 +17573,26 @@
     body.querySelectorAll('tr').forEach(row => {
       const item = collection.find(x => x.id === row.dataset.id);
       if (!item) return;
+      const lifeKind = body.id === 'areasBody' ? 'areas' : body.id === 'subculturesBody' ? 'subcultures' : null;
+
+      if (lifeKind) {
+        row.addEventListener('focusin', () => beginBackgroundRowEdit(lifeKind, item.id, row));
+        row.addEventListener('focusout', event => {
+          // Moving between fields in the same row is still part of one editing
+          // pass. Validate only after focus genuinely leaves the row.
+          if (event.relatedTarget && row.contains(event.relatedTarget)) return;
+          setTimeout(() => {
+            if (row.contains(document.activeElement)) return;
+            finishBackgroundRowEdit(lifeKind, item.id);
+          }, 0);
+        });
+      }
+
       row.querySelectorAll('[data-field]').forEach(el => {
         if (body.id === 'gearBody' && (el.dataset.field === 'weight' || el.dataset.field === 'quantity')) return;
         if (el.matches('[data-primary-subculture-level], [data-calculated-area-level], [data-calculated-subculture-level]')) return;
-        const lifeKind = body.id === 'areasBody' ? 'areas' : body.id === 'subculturesBody' ? 'subcultures' : null;
-        if (lifeKind && el.dataset.field === 'ageFrom') {
-          el.addEventListener('focus', () => beginBackgroundAgeFromEdit(lifeKind, item.id));
-          el.addEventListener('blur', () => finishBackgroundAgeFromEdit(lifeKind, item.id));
-        }
         el.addEventListener('input', () => {
           item[el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value;
-
-          if (
-            lifeKind === 'subcultures' &&
-            subculturePendingAgeWarningId === item.id &&
-            Number.isFinite(strictNumericValue(item.ageFrom)) &&
-            Number.isFinite(strictNumericValue(item.ageTo))
-          ) {
-            subculturePendingAgeWarningId = null;
-          }
-
           calculate();
           queueSave();
         });
@@ -17561,12 +17610,9 @@
         }
         const index = collection.findIndex(x => x.id === item.id);
         if (index >= 0) collection.splice(index,1);
-        if (
-          collection === state.subcultures &&
-          subculturePendingAgeWarningId === item.id
-        ) {
-          subculturePendingAgeWarningId = null;
-        }
+        if (collection === state.areas) releaseBackgroundAgeValidation('areas', item.id);
+        if (collection === state.subcultures) releaseBackgroundAgeValidation('subcultures', item.id);
+        if (backgroundAgeFromEditing?.itemId === item.id) backgroundAgeFromEditing = null;
         if (collection === state.gear) clearGearSortState();
         rerender(); calculate(); queueSave();
       });
