@@ -377,9 +377,9 @@
     textarea { min-height: 105px; resize: vertical; }
     textarea.compact-text { min-height: 64px; }
 
-    /* Keep the same explicit vertical resize affordance at every viewport size.
-       This also gives touch browsers a resize control where the native corner
-       is unavailable or difficult to use. */
+    /* iOS/iPadOS Safari does not expose the native textarea resize corner.
+       The custom touch grip is installed only on iOS/iPadOS; desktop keeps the
+       browser's native resize handle and normal small mouse hit area. */
     .touch-textarea-resize-host { position: relative; }
     .touch-textarea-resize-host > textarea { padding-bottom: 20px; }
     .touch-textarea-resize-grip {
@@ -411,7 +411,8 @@
         linear-gradient(135deg, transparent 0 65%, var(--muted) 66% 74%, transparent 75% 100%);
       pointer-events: none;
     }
-    .touch-textarea-resize-grip:active::before { opacity: 1; }
+    .touch-textarea-resize-grip:active::before,
+    .touch-textarea-resize-grip.is-resizing::before { opacity: 1; }
     .large-text { min-height: 250px; }
 
     .appearance-row { grid-template-columns: 88px 94px 84px minmax(170px, 1fr); }
@@ -7358,7 +7359,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v459</div>
+<div class="footer-note no-print">Character Sheet v461</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -19306,12 +19307,9 @@
   });
   document.getElementById('addGearLocationBtn').addEventListener('click', addGearLocation);
   document.getElementById('toggleAllGearLocationsBtn').addEventListener('click', toggleAllGearLocations);
-  let printLayoutPrepared = false;
-
-  function preparePrintLayout() {
-    // Clicking Print/PDF also triggers the browser's beforeprint event.
-    // Guard against preparing twice, which would otherwise overwrite the
-  // v459: provide the same explicit vertical drag grip for resizable textareas at every viewport size.
+  // v460: explicit vertical resize grip for textareas at every viewport size.
+  // iOS Safari does not expose the desktop textarea resize corner, so use a
+  // touch/pointer driven grip there while leaving native desktop resizing intact.
   function installTouchTextareaResizeGrip(textarea) {
     if (!(textarea instanceof HTMLTextAreaElement) || textarea.dataset.touchResizeReady === '1') return;
     textarea.dataset.touchResizeReady = '1';
@@ -19326,35 +19324,76 @@
     grip.setAttribute('title', 'Drag to resize');
     host.appendChild(grip);
 
-    let pointerId = null;
+    let activePointerId = null;
+    let activeTouchId = null;
     let startY = 0;
     let startHeight = 0;
     let minHeight = 0;
 
-    grip.addEventListener('pointerdown', event => {
-      pointerId = event.pointerId;
-      startY = event.clientY;
+    const beginResize = clientY => {
+      startY = clientY;
       startHeight = textarea.getBoundingClientRect().height;
       const computed = getComputedStyle(textarea);
       minHeight = Math.max(36, parseFloat(computed.minHeight) || 0);
-      try { grip.setPointerCapture(pointerId); } catch (_) {}
-      event.preventDefault();
-    });
-
-    grip.addEventListener('pointermove', event => {
-      if (pointerId === null || event.pointerId !== pointerId) return;
-      const nextHeight = Math.max(minHeight, startHeight + (event.clientY - startY));
-      textarea.style.height = `${Math.round(nextHeight)}px`;
-      event.preventDefault();
-    });
-
-    const finishResize = event => {
-      if (pointerId === null || (event.pointerId !== undefined && event.pointerId !== pointerId)) return;
-      try { grip.releasePointerCapture(pointerId); } catch (_) {}
-      pointerId = null;
+      grip.classList.add('is-resizing');
     };
-    grip.addEventListener('pointerup', finishResize);
-    grip.addEventListener('pointercancel', finishResize);
+
+    const applyResize = clientY => {
+      const nextHeight = Math.max(minHeight, startHeight + (clientY - startY));
+      textarea.style.height = `${Math.round(nextHeight)}px`;
+    };
+
+    const endResize = () => {
+      activePointerId = null;
+      activeTouchId = null;
+      grip.classList.remove('is-resizing');
+    };
+
+    if (window.PointerEvent) {
+      grip.addEventListener('pointerdown', event => {
+        activePointerId = event.pointerId;
+        beginResize(event.clientY);
+        try { grip.setPointerCapture(activePointerId); } catch (_) {}
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      grip.addEventListener('pointermove', event => {
+        if (activePointerId === null || event.pointerId !== activePointerId) return;
+        applyResize(event.clientY);
+        event.preventDefault();
+      });
+      const finishPointer = event => {
+        if (activePointerId === null || event.pointerId !== activePointerId) return;
+        try { grip.releasePointerCapture(activePointerId); } catch (_) {}
+        endResize();
+      };
+      grip.addEventListener('pointerup', finishPointer);
+      grip.addEventListener('pointercancel', finishPointer);
+    }
+
+    // Safari fallback: touch listeners remain available even if Pointer Events
+    // are present but pointer capture behaves inconsistently inside form controls.
+    grip.addEventListener('touchstart', event => {
+      if (activePointerId !== null || !event.changedTouches.length) return;
+      const touch = event.changedTouches[0];
+      activeTouchId = touch.identifier;
+      beginResize(touch.clientY);
+      event.preventDefault();
+      event.stopPropagation();
+    }, {passive:false});
+    grip.addEventListener('touchmove', event => {
+      if (activeTouchId === null) return;
+      const touch = Array.from(event.changedTouches).find(item => item.identifier === activeTouchId)
+        || Array.from(event.touches).find(item => item.identifier === activeTouchId);
+      if (!touch) return;
+      applyResize(touch.clientY);
+      event.preventDefault();
+    }, {passive:false});
+    grip.addEventListener('touchend', event => {
+      if (activeTouchId === null) return;
+      if (Array.from(event.changedTouches).some(item => item.identifier === activeTouchId)) endResize();
+    });
+    grip.addEventListener('touchcancel', endResize);
   }
 
   function installTouchTextareaResizeGrips(root = document) {
@@ -19362,13 +19401,27 @@
     root.querySelectorAll?.('textarea').forEach(installTouchTextareaResizeGrip);
   }
 
-  installTouchTextareaResizeGrips();
-  new MutationObserver(mutations => {
-    mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
-      if (node instanceof Element) installTouchTextareaResizeGrips(node);
-    }));
-  }).observe(document.body, { childList: true, subtree: true });
+  function needsIOSTextareaResizeGrip() {
+    const ua = navigator.userAgent || '';
+    const platform = navigator.platform || '';
+    return /iPad|iPhone|iPod/i.test(ua)
+      || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
 
+  if (needsIOSTextareaResizeGrip()) {
+    installTouchTextareaResizeGrips();
+    new MutationObserver(mutations => {
+      mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+        if (node instanceof Element) installTouchTextareaResizeGrips(node);
+      }));
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+
+  let printLayoutPrepared = false;
+
+  function preparePrintLayout() {
+    // Clicking Print/PDF also triggers the browser's beforeprint event.
+    // Guard against preparing twice, which would otherwise overwrite the
     // true on-screen textarea height with the compressed print height.
     if (printLayoutPrepared) return;
     printLayoutPrepared = true;
