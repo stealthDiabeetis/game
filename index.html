@@ -381,7 +381,9 @@
        The custom touch grip is installed only on iOS/iPadOS; desktop keeps the
        browser's native resize handle and normal small mouse hit area. */
     .touch-textarea-resize-host { position: relative; }
-    .touch-textarea-resize-host > textarea { padding-bottom: 20px; }
+    /* Make the textarea a block on iOS so its parent has no inline baseline gap.
+       That keeps the custom grip aligned to the textarea's real bottom edge. */
+    .touch-textarea-resize-host > textarea { display: block; padding-bottom: 20px; }
     .touch-textarea-resize-grip {
       position: absolute;
       right: 0;
@@ -7359,7 +7361,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v464</div>
+<div class="footer-note no-print">Character Sheet v466</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
