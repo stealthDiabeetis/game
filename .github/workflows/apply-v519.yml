@@ -1,0 +1,70 @@
+name: Apply v519 surveillance signal audit
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-v519.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply surveillance signal audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object index.html)" = "e5d49b9fa49248eadb8cb03ed3c04c6538e56a9d"
+          python - <<'PY'
+          from pathlib import Path
+          import re, json
+          p=Path('index.html')
+          s=p.read_text()
+          m=re.search(r'const GEAR_CATALOG = (\[.*?\]);\n',s,re.S)
+          if not m: raise SystemExit('GEAR_CATALOG not found')
+          cat=json.loads(m.group(1))
+          by={x['id']:x for x in cat}
+          updates={
+          'gc1828':'Coin-size proximity/location tag using nearby consumer-device networks rather than onboard GPS/cellular service · Signal: Bluetooth Low Energy beacon plus UWB two-way ranging on supported devices; relies on nearby compatible phones/network relays; no onboard cellular or GNSS',
+          'gc1930':'Specialized portable cellular-infrastructure simulator used to identify or locate nearby mobile devices through cellular signaling; does not inherently provide message or call contents · Signal: cellular base-station radio transmit/receive on supported bands; interacts directly with nearby cellular devices',
+          'gc1832':'Miniature audio transmitter using a cellular connection for remote monitoring · Signal: 4G cellular transmit/receive for remote audio connection and network/control signaling; requires SIM/service; no short-range RF link assumed',
+          'gc1831':'Miniature battery-powered wireless audio transmitter for short-range monitoring · Signal: short-range RF audio transmission, typically analog VHF/UHF depending on model; transmit-only for program audio; requires a compatible receiver',
+          'gc1849':'Low-profile wireless earpiece for discreet communications monitoring · Signal: near-field magnetic induction from a worn induction loop; receive-only at the earpiece; the loop/source may connect separately to a phone or radio',
+          'gc1826':'Compact rechargeable real-time asset tracker with integrated magnetic mount; subscription service commonly required · Signal: receives GNSS/GPS positioning and uses 4G cellular transmit/receive for location uploads and remote commands; requires SIM/service',
+          'gc1827':'Vehicle tracker powered through an OBD-II diagnostic port; subscription service commonly required · Signal: receives GNSS/GPS positioning and uses 4G cellular transmit/receive for location uploads and remote commands; requires SIM/service',
+          'gc1837':'Specialized long-range optical vibration microphone system requiring line of sight to a reflective surface · Signal: transmits a narrow laser/optical beam and receives reflected light modulated by surface vibration; no RF link inherent',
+          'gc1841':'Professional counter-surveillance detector that can locate semiconductor electronics even when devices are not transmitting · Signal: actively transmits RF excitation and receives harmonic responses from semiconductor junctions; not a communications transceiver',
+          'gc1842':'Portable directional RF receiver/antenna system for locating radio transmitters · Signal: receive-only directional RF monitoring; no transmitter',
+          'gc1838':'Handheld broadband RF detector for locating active wireless transmitters, trackers, and some hidden cameras · Signal: receive/detect-only broadband RF sensing; no transmitter',
+          'gc1840':'Portable radio-frequency spectrum analyzer for surveying and identifying active transmissions · Signal: receive-only RF spectrum monitoring; no communications transmitter',
+          'gc1848':'Portable reader/writer for compatible contactless tags and cards · Signal: near-field LF/HF RFID/NFC transmit/receive, commonly 125 kHz and/or 13.56 MHz depending on device/tag; no cellular link',
+          'gc1843':'Wideband software-defined radio receiver for general RF monitoring and signal analysis · Signal: receive-only wideband RF; no transmitter',
+          'gc1847':'Telescoping inspection pole with remote camera/display for viewing over walls, around obstacles, or into elevated spaces · Signal: wired camera-to-display video/control link; no RF transmitter assumed',
+          'gc1846':'Low-profile articulated camera/display system designed to inspect beneath a door gap · Signal: wired camera-to-display video/control link; no RF transmitter assumed',
+          'gc1850':'Contact microphone worn at the throat for communications in noisy environments · Signal: wired microphone/PTT accessory to a separate radio or intercom; no RF transceiver in the microphone itself',
+          'gc1833':'Miniature 1080p-class pinhole camera/DVR module · Storage/Signal: local microSD/TF recording plus 2.4 GHz Wi-Fi transmit/receive for setup, control, and live view; no cellular',
+          'gc1834':'Discreet body-worn visible-light camera with onboard recording · Storage/Signal: local onboard/microSD storage only; no Wi-Fi, Bluetooth, cellular, or other RF transmit/receive capability',
+          'gc1835':'Rugged visible body-worn video recorder with microphone and timestamped recording · Storage/Signal: onboard local storage plus short-range Wi-Fi/Bluetooth transmit/receive for setup or offload; no cellular',
+          'gc2238':'Covert 4K camera system with miniature camera head, motion detection, and 940 nm no-glow IR night vision · Storage/Signal: local microSD recording plus 4G cellular transmit/receive for remote alerts, live view, and control, with Wi-Fi for local setup; remote cellular streaming may use lower resolution than 4K local recording',
+          'gc2239':'4K motion-triggered outdoor trail camera with PIR detection, 940 nm no-glow IR night vision, and weather-resistant housing · Storage/Signal: local SD/SDHC storage plus 4G cellular transmit/receive for photo/video delivery and remote configuration; no Wi-Fi required in the field',
+          }
+          for k,v in updates.items():
+              if k not in by: raise SystemExit(f'missing {k}')
+              by[k]['specs']=v
+          out=s[:m.start(1)] + json.dumps(cat,separators=(',',':'),ensure_ascii=False) + s[m.end(1):]
+          out=out.replace('Character Sheet v518</div>','Character Sheet v519</div>')
+          p.write_text(out)
+          PY
+          test "$(git hash-object index.html)" = "dd0a172c6aca71ecb9803e2a80b0a590534531fb"
+          rm .github/workflows/apply-v519.yml
+          git config user.name "ChatGPT GitHub Integration"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/apply-v519.yml
+          git commit -m "Audit surveillance signal capabilities (v519)"
+          git push origin HEAD:main
