@@ -7535,7 +7535,7 @@
 <h2 class="screen-title">Character Overview</h2>
 </div>
 <div class="overview-header-actions">
-<div class="field player-compact"><label>Player</label><input data-path="identity.player"/></div>
+<div class="field player-compact"><label for="identityPlayer">Player</label><input id="identityPlayer" data-path="identity.player"/></div>
 <button aria-label="Lock section" class="btn small section-lock-btn no-print" data-section-lock="overview" title="Lock section" type="button"><span aria-hidden="true" class="section-lock-icon"></span></button>
 </div>
 </div>
@@ -7545,26 +7545,26 @@
 <div class="split-layout" id="overviewIdentityLayout">
 <div>
 <div class="grid identity-primary-row">
-<div class="field character-name-field inset-label"><label>Character name</label><input data-path="identity.name"/></div>
-<div class="field center-label"><label>Height</label><div class="numeric-stepper"><input data-path="identity.height"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase height" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.height" type="button">▲</button><button aria-label="Decrease height" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.height" type="button">▼</button></div></div></div>
-<div class="field center-label"><label>Weight (LB)</label><div class="numeric-stepper"><input data-path="identity.weight" inputmode="numeric" max="999" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase weight" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.weight" type="button">▲</button><button aria-label="Decrease weight" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.weight" type="button">▼</button></div></div></div>
-<div class="field center-value center-label"><label>Sex</label><input data-path="identity.sex"/></div>
-<div class="field center-value center-label"><label>Age</label><div class="numeric-stepper"><input data-path="identity.age" inputmode="numeric" max="999" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase age" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.age" type="button">▲</button><button aria-label="Decrease age" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.age" type="button">▼</button></div></div></div>
+<div class="field character-name-field inset-label"><label for="identityName">Character name</label><input id="identityName" data-path="identity.name"/></div>
+<div class="field center-label"><label for="identityHeight">Height</label><div class="numeric-stepper"><input id="identityHeight" data-path="identity.height"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase height" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.height" type="button">▲</button><button aria-label="Decrease height" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.height" type="button">▼</button></div></div></div>
+<div class="field center-label"><label for="identityWeight">Weight (LB)</label><div class="numeric-stepper"><input id="identityWeight" data-path="identity.weight" inputmode="numeric" max="999" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase weight" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.weight" type="button">▲</button><button aria-label="Decrease weight" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.weight" type="button">▼</button></div></div></div>
+<div class="field center-value center-label"><label for="identitySex">Sex</label><input id="identitySex" data-path="identity.sex"/></div>
+<div class="field center-value center-label"><label for="identityAge">Age</label><div class="numeric-stepper"><input id="identityAge" data-path="identity.age" inputmode="numeric" max="999" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase age" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.age" type="button">▲</button><button aria-label="Decrease age" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.age" type="button">▼</button></div></div></div>
 </div>
 <div class="grid appearance-row" style="margin-top:14px">
-<div class="field center-label"><label>Skin</label><input data-path="identity.skin"/></div>
-<div class="field center-label"><label>Hair</label><input data-path="identity.hair"/></div>
-<div class="field center-label"><label>Eyes</label><input data-path="identity.eyes"/></div>
-<div class="field inset-label"><label>Voice</label><input data-path="identity.voice"/></div>
+<div class="field center-label"><label for="identitySkin">Skin</label><input id="identitySkin" data-path="identity.skin"/></div>
+<div class="field center-label"><label for="identityHair">Hair</label><input id="identityHair" data-path="identity.hair"/></div>
+<div class="field center-label"><label for="identityEyes">Eyes</label><input id="identityEyes" data-path="identity.eyes"/></div>
+<div class="field inset-label"><label for="identityVoice">Voice</label><input id="identityVoice" data-path="identity.voice"/></div>
 </div>
 <div class="grid overview-secondary-row" style="margin-top:14px">
-<div class="field center-value center-label"><label>Vision</label><div class="numeric-stepper"><input data-path="identity.vision" inputmode="numeric" max="100" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase vision" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.vision" type="button">▲</button><button aria-label="Decrease vision" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.vision" type="button">▼</button></div></div></div>
-<div class="field center-value center-label"><label>Hearing</label><div class="numeric-stepper"><input data-path="identity.hearing" inputmode="numeric" max="100" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase hearing" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.hearing" type="button">▲</button><button aria-label="Decrease hearing" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.hearing" type="button">▼</button></div></div></div>
-<div class="field center-value center-label"><label>Smell</label><div class="numeric-stepper"><input data-path="identity.smell" inputmode="numeric" max="100" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase smell" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.smell" type="button">▲</button><button aria-label="Decrease smell" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.smell" type="button">▼</button></div></div></div>
-<div class="field inset-label"><label>Temperament</label><input data-path="identity.temperament"/></div>
+<div class="field center-value center-label"><label for="identityVision">Vision</label><div class="numeric-stepper"><input id="identityVision" data-path="identity.vision" inputmode="numeric" max="100" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase vision" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.vision" type="button">▲</button><button aria-label="Decrease vision" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.vision" type="button">▼</button></div></div></div>
+<div class="field center-value center-label"><label for="identityHearing">Hearing</label><div class="numeric-stepper"><input id="identityHearing" data-path="identity.hearing" inputmode="numeric" max="100" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase hearing" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.hearing" type="button">▲</button><button aria-label="Decrease hearing" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.hearing" type="button">▼</button></div></div></div>
+<div class="field center-value center-label"><label for="identitySmell">Smell</label><div class="numeric-stepper"><input id="identitySmell" data-path="identity.smell" inputmode="numeric" max="100" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase smell" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.smell" type="button">▲</button><button aria-label="Decrease smell" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.smell" type="button">▼</button></div></div></div>
+<div class="field inset-label"><label for="identityTemperament">Temperament</label><input id="identityTemperament" data-path="identity.temperament"/></div>
 </div>
-<div class="field inset-label" style="margin-top:14px"><label>Distinguishing features</label><textarea class="compact-text" data-path="identity.features" placeholder="Style, posture, scars, tattoos, jewelry, etc." rows="2"></textarea></div>
-<div class="field inset-label" style="margin-top:14px"><label>Goals</label><textarea class="compact-text" data-path="identity.goals" placeholder="Week, year, life" rows="2"></textarea></div>
+<div class="field inset-label" style="margin-top:14px"><label for="identityFeatures">Distinguishing features</label><textarea id="identityFeatures" class="compact-text" data-path="identity.features" placeholder="Style, posture, scars, tattoos, jewelry, etc." rows="2"></textarea></div>
+<div class="field inset-label" style="margin-top:14px"><label for="identityGoals">Goals</label><textarea id="identityGoals" class="compact-text" data-path="identity.goals" placeholder="Week, year, life" rows="2"></textarea></div>
 </div>
 <div class="portrait-section">
 <div class="field"><label>Character portrait</label></div>
@@ -7679,9 +7679,9 @@
 </div>
 </div>
 <div class="threshold-fields-row">
-<div class="field threshold-field"><label>Light</label><input aria-label="Light encumbrance range unavailable" class="calculated-encumbrance" data-calculated-encumbrance="light" readonly="" value="—"/></div>
-<div class="field threshold-field"><label>Medium</label><input aria-label="Medium encumbrance range unavailable" class="calculated-encumbrance" data-calculated-encumbrance="medium" readonly="" value="—"/></div>
-<div class="field threshold-field"><label>Heavy</label><input aria-label="Heavy encumbrance range unavailable" class="calculated-encumbrance" data-calculated-encumbrance="heavy" readonly="" value="—"/></div>
+<div class="field threshold-field"><label for="encumbranceLight">Light</label><input id="encumbranceLight" aria-label="Light encumbrance range unavailable" class="calculated-encumbrance" data-calculated-encumbrance="light" readonly="" value="—"/></div>
+<div class="field threshold-field"><label for="encumbranceMedium">Medium</label><input id="encumbranceMedium" aria-label="Medium encumbrance range unavailable" class="calculated-encumbrance" data-calculated-encumbrance="medium" readonly="" value="—"/></div>
+<div class="field threshold-field"><label for="encumbranceHeavy">Heavy</label><input id="encumbranceHeavy" aria-label="Heavy encumbrance range unavailable" class="calculated-encumbrance" data-calculated-encumbrance="heavy" readonly="" value="—"/></div>
 </div>
 </div>
 <div class="encumbrance-readout">
@@ -7730,13 +7730,13 @@
 </div>
 </div>
 <div>
-<div class="field"><label>Character background</label><textarea class="large-text" data-path="background.text" placeholder="Upbringing, relationships, training, occupations, interests, influences, routines, etc."></textarea></div>
-<div class="field" style="margin-top:18px"><label>Notes</label><textarea class="large-text" data-path="background.notes"></textarea></div>
+<div class="field"><label for="backgroundText">Character background</label><textarea id="backgroundText" class="large-text" data-path="background.text" placeholder="Upbringing, relationships, training, occupations, interests, influences, routines, etc."></textarea></div>
+<div class="field" style="margin-top:18px"><label for="backgroundNotes">Notes</label><textarea id="backgroundNotes" class="large-text" data-path="background.notes"></textarea></div>
 </div>
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v496</div>
+<div class="footer-note no-print">Character Sheet v505</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -14137,6 +14137,12 @@
       closeGearItemAutocomplete();
     }, true);
     window.addEventListener('resize', closeGearItemAutocomplete);
+    window.visualViewport?.addEventListener('resize', () => {
+      if (!menu.hidden) requestAnimationFrame(positionGearItemAutocomplete);
+    }, {passive:true});
+    window.visualViewport?.addEventListener('scroll', () => {
+      if (!menu.hidden) requestAnimationFrame(positionGearItemAutocomplete);
+    }, {passive:true});
     document.addEventListener('scroll', event => {
       if (menu.hidden || menu.contains(event.target)) return;
       closeGearItemAutocomplete();
@@ -14144,22 +14150,55 @@
     return menu;
   }
 
-  function positionGearItemAutocomplete() {
-    const menu = gearItemAutocompleteMenu;
-    const input = activeGearItemAutocompleteInput;
+  // v505: position catalog suggestions inside the *visual* viewport. On iOS,
+  // the software keyboard can shrink/pan the visual viewport without making
+  // window.innerHeight describe the actually visible area. Measure both sides
+  // of the focused field and constrain the menu to one side, so it can never
+  // cover the text the player is actively typing.
+  function positionGearAutocompleteMenu(menu, input) {
     if (!menu || menu.hidden || !input) return;
     const rect = input.getBoundingClientRect();
+    const viewport = window.visualViewport;
+    const viewportTop = viewport ? viewport.offsetTop : 0;
+    const viewportLeft = viewport ? viewport.offsetLeft : 0;
+    const viewportWidth = viewport ? viewport.width : window.innerWidth;
+    const viewportHeight = viewport ? viewport.height : window.innerHeight;
+    const viewportRight = viewportLeft + viewportWidth;
+    const viewportBottom = viewportTop + viewportHeight;
     const pad = 8;
-    const availableWidth = Math.max(220, window.innerWidth - pad * 2);
-    const width = Math.min(availableWidth, Math.max(320, rect.width));
-    const left = Math.max(pad, Math.min(rect.left, window.innerWidth - width - pad));
+    const gap = 4;
+
+    const availableWidth = Math.max(0, viewportWidth - pad * 2);
+    const preferredWidth = Math.max(320, rect.width);
+    const width = Math.min(availableWidth, preferredWidth);
+    const left = Math.max(viewportLeft + pad, Math.min(rect.left, viewportRight - width - pad));
     menu.style.width = `${width}px`;
     menu.style.left = `${left}px`;
-    menu.style.top = `${rect.bottom + 3}px`;
-    const menuRect = menu.getBoundingClientRect();
-    if (menuRect.bottom > window.innerHeight - pad) {
-      menu.style.top = `${Math.max(pad, rect.top - menuRect.height - 3)}px`;
+
+    // Restore the stylesheet cap before measuring. If neither side can fit the
+    // whole menu, the chosen side becomes the menu's measured max-height.
+    menu.style.maxHeight = '';
+    const naturalHeight = menu.getBoundingClientRect().height;
+    const roomAbove = Math.max(0, rect.top - gap - (viewportTop + pad));
+    const roomBelow = Math.max(0, (viewportBottom - pad) - (rect.bottom + gap));
+    const openBelow = roomBelow >= naturalHeight || (roomBelow >= roomAbove && roomAbove < naturalHeight);
+    const availableHeight = openBelow ? roomBelow : roomAbove;
+
+    if (availableHeight <= 0) {
+      menu.hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+      return;
     }
+
+    menu.style.maxHeight = `${Math.floor(availableHeight)}px`;
+    const fittedHeight = menu.getBoundingClientRect().height;
+    menu.style.top = openBelow
+      ? `${rect.bottom + gap}px`
+      : `${rect.top - gap - fittedHeight}px`;
+  }
+
+  function positionGearItemAutocomplete() {
+    positionGearAutocompleteMenu(gearItemAutocompleteMenu, activeGearItemAutocompleteInput);
   }
 
   function closeGearItemAutocomplete() {
@@ -14212,6 +14251,7 @@
     menu.hidden = false;
     input.setAttribute('aria-expanded', 'true');
     positionGearItemAutocomplete();
+    requestAnimationFrame(positionGearItemAutocomplete);
   }
 
   function selectGearItemAutocomplete(catalogId) {
@@ -14340,6 +14380,12 @@
       closeGearLocationAutocomplete();
     }, true);
     window.addEventListener('resize', closeGearLocationAutocomplete);
+    window.visualViewport?.addEventListener('resize', () => {
+      if (!menu.hidden) requestAnimationFrame(positionGearLocationAutocomplete);
+    }, {passive:true});
+    window.visualViewport?.addEventListener('scroll', () => {
+      if (!menu.hidden) requestAnimationFrame(positionGearLocationAutocomplete);
+    }, {passive:true});
     document.addEventListener('scroll', event => {
       if (menu.hidden || menu.contains(event.target)) return;
       closeGearLocationAutocomplete();
@@ -14348,21 +14394,7 @@
   }
 
   function positionGearLocationAutocomplete() {
-    const menu = gearLocationAutocompleteMenu;
-    const input = activeGearLocationAutocompleteInput;
-    if (!menu || menu.hidden || !input) return;
-    const rect = input.getBoundingClientRect();
-    const pad = 8;
-    const availableWidth = Math.max(220, window.innerWidth - pad * 2);
-    const width = Math.min(availableWidth, Math.max(320, rect.width));
-    const left = Math.max(pad, Math.min(rect.left, window.innerWidth - width - pad));
-    menu.style.width = `${width}px`;
-    menu.style.left = `${left}px`;
-    menu.style.top = `${rect.bottom + 3}px`;
-    const menuRect = menu.getBoundingClientRect();
-    if (menuRect.bottom > window.innerHeight - pad) {
-      menu.style.top = `${Math.max(pad, rect.top - menuRect.height - 3)}px`;
-    }
+    positionGearAutocompleteMenu(gearLocationAutocompleteMenu, activeGearLocationAutocompleteInput);
   }
 
   function closeGearLocationAutocomplete() {
@@ -14406,6 +14438,7 @@
     menu.hidden = false;
     input.setAttribute('aria-expanded', 'true');
     positionGearLocationAutocomplete();
+    requestAnimationFrame(positionGearLocationAutocomplete);
   }
 
   function selectGearLocationAutocomplete(catalogId) {
@@ -22116,6 +22149,22 @@
     await renderCharacterLibrary();
     document.getElementById('characterLoadDialog')?.showModal();
   });
+  // Treat Escape on character-management dialogs exactly like their visible Cancel/Close action.
+  // Prevent the browser's automatic close first so the normal button handler owns cleanup.
+  [
+    ['confirmDialog', 'confirmCancel'],
+    ['characterSaveDialog', 'characterSaveCancel'],
+    ['characterSaveOverwriteDialog', 'characterSaveOverwriteCancel'],
+    ['characterLoadDialog', 'characterLoadClose'],
+    ['characterLoadConfirmDialog', 'characterLoadConfirmCancel'],
+    ['characterDeleteDialog', 'characterDeleteCancel']
+  ].forEach(([dialogId, cancelButtonId]) => {
+    document.getElementById(dialogId)?.addEventListener('cancel', event => {
+      event.preventDefault();
+      document.getElementById(cancelButtonId)?.click();
+    });
+  });
+
   document.getElementById('characterDeleteConfirm')?.addEventListener('click', async () => {
     const id = pendingCharacterDeleteId;
     pendingCharacterDeleteId = null;
