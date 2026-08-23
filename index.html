@@ -7478,6 +7478,640 @@
       .fund-account-header-meta .fund-weight-total { flex: 0 0 auto !important; margin-left: auto !important; padding-left: 4px !important; font-size: 9px; white-space: nowrap !important; }
     }
 
+    /* v507: compact the phone Gear cards. Keep the Item field full-width,
+       place Color / Qty / Weight on one row, and Condition / Dirty / Wet on
+       one row. Dirty/Wet stay as real square checkboxes instead of inheriting
+       the general full-width mobile input rule. */
+    @media screen and (max-width: 600px), screen and (max-height: 520px) and (pointer: coarse) {
+      #gear .gear-table tbody { gap: 8px !important; }
+
+      #gear .gear-table tr.gear-row {
+        grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+        gap: 7px 8px !important;
+        padding: 9px !important;
+        border-radius: 9px !important;
+      }
+
+      #gear .gear-table td { gap: 3px !important; }
+      #gear .gear-table td::before {
+        font-size: 9px !important;
+        line-height: 1.1 !important;
+      }
+
+      #gear .gear-table td:nth-child(1) { grid-column: 1 / -1 !important; }
+      #gear .gear-table td:nth-child(2) { grid-column: span 3 !important; }
+      #gear .gear-table td:nth-child(3) { grid-column: span 2 !important; }
+      #gear .gear-table td:nth-child(4) { grid-column: span 3 !important; }
+      #gear .gear-table td:nth-child(5) { grid-column: span 4 !important; }
+
+      #gear .gear-table td:nth-child(6),
+      #gear .gear-table td:nth-child(7) {
+        grid-column: span 2 !important;
+        min-height: 44px !important;
+        padding: 0 7px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 4px !important;
+      }
+
+      #gear .gear-table td:nth-child(8) {
+        top: 6px !important;
+        right: 6px !important;
+      }
+
+      /* The general mobile Gear rule makes inputs full width. Checkboxes are
+         the exception: keep them genuinely square. */
+      #gear .gear-table input.gear-check {
+        width: 24px !important;
+        min-width: 24px !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        flex: 0 0 24px !important;
+        margin: 0 !important;
+      }
+
+      #gear .gear-location-list { gap: 12px !important; }
+      #gear .gear-location-header {
+        gap: 5px !important;
+        padding: 8px !important;
+      }
+    }
+
+
+    /* v509: on normal-width phones, keep all secondary Gear controls plus the
+       item-actions button on one compact row. Qty and Weight use identical
+       columns; Dirty and Wet use identical square boxes; the actions button
+       sits beside Wet at the bottom-right instead of floating in the Item corner. */
+    @media screen and (min-width: 371px) and (max-width: 600px),
+           screen and (min-width: 371px) and (max-height: 520px) and (pointer: coarse) {
+      #gear .gear-table tr.gear-row {
+        grid-template-columns:
+          minmax(66px, 1.15fr)
+          minmax(44px, .72fr)
+          minmax(44px, .72fr)
+          minmax(72px, 1.2fr)
+          32px
+          32px
+          28px !important;
+        column-gap: 5px !important;
+        row-gap: 6px !important;
+      }
+
+      #gear .gear-table td:nth-child(1) { grid-column: 1 / -1 !important; }
+      #gear .gear-table td:nth-child(2),
+      #gear .gear-table td:nth-child(3),
+      #gear .gear-table td:nth-child(4),
+      #gear .gear-table td:nth-child(5),
+      #gear .gear-table td:nth-child(6),
+      #gear .gear-table td:nth-child(7),
+      #gear .gear-table td:nth-child(8) {
+        grid-column: auto !important;
+        min-width: 0 !important;
+      }
+
+      #gear .gear-table td:nth-child(4)::before {
+        content: attr(data-mobile-weight-label) !important;
+      }
+
+      #gear .gear-table td:nth-child(2)::before,
+      #gear .gear-table td:nth-child(3)::before,
+      #gear .gear-table td:nth-child(4)::before,
+      #gear .gear-table td:nth-child(5)::before,
+      #gear .gear-table td:nth-child(6)::before,
+      #gear .gear-table td:nth-child(7)::before {
+        min-height: 10px;
+        font-size: 8px !important;
+        line-height: 1 !important;
+        letter-spacing: .035em !important;
+        white-space: nowrap;
+      }
+
+      #gear .gear-table td:nth-child(6),
+      #gear .gear-table td:nth-child(7) {
+        min-height: 0 !important;
+        padding: 0 !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        gap: 3px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+      }
+
+      #gear .gear-table td:nth-child(8) {
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
+        width: 28px !important;
+        min-width: 28px !important;
+        height: 36px !important;
+        align-self: end !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+      }
+      #gear .gear-table td:nth-child(8)::before { content: none !important; }
+      #gear .gear-table td:nth-child(8) .gear-item-actions-button {
+        width: 28px !important;
+        min-width: 28px !important;
+        height: 28px !important;
+        margin: 0 !important;
+      }
+
+      /* Color is already 36px; normalize the other secondary controls to it. */
+      #gear .gear-table .gear-quantity-cell .numeric-stepper,
+      #gear .gear-table .gear-weight-cell .numeric-stepper,
+      #gear .gear-table .gear-condition-col .combo-input-wrap,
+      #gear .gear-table .gear-quantity-cell input,
+      #gear .gear-table .gear-weight-cell input,
+      #gear .gear-table .gear-condition-col input,
+      #gear .gear-table .gear-condition-col .combo-arrow {
+        height: 36px !important;
+        min-height: 36px !important;
+      }
+
+      #gear .gear-table .gear-quantity-cell .numeric-stepper,
+      #gear .gear-table .gear-weight-cell .numeric-stepper,
+      #gear .gear-table .gear-condition-col .combo-input-wrap {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      /* Mobile's generic 30px steppers are too wide for these intentionally
+         narrow Gear columns. Keep the arrows usable but contained. */
+      #gear .gear-table .gear-numeric-stepper .numeric-stepper-buttons {
+        width: 18px !important;
+        right: 1px !important;
+        top: 1px !important;
+        bottom: 1px !important;
+      }
+      #gear .gear-table .gear-numeric-stepper .numeric-stepper-button {
+        width: 18px !important;
+        min-width: 18px !important;
+        min-height: 17px !important;
+        font-size: 7px !important;
+      }
+      #gear .gear-table .gear-numeric-stepper input {
+        padding-left: 3px !important;
+        padding-right: 20px !important;
+        text-align: center !important;
+      }
+      #gear .gear-table .gear-weight-fixed input[readonly] {
+        padding-left: 3px !important;
+        padding-right: 3px !important;
+      }
+
+      #gear .gear-table .gear-condition-col .combo-input-wrap {
+        grid-template-columns: minmax(0, 1fr) 24px !important;
+      }
+      #gear .gear-table .gear-condition-col .combo-arrow {
+        width: 24px !important;
+        min-width: 24px !important;
+        padding: 0 !important;
+        font-size: 10px !important;
+      }
+      #gear .gear-table .gear-condition-col input {
+        padding: 4px 3px 4px 6px !important;
+      }
+
+      #gear .gear-table td:nth-child(6) input.gear-check,
+      #gear .gear-table td:nth-child(7) input.gear-check {
+        box-sizing: border-box !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        flex: 0 0 36px !important;
+        align-self: center !important;
+        border-radius: 6px !important;
+      }
+    }
+
+
+
+    /* v510: denser phone-only Overview, Gear-location, Gear-toolbar, and
+       cash-account headers. These layouts explicitly reserve one row for the
+       compact controls so they do not fall back to the older stacked mobile
+       arrangements. */
+    @media screen and (max-width: 600px),
+           screen and (max-height: 520px) and (pointer: coarse) {
+      /* Overview: Character name remains full width; Height / Weight / Sex /
+         Age share the next row. Height gets the most room because its display
+         value is naturally the longest. */
+      #overview .identity-primary-row {
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, .90fr) minmax(0, .65fr) minmax(0, .65fr) !important;
+        gap: 6px !important;
+      }
+      #overview .identity-primary-row .character-name-field {
+        grid-column: 1 / -1 !important;
+      }
+      #overview .identity-primary-row .field {
+        min-width: 0 !important;
+      }
+      #overview .identity-primary-row .field label {
+        font-size: 9px !important;
+        letter-spacing: .04em !important;
+        white-space: nowrap !important;
+      }
+      #overview .identity-primary-row .numeric-stepper-buttons {
+        width: 24px !important;
+      }
+      #overview .identity-primary-row .numeric-stepper-button {
+        width: 24px !important;
+        min-width: 24px !important;
+        padding-right: 2px !important;
+      }
+      #overview .identity-primary-row .numeric-stepper input {
+        padding-left: 26px !important;
+        padding-right: 26px !important;
+      }
+      #overview .identity-primary-row .field:nth-child(4) input {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+        text-align: center !important;
+      }
+
+      /* Gear action bar: all three actions stay on one row. */
+      #gear .gear-items-toolbar {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 5px !important;
+      }
+      #gear .gear-items-toolbar .btn {
+        min-width: 0 !important;
+        min-height: 36px !important;
+        height: 36px !important;
+        padding: 4px 5px !important;
+        font-size: 9.5px !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+      }
+
+      /* Location/container header: title, total weight, Dirty, Wet, Carried,
+         and delete all share one line. Empty system-location spacers disappear. */
+      #gear .gear-location-header {
+        grid-template-columns: minmax(0, 1fr) auto auto auto auto auto !important;
+        grid-template-rows: 32px !important;
+        gap: 4px !important;
+        min-height: 40px !important;
+        padding: 4px 6px !important;
+        align-items: center !important;
+      }
+      #gear .gear-location-name-wrap {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        gap: 3px !important;
+      }
+      #gear .gear-location-name-content {
+        min-width: 0 !important;
+        overflow: hidden !important;
+      }
+      #gear .gear-location-name,
+      #gear .gear-location-name-input {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        font-size: 13px !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+      #gear .gear-location-name-input {
+        min-height: 28px !important;
+        height: 28px !important;
+        padding: 2px 4px !important;
+      }
+      #gear .gear-location-drag-handle {
+        width: 18px !important;
+        min-width: 18px !important;
+        height: 28px !important;
+        font-size: 12px !important;
+      }
+      #gear .gear-location-collapse {
+        width: 18px !important;
+        min-width: 18px !important;
+        height: 18px !important;
+        font-size: 11px !important;
+      }
+      #gear .gear-location-total {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        justify-self: end !important;
+        padding: 0 !important;
+        font-size: 9px !important;
+      }
+      #gear .gear-location-check-dirty { grid-column: 3 !important; grid-row: 1 !important; }
+      #gear .gear-location-check-wet { grid-column: 4 !important; grid-row: 1 !important; }
+      #gear .gear-location-check-carried { grid-column: 5 !important; grid-row: 1 !important; }
+      #gear .gear-location-check-dirty,
+      #gear .gear-location-check-wet,
+      #gear .gear-location-check-carried {
+        width: auto !important;
+        min-width: 0 !important;
+        height: 28px !important;
+        padding: 0 !important;
+        gap: 2px !important;
+        white-space: nowrap !important;
+      }
+      #gear .gear-location-check-control::before {
+        font-size: 7.5px !important;
+        letter-spacing: 0 !important;
+      }
+      #gear .gear-location-check-control .gear-check {
+        width: 15px !important;
+        min-width: 15px !important;
+        height: 15px !important;
+        min-height: 15px !important;
+      }
+      #gear .gear-location-delete {
+        grid-column: 6 !important;
+        grid-row: 1 !important;
+        width: 24px !important;
+        min-width: 24px !important;
+        height: 24px !important;
+        justify-self: end !important;
+      }
+      #gear .gear-location-delete-spacer {
+        display: none !important;
+      }
+
+      /* Cash account headers: keep the editable title deliberately short and
+         reserve the rest of the line for Dirty / Wet / Carried / weight. */
+      #gear .fund-account-header {
+        grid-template-columns: auto minmax(42px, 58px) minmax(0, 1fr) !important;
+        grid-template-rows: 30px !important;
+        gap: 4px !important;
+        align-items: center !important;
+        margin-bottom: 6px !important;
+      }
+      #gear .fund-account-header .fund-type-badge {
+        min-height: 20px !important;
+        padding: 1px 4px !important;
+        font-size: 7.5px !important;
+      }
+      #gear .fund-account-name {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 58px !important;
+        min-height: 27px !important;
+        height: 27px !important;
+        padding: 2px 4px !important;
+        font-size: 11px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+      #gear .fund-account-header-meta {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
+        padding: 0 !important;
+        font-size: 8px !important;
+        white-space: nowrap !important;
+      }
+      #gear .fund-cash-flags {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+      }
+      #gear .fund-carried-control,
+      #gear .fund-environment-control {
+        gap: 2px !important;
+        font-size: 8px !important;
+        white-space: nowrap !important;
+      }
+      #gear .fund-carried-control .gear-check,
+      #gear .fund-environment-control .gear-check {
+        width: 13px !important;
+        min-width: 13px !important;
+        height: 13px !important;
+        min-height: 13px !important;
+      }
+      #gear .fund-account-header-meta .fund-weight-total {
+        flex: 0 0 auto !important;
+        margin-left: auto !important;
+        padding-left: 2px !important;
+        font-size: 8px !important;
+      }
+      #gear .fund-account:not(.fund-account-deletable) .fund-account-header {
+        padding-right: 0 !important;
+      }
+    }
+
+
+
+    /* v511: phone-only header refinement. Gear locations return to a clear
+       two-row hierarchy (title/delete above, flags/weight below). Funds keep
+       their single-row header, but the status flags and weight form one compact
+       right-side cluster so they do not squeeze the account name unnecessarily. */
+    @media screen and (max-width: 600px),
+           screen and (max-height: 520px) and (pointer: coarse) {
+      /* Gear location: title and delete on row one. On row two use the familiar
+         checkbox-first convention, then place weight immediately after Wet with
+         a small visual separation. */
+      #gear .gear-location-header {
+        grid-template-columns: max-content max-content max-content max-content minmax(0, 1fr) 24px !important;
+        grid-template-rows: 32px 26px !important;
+        column-gap: 5px !important;
+        row-gap: 2px !important;
+        min-height: 66px !important;
+        padding: 5px 6px 6px !important;
+        align-items: center !important;
+      }
+      #gear .gear-location-name-wrap {
+        grid-column: 1 / 6 !important;
+        grid-row: 1 !important;
+        min-width: 0 !important;
+      }
+      #gear .gear-location-delete {
+        grid-column: 6 !important;
+        grid-row: 1 !important;
+        width: 24px !important;
+        min-width: 24px !important;
+        height: 24px !important;
+        justify-self: end !important;
+      }
+      #gear .gear-location-delete-spacer { display: none !important; }
+
+      #gear .gear-location-check-dirty {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+      }
+      #gear .gear-location-check-wet {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+      }
+      #gear .gear-location-total {
+        grid-column: 3 !important;
+        grid-row: 2 !important;
+        justify-self: start !important;
+        margin-left: 6px !important;
+        padding: 0 !important;
+        font-size: 9px !important;
+      }
+      #gear .gear-location-check-carried {
+        grid-column: 4 !important;
+        grid-row: 2 !important;
+      }
+      #gear .gear-location-check-dirty,
+      #gear .gear-location-check-wet,
+      #gear .gear-location-check-carried {
+        display: inline-flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: auto !important;
+        min-width: 0 !important;
+        height: 24px !important;
+        padding: 0 !important;
+        gap: 3px !important;
+        white-space: nowrap !important;
+      }
+      /* Match Funds: checkbox first, word second. */
+      #gear .gear-location-check-control::before {
+        content: none !important;
+        display: none !important;
+      }
+      #gear .gear-location-check-control::after {
+        content: attr(data-label);
+        display: inline;
+        color: var(--muted);
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 0;
+        line-height: 1;
+      }
+      #gear .gear-location-carry-text { display: none !important; }
+      #gear .gear-location-check-control .gear-check {
+        width: 15px !important;
+        min-width: 15px !important;
+        height: 15px !important;
+        min-height: 15px !important;
+        flex: 0 0 15px !important;
+      }
+
+      /* Funds: let the account title use the flexible middle space. Keep the
+         three flags and weight packed together against the right edge. */
+      #gear .fund-account-header {
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+        grid-template-rows: 30px !important;
+        column-gap: 5px !important;
+      }
+      #gear .fund-account-name {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+      }
+      #gear .fund-account-header-meta {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        justify-self: end !important;
+        justify-content: flex-end !important;
+        flex: 0 0 auto !important;
+        gap: 4px !important;
+      }
+      #gear .fund-cash-flags {
+        flex: 0 0 auto !important;
+        gap: 4px !important;
+      }
+      #gear .fund-carried-control,
+      #gear .fund-environment-control {
+        gap: 2px !important;
+      }
+      #gear .fund-account-header-meta .fund-weight-total {
+        margin-left: 0 !important;
+        padding-left: 4px !important;
+      }
+
+      /* Currency is 44px tall on phones. Make Balance use exactly the same
+         outer and inner heights rather than inheriting the generic mobile
+         numeric-stepper minimum. */
+      #gear .fund-balance-stepper {
+        height: 44px !important;
+        min-height: 44px !important;
+      }
+      #gear .fund-balance-stepper .fund-balance {
+        height: 42px !important;
+        min-height: 42px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        line-height: 42px !important;
+      }
+    }
+
+
+
+    /* v514: phone-only spacing refinement. Center location weight across the
+       second header row while keeping Dirty / Wet / Carried anchored together
+       on the right. Cash retains the larger gap between flags and total weight. */
+    @media screen and (max-width: 600px),
+           screen and (max-height: 520px) and (pointer: coarse) {
+      #gear .gear-location-header {
+        /* Keep the compact control columns; the weight itself spans the row
+           below and is independently centered. */
+        grid-template-columns: 42px max-content minmax(12px, 1fr) max-content max-content max-content 24px !important;
+      }
+      #gear .gear-location-name-wrap {
+        grid-column: 1 / 7 !important;
+        grid-row: 1 !important;
+      }
+      #gear .gear-location-delete {
+        grid-column: 7 !important;
+        grid-row: 1 !important;
+      }
+      #gear .gear-location-total {
+        /* Center the location weight across the full second row. The status
+           controls remain independently anchored to the right, so the weight
+           reads as visually centered rather than merely indented. */
+        grid-column: 1 / 8 !important;
+        grid-row: 2 !important;
+        justify-self: center !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        z-index: 0 !important;
+      }
+      #gear .gear-location-check-dirty {
+        grid-column: 4 !important;
+        grid-row: 2 !important;
+      }
+      #gear .gear-location-check-wet {
+        grid-column: 5 !important;
+        grid-row: 2 !important;
+      }
+      #gear .gear-location-check-carried {
+        grid-column: 6 !important;
+        grid-row: 2 !important;
+      }
+      #gear .fund-account-header-meta {
+        gap: 16px !important;
+      }
+      #gear .fund-cash-flags {
+        gap: 4px !important;
+      }
+      #gear .fund-account-header-meta .fund-weight-total {
+        padding-left: 0 !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -7736,7 +8370,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v506</div>
+<div class="footer-note no-print">Character Sheet v514</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -17701,7 +18335,7 @@
         <td class="gear-item-col"><div class="gear-item-input-wrap">${dragControl}<input value="${esc(g.item)}" data-field="item" placeholder="${draft ? 'Add item…' : 'Item'}" autocomplete="off" aria-autocomplete="list" aria-controls="gearItemAutocompleteMenu" aria-expanded="false"><span class="gear-print-value print-only">${esc(g.item || '')}</span></div></td>
         <td class="gear-color-cell">${gearColorSelectMarkup(g, draft)}<span class="gear-print-value print-only">${esc(g.color || '')}</span></td>
         <td class="gear-quantity-cell"><div class="numeric-stepper gear-numeric-stepper"><input type="number" min="0.01" max="9999.99" step="0.01" inputmode="decimal" value="${esc(gearItemQuantity(g))}" data-field="quantity" aria-label="Quantity"><div class="numeric-stepper-buttons no-print"><button class="numeric-stepper-button" type="button" data-input-step data-step-amount="1" data-step-direction="1" aria-label="Increase quantity">▲</button><button class="numeric-stepper-button" type="button" data-input-step data-step-amount="1" data-step-direction="-1" aria-label="Decrease quantity">▼</button></div></div><span class="gear-print-value print-only">${esc(gearItemQuantity(g))}</span></td>
-        <td class="gear-weight-cell" data-weight-label="Weight each (${esc(weightUnit)})"${currentWeightTitle ? ` title="${esc(currentWeightTitle)}"` : ''}><div class="numeric-stepper gear-numeric-stepper${displayWeightLocked ? ' gear-weight-fixed' : ''}"><input type="number" min="0" step="${esc(weightConfig.step)}" inputmode="decimal" value="${esc(displayedWeight)}" data-field="weight" aria-label="${draft ? 'Dry weight per item' : loadedBreakdown?.isContainer ? 'Loaded container weight per item' : stockWeightLocked ? 'Fixed catalog weight per item' : 'Current weight per item'} (${esc(weightUnit)})"${displayWeightLocked ? ' readonly aria-readonly="true"' : ''}${currentWeightTitle ? ` title="${esc(currentWeightTitle)}"` : ''}>${displayWeightLocked ? '' : '<div class="numeric-stepper-buttons no-print"><button class="numeric-stepper-button" type="button" data-input-step data-step-direction="1" aria-label="Increase weight">▲</button><button class="numeric-stepper-button" type="button" data-input-step data-step-direction="-1" aria-label="Decrease weight">▼</button></div>'}</div><span class="gear-print-value print-only">${esc(displayedWeight)}</span></td>
+        <td class="gear-weight-cell" data-weight-label="Weight each (${esc(weightUnit)})" data-mobile-weight-label="Wt (${esc(weightUnit)})"${currentWeightTitle ? ` title="${esc(currentWeightTitle)}"` : ''}><div class="numeric-stepper gear-numeric-stepper${displayWeightLocked ? ' gear-weight-fixed' : ''}"><input type="number" min="0" step="${esc(weightConfig.step)}" inputmode="decimal" value="${esc(displayedWeight)}" data-field="weight" aria-label="${draft ? 'Dry weight per item' : loadedBreakdown?.isContainer ? 'Loaded container weight per item' : stockWeightLocked ? 'Fixed catalog weight per item' : 'Current weight per item'} (${esc(weightUnit)})"${displayWeightLocked ? ' readonly aria-readonly="true"' : ''}${currentWeightTitle ? ` title="${esc(currentWeightTitle)}"` : ''}>${displayWeightLocked ? '' : '<div class="numeric-stepper-buttons no-print"><button class="numeric-stepper-button" type="button" data-input-step data-step-direction="1" aria-label="Increase weight">▲</button><button class="numeric-stepper-button" type="button" data-input-step data-step-direction="-1" aria-label="Decrease weight">▼</button></div>'}</div><span class="gear-print-value print-only">${esc(displayedWeight)}</span></td>
         <td class="gear-condition-col"><div class="combo-input-wrap"><input value="${esc(g.condition ?? 'New')}" data-field="condition" placeholder="New or custom" autocomplete="off" aria-haspopup="listbox"><button class="combo-arrow" type="button" data-condition-toggle aria-label="Show condition options" title="Show condition options" aria-expanded="false">▼</button><span class="gear-print-value print-only">${esc(g.condition ?? 'New')}</span></div></td>
         <td class="gear-check-cell gear-dirty-col"><input class="gear-check" type="checkbox" ${g.dirty ? 'checked' : ''} data-field="dirty" aria-label="${esc(dirtyWeightTitle)}" title="${esc(dirtyWeightTitle)}"><span class="gear-print-check print-only ${g.dirty ? 'checked' : ''}" aria-hidden="true"></span></td>
         <td class="gear-check-cell gear-wet-col"><input class="gear-check" type="checkbox" ${g.wet ? 'checked' : ''} data-field="wet" aria-label="${esc(wetWeightTitle)}" title="${esc(wetWeightTitle)}"><span class="gear-print-check print-only ${g.wet ? 'checked' : ''}" aria-hidden="true"></span></td>
