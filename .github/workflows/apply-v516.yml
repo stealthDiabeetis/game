@@ -1,0 +1,197 @@
+name: Apply v516 index update
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-v516.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply exact v516 patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(git hash-object index.html)
+          test "$current" = "c1bf438a061b10d6f149f23a14512f14fce5d476"
+          cat > /tmp/update.patch <<'PATCH'
+          --- a/index.html
+          +++ b/index.html
+          @@ -7704,7 +7704,7 @@
+                    Age share the next row. Height gets the most room because its display
+                    value is naturally the longest. */
+                 #overview .identity-primary-row {
+          -        grid-template-columns: minmax(0, 1.35fr) minmax(0, .90fr) minmax(0, .65fr) minmax(0, .65fr) !important;
+          +        grid-template-columns: minmax(0, 1.18fr) minmax(0, .90fr) minmax(0, .65fr) minmax(0, .82fr) !important;
+                   gap: 6px !important;
+                 }
+                 #overview .identity-primary-row .character-name-field {
+          @@ -7736,6 +7736,23 @@
+                   text-align: center !important;
+                 }
+           
+          +      /* v516: Age is a narrow phone field, so do not spend most of its usable
+          +         width on the generic Overview stepper touch gutter. Keep the arrows
+          +         reachable at the right edge while restoring the value's viewable area. */
+          +      #overview .identity-primary-row .field:nth-child(5) .numeric-stepper-buttons {
+          +        width: 18px !important;
+          +      }
+          +      #overview .identity-primary-row .field:nth-child(5) .numeric-stepper-button {
+          +        width: 18px !important;
+          +        min-width: 18px !important;
+          +        padding-right: 2px !important;
+          +      }
+          +      #overview .identity-primary-row .field:nth-child(5) .numeric-stepper input {
+          +        padding-left: 20px !important;
+          +        padding-right: 20px !important;
+          +        text-align: center !important;
+          +      }
+          +
+                 /* Gear action bar: all three actions stay on one row. */
+                 #gear .gear-items-toolbar {
+                   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          @@ -8112,6 +8129,117 @@
+                 }
+               }
+           
+          +
+          +    /* v515: phone Gear fit/spacing refinement. Reclaim horizontal room by
+          +       using the same swatch-only Color control as tablet, give Qty/Weight more
+          +       usable width, hard-contain the Item/actions row, and replace the centered
+          +       location weight with an explicit spacer/weight/spacer/status layout. */
+          +    @media screen and (max-width: 600px),
+          +           screen and (max-height: 520px) and (pointer: coarse) {
+          +      /* Item cards must never make the card wider than its location. The
+          +         secondary row is intentionally sized to fit inside a normal iPhone
+          +         content width rather than depending on overflow clipping. */
+          +      #gear .gear-table tr.gear-row {
+          +        box-sizing: border-box !important;
+          +        width: 100% !important;
+          +        max-width: 100% !important;
+          +        overflow: hidden !important;
+          +        grid-template-columns:
+          +          42px
+          +          minmax(50px, .82fr)
+          +          minmax(50px, .82fr)
+          +          minmax(66px, 1.15fr)
+          +          32px
+          +          32px
+          +          28px !important;
+          +        column-gap: 4px !important;
+          +      }
+          +      #gear .gear-table td,
+          +      #gear .gear-table td:nth-child(1),
+          +      #gear .gear-table .gear-item-input-wrap,
+          +      #gear .gear-table input[data-field="item"] {
+          +        box-sizing: border-box !important;
+          +        min-width: 0 !important;
+          +        max-width: 100% !important;
+          +      }
+          +      #gear .gear-table td:nth-child(1) {
+          +        width: auto !important;
+          +        overflow: hidden !important;
+          +      }
+          +      #gear .gear-table .gear-item-input-wrap {
+          +        width: 100% !important;
+          +        overflow: hidden !important;
+          +      }
+          +      #gear .gear-table input[data-field="item"] {
+          +        width: 100% !important;
+          +      }
+          +      #gear .gear-table td:nth-child(8),
+          +      #gear .gear-table td:nth-child(8) .gear-item-actions-button {
+          +        max-width: 28px !important;
+          +      }
+          +
+          +      /* Match tablet: compact Color is swatch + dropdown chevron only. The
+          +         floating menu itself still contains the complete color names. */
+          +      #gear button.gear-color-picker {
+          +        justify-content: center !important;
+          +        padding-left: 4px !important;
+          +        padding-right: 4px !important;
+          +        gap: 2px !important;
+          +      }
+          +      #gear button.gear-color-picker [data-gear-color-label] {
+          +        display: none !important;
+          +      }
+          +      #gear button.gear-color-picker::after {
+          +        margin-left: 2px !important;
+          +        margin-right: 0 !important;
+          +        font-size: 8px !important;
+          +      }
+          +      #gear button.gear-color-picker.is-fixed::after {
+          +        display: none !important;
+          +      }
+          +
+          +      /* Location row: large flexible space, weight, moderate fixed space,
+          +         Dirty, Wet, Carried. Built-in locations simply leave Carried absent. */
+          +      #gear .gear-location-header {
+          +        grid-template-columns:
+          +          minmax(56px, 1fr)
+          +          max-content
+          +          16px
+          +          max-content
+          +          max-content
+          +          max-content
+          +          24px !important;
+          +      }
+          +      #gear .gear-location-name-wrap {
+          +        grid-column: 1 / 7 !important;
+          +        grid-row: 1 !important;
+          +      }
+          +      #gear .gear-location-delete {
+          +        grid-column: 7 !important;
+          +        grid-row: 1 !important;
+          +      }
+          +      #gear .gear-location-total {
+          +        grid-column: 2 !important;
+          +        grid-row: 2 !important;
+          +        justify-self: end !important;
+          +        margin: 0 !important;
+          +        padding: 0 !important;
+          +        z-index: auto !important;
+          +      }
+          +      #gear .gear-location-check-dirty {
+          +        grid-column: 4 !important;
+          +        grid-row: 2 !important;
+          +      }
+          +      #gear .gear-location-check-wet {
+          +        grid-column: 5 !important;
+          +        grid-row: 2 !important;
+          +      }
+          +      #gear .gear-location-check-carried {
+          +        grid-column: 6 !important;
+          +        grid-row: 2 !important;
+          +      }
+          +    }
+          +
+           </style>
+           </head>
+           <body>
+          @@ -8370,7 +8498,7 @@
+           </div>
+           </section>
+           </main>
+          -<div class="footer-note no-print">Character Sheet v514</div>
+          +<div class="footer-note no-print">Character Sheet v516</div>
+           </div>
+           <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
+           <input accept="image/*" hidden="" id="portraitFile" type="file"/>
+          PATCH
+          git apply /tmp/update.patch
+          updated=$(git hash-object index.html)
+          test "$updated" = "63f66a58e6aedbb79c92e960d44840f40f770743"
+          rm .github/workflows/apply-v516.yml
+          git config user.name "ChatGPT GitHub Integration"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/apply-v516.yml
+          git commit -m "Update index.html to v516"
+          git push origin HEAD:main
