@@ -7736,7 +7736,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v505</div>
+<div class="footer-note no-print">Character Sheet v506</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -14150,37 +14150,51 @@
     return menu;
   }
 
-  // v505: position catalog suggestions inside the *visual* viewport. On iOS,
-  // the software keyboard can shrink/pan the visual viewport without making
-  // window.innerHeight describe the actually visible area. Measure both sides
-  // of the focused field and constrain the menu to one side, so it can never
-  // cover the text the player is actively typing.
+  // v506: iOS 26 can intermittently pan the visual viewport while the software
+  // keyboard is animating, and fixed-position overlays can briefly be painted
+  // against a different viewport origin than their focused input. On iOS/iPadOS,
+  // keep the autocomplete in document space instead. The input and menu then move
+  // together if WebKit pans the page, so the menu cannot drift across the field.
+  // Other platforms keep the fixed overlay behavior.
   function positionGearAutocompleteMenu(menu, input) {
     if (!menu || menu.hidden || !input) return;
     const rect = input.getBoundingClientRect();
     const viewport = window.visualViewport;
-    const viewportTop = viewport ? viewport.offsetTop : 0;
-    const viewportLeft = viewport ? viewport.offsetLeft : 0;
     const viewportWidth = viewport ? viewport.width : window.innerWidth;
     const viewportHeight = viewport ? viewport.height : window.innerHeight;
-    const viewportRight = viewportLeft + viewportWidth;
-    const viewportBottom = viewportTop + viewportHeight;
+    const useDocumentSpace = needsIOSTextareaResizeGrip();
+    const pageLeft = viewport && Number.isFinite(viewport.pageLeft) ? viewport.pageLeft : window.scrollX;
+    const pageTop = viewport && Number.isFinite(viewport.pageTop) ? viewport.pageTop : window.scrollY;
     const pad = 8;
     const gap = 4;
+
+    // In document-space mode, convert the input's visible rect back to document
+    // coordinates with visualViewport.pageTop/pageLeft. This is intentionally
+    // independent of visualViewport.offsetTop, which WebKit can report late while
+    // the keyboard is animating.
+    const anchorLeft = useDocumentSpace ? rect.left + pageLeft : rect.left;
+    const anchorTop = useDocumentSpace ? rect.top + pageTop : rect.top;
+    const anchorBottom = useDocumentSpace ? rect.bottom + pageTop : rect.bottom;
+    const viewportLeft = useDocumentSpace ? pageLeft : 0;
+    const viewportTop = useDocumentSpace ? pageTop : 0;
+    const viewportRight = viewportLeft + viewportWidth;
+    const viewportBottom = viewportTop + viewportHeight;
+
+    menu.style.position = useDocumentSpace ? 'absolute' : 'fixed';
 
     const availableWidth = Math.max(0, viewportWidth - pad * 2);
     const preferredWidth = Math.max(320, rect.width);
     const width = Math.min(availableWidth, preferredWidth);
-    const left = Math.max(viewportLeft + pad, Math.min(rect.left, viewportRight - width - pad));
+    const left = Math.max(viewportLeft + pad, Math.min(anchorLeft, viewportRight - width - pad));
     menu.style.width = `${width}px`;
     menu.style.left = `${left}px`;
 
     // Restore the stylesheet cap before measuring. If neither side can fit the
-    // whole menu, the chosen side becomes the menu's measured max-height.
+    // whole menu, constrain it to the larger side without crossing the input.
     menu.style.maxHeight = '';
     const naturalHeight = menu.getBoundingClientRect().height;
-    const roomAbove = Math.max(0, rect.top - gap - (viewportTop + pad));
-    const roomBelow = Math.max(0, (viewportBottom - pad) - (rect.bottom + gap));
+    const roomAbove = Math.max(0, anchorTop - gap - (viewportTop + pad));
+    const roomBelow = Math.max(0, (viewportBottom - pad) - (anchorBottom + gap));
     const openBelow = roomBelow >= naturalHeight || (roomBelow >= roomAbove && roomAbove < naturalHeight);
     const availableHeight = openBelow ? roomBelow : roomAbove;
 
@@ -14193,8 +14207,24 @@
     menu.style.maxHeight = `${Math.floor(availableHeight)}px`;
     const fittedHeight = menu.getBoundingClientRect().height;
     menu.style.top = openBelow
-      ? `${rect.bottom + gap}px`
-      : `${rect.top - gap - fittedHeight}px`;
+      ? `${anchorBottom + gap}px`
+      : `${anchorTop - gap - fittedHeight}px`;
+  }
+
+  // Safari can continue adjusting the viewport for several frames after an
+  // input event. Re-run positioning briefly while the menu is open rather than
+  // assuming a single resize/scroll event reports the final keyboard geometry.
+  let gearAutocompleteStabilityTimer = 0;
+  function stabilizeGearAutocomplete(positionCallback) {
+    clearTimeout(gearAutocompleteStabilityTimer);
+    const started = performance.now();
+    const tick = () => {
+      positionCallback();
+      if (performance.now() - started < 650) {
+        gearAutocompleteStabilityTimer = setTimeout(tick, 50);
+      }
+    };
+    gearAutocompleteStabilityTimer = setTimeout(tick, 50);
   }
 
   function positionGearItemAutocomplete() {
@@ -14202,6 +14232,7 @@
   }
 
   function closeGearItemAutocomplete() {
+    clearTimeout(gearAutocompleteStabilityTimer);
     if (gearItemAutocompleteMenu) gearItemAutocompleteMenu.hidden = true;
     activeGearItemAutocompleteInput?.setAttribute('aria-expanded', 'false');
     activeGearItemAutocompleteInput = null;
@@ -14252,6 +14283,7 @@
     input.setAttribute('aria-expanded', 'true');
     positionGearItemAutocomplete();
     requestAnimationFrame(positionGearItemAutocomplete);
+    stabilizeGearAutocomplete(positionGearItemAutocomplete);
   }
 
   function selectGearItemAutocomplete(catalogId) {
@@ -14398,6 +14430,7 @@
   }
 
   function closeGearLocationAutocomplete() {
+    clearTimeout(gearAutocompleteStabilityTimer);
     if (gearLocationAutocompleteMenu) gearLocationAutocompleteMenu.hidden = true;
     activeGearLocationAutocompleteInput?.setAttribute('aria-expanded', 'false');
     activeGearLocationAutocompleteInput = null;
@@ -14439,6 +14472,7 @@
     input.setAttribute('aria-expanded', 'true');
     positionGearLocationAutocomplete();
     requestAnimationFrame(positionGearLocationAutocomplete);
+    stabilizeGearAutocomplete(positionGearLocationAutocomplete);
   }
 
   function selectGearLocationAutocomplete(catalogId) {
