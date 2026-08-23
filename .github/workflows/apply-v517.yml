@@ -1,0 +1,73 @@
+name: Apply v517 catalog update
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-v517.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update surveillance camera catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object index.html)" = "63f66a58e6aedbb79c92e960d44840f40f770743"
+          python - <<'PY'
+          from pathlib import Path
+          import re, json
+
+          p = Path('index.html')
+          s = p.read_text()
+          m = re.search(r'const GEAR_CATALOG = (\[.*?\]);\n', s, re.S)
+          if not m:
+              raise SystemExit('GEAR_CATALOG not found')
+          catalog = json.loads(m.group(1))
+          byid = {x['id']: x for x in catalog}
+
+          byid['gc1833']['name'] = 'Covert Camera Module, Miniature'
+          byid['gc1833']['specs'] = 'Miniature 1080p-class pinhole camera/DVR module · Storage/Signal: local microSD/TF recording plus 2.4 GHz Wi-Fi for setup/live view; no cellular'
+          byid['gc1833']['aliases'] = sorted(set(byid['gc1833'].get('aliases', []) + ['Covert Camera, Miniature','miniature covert camera','pinhole camera','hidden camera module']))
+
+          byid['gc1834']['name'] = 'Covert Camera, Body-Worn'
+          byid['gc1834']['specs'] = 'Discreet body-worn visible-light camera with onboard recording · Storage/Signal: local onboard/microSD storage only; no Wi-Fi, cellular, or other RF transmitter'
+          byid['gc1834']['aliases'] = sorted(set(byid['gc1834'].get('aliases', []) + ['Covert Camera, Wearable','wearable covert camera','button camera','body-worn covert camera']))
+
+          byid['gc1835']['name'] = 'Body Camera, Rugged'
+          byid['gc1835']['specs'] = 'Rugged visible body-worn video recorder with microphone and timestamped recording · Storage/Signal: onboard local storage with Wi-Fi/Bluetooth-class short-range setup or offload; no cellular'
+          byid['gc1835']['aliases'] = sorted(set(byid['gc1835'].get('aliases', []) + ['Body Camera, Compact','compact body camera','rugged body camera','body-worn camera']))
+
+          if 'gc2237' in byid:
+              raise SystemExit('gc2237 already exists')
+          trail = {
+              'id':'gc2237','name':'Trail Camera, Non-Cellular','category':'Electronics & Communications',
+              'subcategory':'Surveillance & Counter-Surveillance','weight':0.6,'price':40.0,'availability':'Common',
+              'colors':['Green','Tan','Multicolor'],
+              'specs':'Budget motion-triggered outdoor camera; 1080p-class video, PIR motion detection, infrared night illumination, weather-resistant housing, and 4×AA power · Storage/Signal: SD/SDHC local storage only; no Wi-Fi, cellular, or other RF link',
+              'createsLocation':False,
+              'aliases':['game camera','wildlife camera','hunting camera','trail cam','non-cellular trail camera'],
+              'unit':'each','defaultQuantity':1
+          }
+          idx = next(i for i,x in enumerate(catalog) if x['id'] == 'gc1835') + 1
+          catalog.insert(idx, trail)
+
+          new_json = json.dumps(catalog, separators=(',', ':'), ensure_ascii=False)
+          out = s[:m.start(1)] + new_json + s[m.end(1):]
+          out = out.replace('Character Sheet v516</div>', 'Character Sheet v517</div>')
+          p.write_text(out)
+          PY
+          test "$(git hash-object index.html)" = "510e59737d5cdad774a9f334f9e91dc585fee2b5"
+          rm .github/workflows/apply-v517.yml
+          git config user.name "ChatGPT GitHub Integration"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/apply-v517.yml
+          git commit -m "Update surveillance cameras and add trail camera (v517)"
+          git push origin HEAD:main
