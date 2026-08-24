@@ -1,0 +1,52 @@
+name: Trigger v535
+
+on:
+  push:
+    paths:
+      - ".github/v535-go"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Extract and apply v535 patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          src = Path('.github/workflows/apply-v535.yml').read_text().splitlines()
+          start = next(i for i, line in enumerate(src) if "python - <<'PY'" in line) + 1
+          end = next(i for i in range(start, len(src)) if src[i].strip() == 'PY')
+          script_lines = []
+          for line in src[start:end]:
+              script_lines.append(line[10:] if line.startswith('          ') else line)
+          Path('/tmp/apply_v535.py').write_text('\n'.join(script_lines) + '\n')
+          PY
+          python /tmp/apply_v535.py
+          grep -q "Character Sheet v535" index.html
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('index.html').read_text()
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, re.S | re.I)
+          if len(scripts) != 1:
+              raise SystemExit(f'Expected 1 script, found {len(scripts)}')
+          Path('/tmp/index-script.js').write_text(scripts[0])
+          PY
+          node --check /tmp/index-script.js
+      - name: Commit v535
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/apply-v535.yml .github/workflows/trigger-v535.yml .github/v535-go
+          git add -A
+          git commit -m "Overhaul medication data and PED catalog (v535)"
+          git push origin main
