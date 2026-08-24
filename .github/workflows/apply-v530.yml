@@ -1,0 +1,34 @@
+name: Apply v530
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-v530.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply v530 instrumentation patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64, gzip
+          payload = '''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'''
+          exec(gzip.decompress(base64.b64decode(payload)).decode(), {})
+          PY
+          git diff --check
+          grep -q "Character Sheet v530" index.html
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/apply-v530.yml
+          git add index.html .github/workflows/apply-v530.yml
+          git commit -m "Add professional telecom and inspection tools (v530)"
+          git push
