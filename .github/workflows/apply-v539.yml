@@ -15,6 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Apply exact v539 update
@@ -22,7 +23,7 @@ jobs:
         run: |
           set -euo pipefail
           current=$(git hash-object index.html)
-          test "$current" = "cf8c07af692051ce39d09a6940f528434e18d259"
+          test "$current" = "9e0bb83409ed19593cf47608a2a49e34ff9c2f35"
 
           python - <<'PY'
           from pathlib import Path
