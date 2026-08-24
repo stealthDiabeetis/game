@@ -1,0 +1,170 @@
+name: Apply v533 package normalization
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-v533.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch index.html
+        shell: bash
+        run: |
+          cat > /tmp/apply_v533.py <<'PY'
+          from pathlib import Path
+          import json
+
+          p = Path("index.html")
+          text = p.read_text()
+          prefix = "const GEAR_CATALOG = "
+          start = text.index(prefix) + len(prefix)
+          end = text.index(";\n", start)
+          catalog = json.loads(text[start:end])
+          by_id = {x["id"]: x for x in catalog}
+
+          def update(item_id, **changes):
+              by_id[item_id].update(changes)
+
+          update("gc0807", price=0.10, defaultQuantity=20,
+                 specs="Single pre-moistened personal wipe · Common retail package quantity: 20")
+          update("gc0811", price=1.11, defaultQuantity=18,
+                 specs="Disposable adult incontinence brief · Common retail package quantity: 18")
+          update("gc0809", price=0.30, defaultQuantity=20,
+                 specs="Disposable menstrual pad · Common retail package quantity: 20")
+          update("gc0808", price=0.29, defaultQuantity=18,
+                 specs="Disposable tampon · Common retail package quantity: 18")
+          update("gc2093", price=0.68, defaultQuantity=10,
+                 specs="Disposable compressible foam hearing-protection plugs · Inventory unit: 1 pair · Common retail package quantity: 10 pairs")
+          update("gc2193", defaultQuantity=50,
+                 specs="Blank recordable compact disc; approximately 700 MB capacity · Common retail package quantity: 50")
+          update("gc2194", defaultQuantity=50,
+                 specs="Blank single-layer recordable DVD; approximately 4.7 GB capacity · Common retail package quantity: 50")
+          update("gc2195", defaultQuantity=25,
+                 specs="Blank single-layer BD-R optical disc; approximately 25 GB capacity · Common retail package quantity: 25")
+          update("gc0767", defaultQuantity=40,
+                 specs="13-gallon household trash bag · Common retail package quantity: 40")
+          update("gc0768", defaultQuantity=20,
+                 specs="Heavy-duty 42-gallon contractor trash bag · Common retail package quantity: 20")
+          update("gc0722", defaultQuantity=25,
+                 specs="Standard letter envelope · Common small retail package quantity: 25")
+          update("gc0723", price=0.38, defaultQuantity=25,
+                 specs="9 × 12 in manila document envelope · Common small retail package quantity: 25")
+          update("gc2170", price=0.08, defaultQuantity=12,
+                 specs="Single stick of white chalk · Common retail box quantity: 12")
+          update("gc0418", price=0.30, defaultQuantity=50,
+                 specs="Disposable nitrile examination/work gloves · Inventory unit: 1 pair · Common retail box: 100 gloves / 50 pairs")
+          update("gc0397", price=0.14, defaultQuantity=30,
+                 specs="Small adhesive bandage · Common retail package quantity: 30")
+          update("gc0398", price=0.43, defaultQuantity=10,
+                 specs="Large adhesive bandage · Common retail package quantity: 10")
+          update("gc0409", price=0.03, defaultQuantity=100,
+                 specs="Individually wrapped alcohol preparation pad · Common retail box quantity: 100")
+          update("gc0408", price=0.09, defaultQuantity=100,
+                 specs="Individually wrapped first-aid antiseptic wipe · Common retail box quantity: 100")
+          update("gc0400", price=0.24, defaultQuantity=25,
+                 specs="Single sterile 2 × 2 in absorbent gauze pad, individually wrapped · Common retail package quantity: 25")
+          update("gc0401", price=0.44, defaultQuantity=25,
+                 specs="Single sterile 4 × 4 in absorbent gauze pad, individually wrapped · Common retail package quantity: 25")
+          update("gc0458", price=0.80, defaultQuantity=10,
+                 specs="17 g polyethylene glycol 3350 single-dose packet · Common retail carton quantity: 10")
+          update("gc2083", price=1.00, defaultQuantity=10,
+                 specs="Sterile oval eye dressing pad · Common first-aid refill box quantity: 10")
+          update("gc0407", price=0.92, defaultQuantity=6,
+                 specs="Hydrocolloid blister dressing · Common retail package quantity: 6")
+          update("gc0746", defaultQuantity=100,
+                 specs="Resealable 4 mil polyethylene field sample bag; about 1 qt capacity; suitable for soil, rock, powder, or other dry/semidry samples · Common laboratory package quantity: 100")
+          update("gc0748", defaultQuantity=100,
+                 specs="20 mL borosilicate glass screw-cap sample vial · Common laboratory package quantity: 100")
+          update("gc0887", price=1.29, defaultQuantity=12,
+                 specs="1 qt glass canning jar with lid and band · Common retail case quantity: 12")
+          update("gc2129",
+                 name="Plastic Baggie, Small",
+                 weight=0.25/100,
+                 price=8.0/100,
+                 unit="bag",
+                 defaultQuantity=100,
+                 specs="Small resealable plastic bag · Common retail package quantity: 100",
+                 aliases=["small plastic baggie", "small resealable bag", "zip bag small"])
+          update("gc0781",
+                 name="Disinfecting Wipe, Individually Wrapped",
+                 weight=0.4/25,
+                 price=6.0/25,
+                 unit="wipe",
+                 defaultQuantity=25,
+                 specs="Individually wrapped pre-moistened disinfecting wipe · Common retail package quantity: 25",
+                 aliases=["disinfecting wipe", "individual disinfecting wipe", "single-use disinfecting wipe", "wrapped disinfecting wipe"])
+          update("gc1295",
+                 name="Colored Pencil",
+                 weight=0.45/24,
+                 price=7.0/24,
+                 unit="pencil",
+                 defaultQuantity=24,
+                 specs="Standard colored pencil · Common retail set quantity: 24",
+                 aliases=["colored pencils", "colour pencil", "24 color pencils"])
+          update("gc1296",
+                 name="Marker, Coloring",
+                 weight=0.4/12,
+                 price=6.0/12,
+                 unit="marker",
+                 defaultQuantity=12,
+                 specs="Washable felt-tip coloring marker · Common retail set quantity: 12",
+                 aliases=["coloring marker", "markers set", "felt tip marker"])
+          update("gc1156",
+                 name="Crayon",
+                 weight=0.3/24,
+                 price=4.0/24,
+                 unit="crayon",
+                 defaultQuantity=24,
+                 specs="Standard wax coloring crayon · Common retail box quantity: 24",
+                 aliases=["crayons", "24 count crayons"])
+          update("gc1155",
+                 name="Sidewalk Chalk",
+                 weight=0.8/12,
+                 price=5.0/12,
+                 unit="stick",
+                 defaultQuantity=12,
+                 specs="Large colored sidewalk-chalk stick · Common retail box quantity: 12",
+                 aliases=["sidewalk chalk stick", "outdoor chalk"])
+          update("gc1151",
+                 name="Marble, Glass",
+                 weight=1.0/50,
+                 price=8.0/50,
+                 unit="marble",
+                 defaultQuantity=50,
+                 specs="Small glass toy marble · Common retail bag quantity: 50",
+                 aliases=["glass marble", "marbles"])
+          update("gc0165",
+                 name="Matches, Paper Book",
+                 weight=0.5/50,
+                 price=6.0/50,
+                 unit="book",
+                 defaultQuantity=1,
+                 specs="Paper matchbook with about 20 matches · Often distributed or acquired individually; bulk cartons also exist",
+                 aliases=["matchbook", "book of matches", "paper matches"])
+
+          new_catalog = json.dumps(catalog, ensure_ascii=False, separators=(",", ":"))
+          text = text[:start] + new_catalog + text[end:]
+          if text.count("Character Sheet v532") != 1:
+              raise RuntimeError("Expected v532 baseline")
+          text = text.replace("Character Sheet v532", "Character Sheet v533")
+          p.write_text(text)
+          PY
+          python /tmp/apply_v533.py
+          grep -q 'Character Sheet v533' index.html
+          git diff --check
+      - name: Commit v533 and remove one-shot workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/apply-v533.yml
+          git add index.html .github/workflows/apply-v533.yml
+          git commit -m "Normalize retail package quantities (v533)"
+          git push origin main
