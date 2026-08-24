@@ -1,0 +1,54 @@
+name: Apply v521 backpack update
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-v521.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply v521
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object index.html)" = "36cc4b7548405999c36b71095a86b104febf30a5"
+          python - <<'PY'
+          from pathlib import Path
+          import re, json
+          p=Path('index.html')
+          s=p.read_text()
+          m=re.search(r'const GEAR_CATALOG = (\[.*?\]);\n', s, re.S)
+          if not m:
+              raise SystemExit('GEAR_CATALOG not found')
+          cat=json.loads(m.group(1))
+          it=next(x for x in cat if x['id']=='gc0094')
+          if it['name'] != 'Backpack, Large, 70 L':
+              raise SystemExit(f'unexpected gc0094 name: {it["name"]}')
+          it.update({
+              'name':'Backpack, Hiking, 45 L',
+              'weight':2.3,
+              'price':50.0,
+              'availability':'Common',
+              'colors':['Black','Blue','Gray','Green'],
+              'specs':'Volume: 45 L · Maximum Load: 35 lb · Budget internal-frame hiking/backpacking pack with padded hip belt, hydration compatibility, compression straps, and gear loops',
+              'aliases':['budget hiking backpack','45 L backpack','45L backpack','budget backpacking backpack'],
+              'locationCapacityPounds':35.0
+          })
+          s=s[:m.start(1)] + json.dumps(cat,separators=(',',':'),ensure_ascii=False) + s[m.end(1):]
+          if 'Character Sheet v520' not in s:
+              raise SystemExit('v520 footer not found')
+          s=s.replace('Character Sheet v520','Character Sheet v521')
+          p.write_text(s)
+          PY
+          test "$(git hash-object index.html)" = "3a798bcca3b3b016364e3f0b1fa3e1e5dcac684d"
+          rm .github/workflows/apply-v521.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/apply-v521.yml
+          git commit -m "Update budget hiking backpack (v521)"
+          git push origin main
