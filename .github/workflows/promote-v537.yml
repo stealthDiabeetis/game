@@ -1,0 +1,77 @@
+name: Promote exact full v537
+
+on:
+  push:
+    paths:
+      - '.github/workflows/promote-v537.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct exact v536 base
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const zlib = require('zlib');
+          let t = fs.readFileSync('index-v534-base.html', 'utf8');
+          const patch = JSON.parse(zlib.gunzipSync(fs.readFileSync('v536-patch.json.gz')).toString('utf8'));
+          if (!t.includes(patch.baseVersion)) throw new Error('Unexpected base version');
+          const marker = 'const GEAR_CATALOG = ';
+          const s = t.indexOf(marker) + marker.length;
+          const e = t.indexOf(';\n', s);
+          const catalog = JSON.parse(t.slice(s, e));
+          const byId = new Map(catalog.map(x => [x.id, x]));
+          for (const [id, fields] of Object.entries(patch.changes)) {
+            const item = byId.get(id);
+            if (!item) throw new Error('Missing catalog item ' + id);
+            Object.assign(item, fields);
+          }
+          for (const [id, keys] of Object.entries(patch.remove || {})) {
+            const item = byId.get(id);
+            if (!item) throw new Error('Missing remove item ' + id);
+            for (const key of keys) delete item[key];
+          }
+          const ai = catalog.findIndex(x => x.id === patch.insertAfter);
+          if (ai < 0) throw new Error('Insertion anchor missing');
+          catalog.splice(ai + 1, 0, ...patch.newItems);
+          t = t.slice(0, s) + JSON.stringify(catalog) + t.slice(e);
+          for (const [a, b] of patch.outside) {
+            const i = t.indexOf(a);
+            if (i < 0) throw new Error('UI patch anchor not found');
+            t = t.slice(0, i) + b + t.slice(i + a.length);
+          }
+          if (!t.includes(patch.targetVersion)) throw new Error('Target version marker missing');
+          fs.writeFileSync('/tmp/v536.html', t, 'utf8');
+          NODE
+          echo '132106a7120c40f8d250990d9dc63a634117f668dbe392e9f96d0e5457d045e5  /tmp/v536.html' | sha256sum -c -
+
+      - name: Reconstruct exact full v537
+        shell: bash
+        run: |
+          cat > /tmp/v536-to-v537.zstpatch.b64 <<'B64'
+          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
+          B64
+          base64 -d /tmp/v536-to-v537.zstpatch.b64 > /tmp/v536-to-v537.zstpatch
+          zstd -q -d --patch-from=/tmp/v536.html /tmp/v536-to-v537.zstpatch -o index.html
+          echo '0f67a69bfe58131bff98e5a974e938002141cb261762d1582dee99d438395463  index.html' | sha256sum -c -
+          test "$(wc -c < index.html)" -eq 2318393
+
+      - name: Commit standalone v537
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f index-v534-base.html v536-patch.json.gz
+          git add index.html
+          git commit -m 'Publish full standalone v537'
+          git push
