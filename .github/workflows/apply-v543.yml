@@ -1,0 +1,79 @@
+name: Apply v543 medieval armor update
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-v543.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply exact v543 changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object index.html)" = "4363183f80fa11d7713213a8f1aea3bba47589aa"
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path('index.html')
+          t=p.read_text(encoding='utf-8')
+          marker='const GEAR_CATALOG = '
+          s=t.index(marker)+len(marker)
+          e=t.index(';\n',s)
+          cat=json.loads(t[s:e])
+          byid={x['id']:x for x in cat}
+          byname={x['name']:x for x in cat}
+          utv=byid['gc1710']
+          assert utv['name']=='UTV, Side-by-Side'
+          assert 'side by side' in [a.lower() for a in utv.get('aliases',[])]
+          if not any(a.lower()=='sxs' for a in utv.get('aliases',[])):
+              utv.setdefault('aliases',[]).append('SxS')
+          new_items=[
+          {'id':'gc2353','name':'Plate Armor, Full Medieval','category':'Clothing & Footwear','subcategory':'Protective & Tactical Gear > Armor','weight':50.0,'price':5000.0,'availability':'Specialty','colors':['Black','Silver'],'specs':'Complete late-medieval European field harness of articulated steel plate, including helmet, cuirass, arm and leg defenses, gauntlets, and sabatons · Representative battle weight about 50 lb; historical field armor commonly weighs roughly 45–55 lb · Properly fitted weight is distributed across the body rather than hanging entirely from the shoulders','createsLocation':False,'aliases':['full plate armor','medieval plate armor','plate armour','full plate armour','suit of armor','suit of armour','knight armor','knight armour','plate harness'],'unit':'each','defaultQuantity':1,'wetRetention':'very_low','dirtRetention':'moderate'},
+          {'id':'gc2354','name':'Chain Mail Shirt','category':'Clothing & Footwear','subcategory':'Protective & Tactical Gear > Armor','weight':18.0,'price':500.0,'availability':'Specialty','colors':['Black','Silver'],'specs':'Riveted steel mail shirt / haubergeon covering the torso and upper arms · Representative weight about 18 lb; historical mail shirts vary substantially with length, ring size, and construction · Typically worn over a padded garment','createsLocation':False,'aliases':['chainmail shirt','chain mail top','chainmail top','mail shirt','mail armor shirt','mail armour shirt','haubergeon','mail haubergeon'],'unit':'each','defaultQuantity':1,'wetRetention':'very_low','dirtRetention':'moderate'},
+          {'id':'gc2355','name':'Chain Mail Leggings','category':'Clothing & Footwear','subcategory':'Protective & Tactical Gear > Armor','weight':7.0,'price':390.0,'availability':'Specialty','colors':['Black','Silver'],'specs':'Pair of riveted steel mail leggings / chausses covering the legs, commonly including foot flaps · Representative weight about 7 lb for a medium-to-large pair · Suspended from a belt or arming girdle to carry the weight at the hips','createsLocation':False,'aliases':['chainmail leggings','chain mail bottoms','chainmail bottoms','mail leggings','mail chausses','chausses'],'unit':'pair','defaultQuantity':1,'wetRetention':'very_low','dirtRetention':'moderate'},
+          {'id':'gc2356','name':'Chain Mail Coif','category':'Clothing & Footwear','subcategory':'Protective & Tactical Gear > Armor','weight':5.0,'price':225.0,'availability':'Specialty','colors':['Black','Silver'],'specs':'Riveted steel mail hood / coif covering the head, neck, and upper shoulders · Representative weight about 5 lb · Commonly worn over a padded arming cap and sometimes beneath a helmet','createsLocation':False,'aliases':['chainmail coif','mail coif','chain mail hood','chainmail hood','mail hood'],'unit':'each','defaultQuantity':1,'wetRetention':'very_low','dirtRetention':'moderate'}
+          ]
+          for item in new_items:
+              assert item['id'] not in byid
+              assert item['name'] not in byname
+          idx=next(i for i,x in enumerate(cat) if x['id']=='gc2097')+1
+          cat[idx:idx]=new_items
+          t=t[:s]+json.dumps(cat,separators=(',',':'),ensure_ascii=False)+t[e:]
+          assert t.count('Character Sheet v542')==1
+          t=t.replace('Character Sheet v542','Character Sheet v543',1)
+          p.write_text(t,encoding='utf-8')
+          PY
+          echo 'b0757b74f1979c97b9df27a017d9dac93038bd8ac2ad769226949633a66c5146  index.html' | sha256sum -c -
+          test "$(git hash-object index.html)" = "9397bbe479c56c1b42a2d40858114d896197dc9c"
+          test "$(wc -c < index.html)" -eq 2334543
+          grep -q 'Character Sheet v543' index.html
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S|re.I)
+          assert len(scripts)==1
+          Path('/tmp/v543.js').write_text(scripts[0],encoding='utf-8')
+          PY
+          node --check /tmp/v543.js
+      - name: Commit v543 and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'ChatGPT GitHub Integration'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/apply-v543.yml
+          git add index.html
+          git commit -m 'Update index.html to v543'
+          git push origin HEAD:main
