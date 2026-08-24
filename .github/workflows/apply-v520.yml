@@ -1,0 +1,104 @@
+name: Apply v520 gear cleanup
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-v520.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply v520 catalog changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object index.html)" = "dd0a172c6aca71ecb9803e2a80b0a590534531fb"
+          python - <<'PY'
+          from pathlib import Path
+          import re, json
+
+          p=Path('index.html')
+          s=p.read_text()
+          m=re.search(r'const GEAR_CATALOG = (\[.*?\]);\n', s, re.S)
+          if not m:
+              raise SystemExit('GEAR_CATALOG not found')
+          cat=json.loads(m.group(1))
+          byid={x['id']:x for x in cat}
+
+          byid['gc0195']['price']=1500.0
+
+          for gid in ['gc0096','gc0097','gc0098','gc0099']:
+              byid[gid]['subcategory']='Backpacks > Backpacking'
+
+          for gid in ['gc2240','gc2241']:
+              if gid in byid:
+                  raise SystemExit(f'{gid} already exists')
+
+          basic={
+              'id':'gc2240','name':'Backpack, Basic, 20 L','category':'Bags, Packs & Containers',
+              'subcategory':'Backpacks > Daypacks','weight':0.8,'price':10.0,'availability':'Ubiquitous',
+              'colors':['Black','Blue','Gray','Green','Pink','Purple','Red'],
+              'specs':'Volume: ~20 L · Load Capacity: 15 lb · Basic lightweight polyester school/work backpack with a main compartment and front pocket',
+              'createsLocation':True,
+              'aliases':['basic backpack','cheap backpack','book bag','bookbag','school bag','schoolbag','school backpack','student backpack'],
+              'unit':'each','defaultQuantity':1,'locationCapacityPounds':15.0,
+              'wetRetention':'moderate','dirtRetention':'moderate'
+          }
+          everyday={
+              'id':'gc2241','name':'Backpack, Everyday, 26 L','category':'Bags, Packs & Containers',
+              'subcategory':'Backpacks > Daypacks','weight':0.78,'price':40.0,'availability':'Common',
+              'colors':['Black','Blue','Gray','Green','Navy Blue','Pink','Purple','Red','Tan'],
+              'specs':'Volume: 26 L · Load Capacity: 20 lb · Classic lightweight school/work backpack with padded shoulder straps, roomy main compartment, and front organizer pocket',
+              'createsLocation':True,
+              'aliases':['everyday backpack','classic backpack','book bag','bookbag','school bag','schoolbag','school backpack','student backpack','jansport-style backpack'],
+              'unit':'each','defaultQuantity':1,'locationCapacityPounds':20.0,
+              'wetRetention':'moderate','dirtRetention':'moderate'
+          }
+          idx=next(i for i,x in enumerate(cat) if x['id']=='gc0085')
+          cat[idx:idx]=[basic,everyday]
+
+          arm=byid['gc0675']
+          arm['name']='Reflective Armband, Pair'
+          arm['weight']=0.1
+          arm['price']=7.0
+          arm['colors']=['Yellow','Orange']
+          arm['specs']='Pair of high-visibility reflective elastic bands for the arm, wrist, or ankle'
+          arm['aliases']=sorted(set(arm.get('aliases',[])+['reflective armband','reflective band','safety armband','high visibility armband']))
+
+          matches=byid['gc0165']
+          matches['name']='Matches, Paper Book, 50-Pack'
+          matches['weight']=0.5
+          matches['price']=6.0
+          matches['specs']='Retail pack of 50 paper matchbooks with about 20 matches per book (~1,000 matches total)'
+          matches['aliases']=sorted(set(matches.get('aliases',[])+['matchbook','matchbooks','paper matches','book matches']))
+
+          wipes=byid['gc0781']
+          wipes['name']='Disinfecting Wipes, Individually Wrapped, 25-Pack'
+          wipes['weight']=0.4
+          wipes['price']=6.0
+          wipes['specs']='Retail pack of 25 individually wrapped, pre-moistened disinfecting wipes'
+          wipes['aliases']=sorted(set(wipes.get('aliases',[])+['disinfecting wipe','individual disinfecting wipe','single-use disinfecting wipes','wrapped disinfecting wipes']))
+
+          byid['gc0780']['price']=3.0
+          byid['gc0782']['price']=3.0
+
+          new_json=json.dumps(cat,separators=(',',':'),ensure_ascii=False)
+          out=s[:m.start(1)] + new_json + s[m.end(1):]
+          out=out.replace('Character Sheet v519</div>','Character Sheet v520</div>',1)
+          p.write_text(out)
+          PY
+          test "$(git hash-object index.html)" = "36cc4b7548405999c36b71095a86b104febf30a5"
+          rm .github/workflows/apply-v520.yml
+          git config user.name "ChatGPT GitHub Integration"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/apply-v520.yml
+          git commit -m "Fix gear prices and add everyday backpacks (v520)"
+          git push origin HEAD:main
