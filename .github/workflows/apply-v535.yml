@@ -1,0 +1,567 @@
+name: Apply v535
+
+on:
+  push:
+    paths:
+      - ".github/workflows/apply-v535.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply medication catalog update
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          
+          M = {'gc0439': (0.5,
+                      'OTC',
+                      None,
+                      'Analgesic/antipyretic for pain and fever with little peripheral anti-inflammatory activity · Typical adult use: 325–650 mg every 4–6 hr as '
+                      'needed, keeping total daily acetaminophen within product labeling · Effect about 4–6 hr · Easier on the stomach than NSAIDs; overdose primarily '
+                      'threatens the liver'),
+           'gc0440': (0.67,
+                      'OTC',
+                      None,
+                      'Higher-strength acetaminophen analgesic/antipyretic · Typical OTC label use: 500–1000 mg about every 6 hr as needed, within the package daily maximum '
+                      'and counting acetaminophen from combination products · Effect about 4–6 hr · Good pain/fever choice when anti-inflammatory action is not needed'),
+           'gc0441': (0.35,
+                      'OTC',
+                      None,
+                      'NSAID for pain, fever and inflammation · Typical OTC adult use: 200–400 mg every 4–6 hr as needed; max 1200 mg/day OTC · Effect about 4–6 hr · Better '
+                      'anti-inflammatory action than acetaminophen but more GI/kidney/bleeding risk'),
+           'gc0442': (0.34,
+                      'OTC',
+                      None,
+                      'Longer-acting NSAID for pain, fever and inflammation · Typical OTC adult use: 220 mg every 8–12 hr; an initial 440 mg dose may be used; max 660 mg/day '
+                      '· Effect about 8–12 hr · Longer interval than ibuprofen, with similar NSAID GI/kidney/bleeding concerns'),
+           'gc0443': (0.13,
+                      'OTC',
+                      None,
+                      'Low-dose aspirin primarily used for antiplatelet effect rather than pain relief · Typical preventive regimen when clinician-directed: 81 mg once '
+                      'daily · Platelet inhibition lasts for the life of affected platelets (about 7–10 days) · Not a useful single-tablet analgesic dose'),
+           'gc0444': (0.45,
+                      'OTC',
+                      None,
+                      'NSAID/salicylate for pain, fever and inflammation; also inhibits platelets · Typical analgesic adult use: 325–650 mg every 4–6 hr as needed · Effect '
+                      'about 4–6 hr · More bleeding/GI risk than acetaminophen and generally avoided in children/teens with viral illness'),
+           'gc0445': (0.45,
+                      'OTC',
+                      None,
+                      'First-generation antihistamine with strong sedating/anticholinergic effects · Typical adult use: 25–50 mg every 4–6 hr · Effect about 4–6 hr · '
+                      'Faster/sedating option for allergy symptoms; causes more impairment, dry mouth and urinary retention than newer antihistamines'),
+           'gc0446': (0.15,
+                      'OTC',
+                      None,
+                      'Second-generation antihistamine for allergic rhinitis/hives · Typical adult use: 10 mg once daily · Onset about 1 hr; effect about 24 hr · Usually '
+                      'less sedating than diphenhydramine, but more likely to cause drowsiness than fexofenadine/loratadine in some people'),
+           'gc0447': (0.15,
+                      'OTC',
+                      None,
+                      'Second-generation antihistamine for allergic rhinitis/hives · Typical adult use: 10 mg once daily · Effect about 24 hr · Usually minimally sedating; '
+                      'often a little less potent/faster-tolerated tradeoff versus cetirizine'),
+           'gc0448': (0.35,
+                      'OTC',
+                      None,
+                      'Second-generation antihistamine for allergic rhinitis/hives · Typical adult use: 180 mg once daily · Effect about 24 hr · Among the least sedating '
+                      'antihistamines; fruit juice can reduce absorption'),
+           'gc0449': (0.18,
+                      'Restricted OTC',
+                      None,
+                      'Effective systemic sympathomimetic decongestant · Typical immediate-release adult use: 30–60 mg every 4–6 hr; max 240 mg/day · Effect about 4–6 hr · '
+                      'More effective orally than phenylephrine but can increase heart rate/BP and cause insomnia · Federally sold behind the counter with ID and purchase '
+                      'limits'),
+           'gc0450': (0.15,
+                      'OTC',
+                      None,
+                      'Oral alpha-adrenergic decongestant · Labeled adult use: 10 mg every 4 hr; max 60 mg/day · Short-acting, but FDA has proposed removing oral '
+                      'phenylephrine from the OTC monograph because current evidence does not support effectiveness for nasal congestion · Topical phenylephrine is a '
+                      'different issue'),
+           'gc0451': (0.65,
+                      'OTC',
+                      None,
+                      'Expectorant that increases/loosens respiratory secretions to make productive coughing easier · Typical immediate-release adult use: 200–400 mg '
+                      'every 4 hr; max 2400 mg/day · Effect about 4 hr · Best suited to thick mucus, unlike dextromethorphan which suppresses cough'),
+           'gc0452': (0.45,
+                      'OTC',
+                      None,
+                      'Cough suppressant (NMDA/sigma activity) that reduces cough reflex without treating mucus or airway inflammation · Typical adult use: 10–20 mg every '
+                      '4 hr or 30 mg every 6–8 hr; max 120 mg/day · Effect about 4–6 hr · Useful for dry cough; can interact with serotonergic drugs'),
+           'gc0453': (0.3,
+                      'OTC',
+                      None,
+                      'Peripheral opioid-receptor antidiarrheal that slows intestinal transit · Typical adult acute-diarrhea use: 4 mg initially, then 2 mg after each loose '
+                      'stool within OTC label limits · Effect begins within hours and may last 8–12 hr · Controls diarrhea symptoms but is inappropriate for some '
+                      'invasive/inflammatory diarrheas'),
+           'gc0454': (0.55,
+                      'OTC',
+                      None,
+                      'Antidiarrheal/antacid salicylate with antisecretory and antimicrobial activity · Typical adult chewable use: 524 mg (two 262 mg tablets) every 30–60 '
+                      'min as needed within label limits · Effect begins within about 30–60 min · Can darken tongue/stool; unlike loperamide it does not primarily slow gut '
+                      'motility'),
+           'gc0455': (1.3,
+                      'OTC',
+                      None,
+                      'Chewable calcium-carbonate antacid · Typical adult use: 750–1500 mg as symptoms occur within product limits · Onset within minutes; relief often lasts '
+                      'roughly 1–3 hr · Neutralizes existing stomach acid quickly but is shorter-acting than famotidine/omeprazole; also supplies calcium'),
+           'gc0456': (0.16,
+                      'OTC',
+                      None,
+                      'H2 blocker that suppresses gastric acid · Typical OTC adult use: 10–20 mg once or twice daily; can be taken before trigger foods · Begins within about '
+                      '1 hr and can last around 10–12 hr · Faster relief than a PPI, but generally less powerful for sustained acid suppression'),
+           'gc0457': (0.35,
+                      'OTC',
+                      None,
+                      'Delayed-release proton-pump inhibitor for strong acid suppression · Typical OTC adult regimen: 20 mg once daily before eating for a 14-day course · '
+                      'Not an instant antacid; substantial benefit may take 1–4 days and acid suppression persists about 24 hr · Better for frequent reflux than immediate '
+                      'episodic relief'),
+           'gc0458': (18.0,
+                      'OTC',
+                      None,
+                      'Osmotic laxative powder that retains water in stool · Typical adult use: one 17 g packet dissolved in liquid once daily · Bowel movement commonly '
+                      'occurs in 1–3 days · Gentler/slower than stimulant laxatives such as bisacodyl or senna'),
+           'gc0459': (0.13,
+                      'OTC',
+                      None,
+                      'Stimulant laxative that increases colonic motility · Typical adult oral use: 5–15 mg once daily as needed · Oral effect usually begins in 6–12 hr · '
+                      'Faster/more forceful than osmotic PEG; enteric-coated tablets should generally be swallowed intact'),
+           'gc0460': (0.2,
+                      'OTC',
+                      None,
+                      'Stimulant laxative (sennosides) that increases colonic motility · Typical adult use: 1–2 tablets once daily, often at bedtime, with product-specific '
+                      'limits · Effect generally in 6–12 hr · Useful for predictable overnight action; more cramping than PEG is possible'),
+           'gc0461': (0.22,
+                      'OTC',
+                      None,
+                      'Sedating antihistamine/anticholinergic used mainly for motion sickness and nausea · Typical adult use: 50–100 mg every 4–6 hr; max 400 mg/day · Effect '
+                      'about 4–6 hr · Works well for motion-related nausea but impairs alertness more than many antiemetics'),
+           'gc0462': (0.2,
+                      'OTC',
+                      None,
+                      'Long-acting sedating antihistamine for motion sickness/vertigo · Typical adult motion-sickness use: 25–50 mg about 1 hr before travel, then once every '
+                      '24 hr if needed · Effect up to about 24 hr · Less frequent dosing than dimenhydrinate, but still causes drowsiness'),
+           'gc0463': (36.0,
+                      'OTC',
+                      None,
+                      'Low-potency topical corticosteroid for itching/inflammatory rashes · Typical OTC use: thin layer to affected area up to 3–4 times daily for '
+                      'short-term treatment · Relief can begin within hours · Reduces inflammation but does not kill fungi/bacteria and can mask infection'),
+           'gc0464': (27.0,
+                      'OTC',
+                      None,
+                      "Azole antifungal cream for athlete's foot, ringworm and jock itch · Typical use: apply twice daily; treatment usually lasts 2–4 weeks depending on site "
+                      '· Local action with minimal systemic exposure · Treats fungi, unlike hydrocortisone which may temporarily reduce redness while worsening an '
+                      'untreated fungal infection'),
+           'gc0465': (27.0,
+                      'OTC',
+                      None,
+                      'Azole antifungal cream for superficial fungal skin infections · Typical use: apply twice daily for roughly 2–4 weeks depending on infection · Local '
+                      'action with minimal systemic exposure · Similar role to clotrimazole; product/formulation choice often determines convenience and site'),
+           'gc0466': (36.0,
+                      'OTC',
+                      None,
+                      'Topical antibiotic ointment for minor cuts, scrapes and burns; common products combine bacitracin/neomycin/polymyxin B · Typical use: thin layer 1–3 '
+                      'times daily for a short period · Local action persists while present on skin · Adds antibacterial coverage, but contact allergy—especially to '
+                      'neomycin—can occur'),
+           'gc0467': (34.0,
+                      'OTC',
+                      None,
+                      'Occlusive petrolatum barrier that protects minor wounds/chafed skin and reduces water loss · Apply as needed · Effect persists physically until '
+                      'rubbed/washed away · Not an antibiotic or steroid; useful when moisture retention/barrier protection is the goal'),
+           'gc0468': (36.0,
+                      'OTC',
+                      None,
+                      'Topical local anesthetic for temporary relief of minor pain/itching · Product directions vary; commonly applied up to 3–4 times daily to limited '
+                      'intact skin areas · Numbing begins within tens of minutes and typically lasts a few hours · Provides sensory blockade rather than anti-inflammatory '
+                      'or antimicrobial treatment'),
+           'gc0469': (0.7,
+                      'Rx',
+                      None,
+                      'Penicillin-class antibiotic · Common adult regimens include 500 mg every 8 hr or 875 mg every 12 hr, depending on infection · Active while drug levels '
+                      'are maintained; courses commonly last several days · Good for many streptococcal/ENT/dental infections but vulnerable to beta-lactamase; not useful '
+                      'for viruses'),
+           'gc0470': (1.4,
+                      'Rx',
+                      None,
+                      'Amoxicillin plus beta-lactamase inhibitor for broader coverage than amoxicillin alone · Common adult regimen: 875/125 mg every 12 hr with food for '
+                      'many indications · Course length varies by infection · Adds activity against many beta-lactamase producers but causes more GI upset'),
+           'gc0471': (0.45,
+                      'Rx',
+                      None,
+                      'Macrolide antibiotic with long tissue persistence and atypical-pathogen coverage · A common adult respiratory regimen is 500 mg once, then 250 mg '
+                      'daily for 4 more days; other indications differ · Tissue effect persists for days after the last dose · Convenient dosing, but resistance and '
+                      'QT-prolongation concerns limit when it is preferred'),
+           'gc0472': (0.3,
+                      'Rx',
+                      None,
+                      'Tetracycline-class antibiotic · Common adult regimen: 100 mg every 12 hr for many infections · Course length varies · Particularly useful for '
+                      'tick-borne disease, atypical respiratory pathogens, acne and some MRSA; photosensitivity and esophageal irritation are important tradeoffs'),
+           'gc0473': (0.7,
+                      'Rx',
+                      None,
+                      'First-generation cephalosporin antibiotic · Common adult dosing: 500 mg every 6–12 hr depending on infection · Course often 5–10 days · Strong for '
+                      'many streptococcal/MSSA skin infections and some UTIs; less broad gram-negative/atypical coverage than later agents'),
+           'gc0474': (0.75,
+                      'Rx',
+                      None,
+                      'Fluoroquinolone antibiotic with strong gram-negative activity · Common adult dosing is often 500 mg every 12 hr, indication/renal-function dependent '
+                      '· Course length varies · Useful for selected complicated urinary/GI infections and Pseudomonas, but tendon/CNS/aortic risks make it a poor routine '
+                      'choice when safer options work'),
+           'gc0475': (0.65,
+                      'Rx',
+                      None,
+                      'Nitroimidazole antibiotic/antiprotozoal focused on anaerobes · Common adult regimens often use 500 mg every 8–12 hr depending on indication · Course '
+                      'length varies · Useful for anaerobic infections, bacterial vaginosis and certain protozoa; metallic taste and interaction cautions are distinctive'),
+           'gc0476': (0.45,
+                      'Rx',
+                      None,
+                      'Gabapentinoid used for neuropathic pain and focal seizures · Typical adult therapy is titrated; 300 mg three times daily is a common established dose '
+                      'but regimens vary widely · Half-life about 5–7 hr · Targets neuropathic pain rather than inflammatory pain; sedation/dizziness are common'),
+           'gc0477': (0.18,
+                      'Rx',
+                      'IV',
+                      'Centrally acting opioid/SNRI-like analgesic · Typical adult immediate-release use: 50–100 mg every 4–6 hr as needed; max commonly 400 mg/day in '
+                      'appropriate adults · Effect about 4–6 hr · Less potent than many Schedule II opioids but adds seizure and serotonin-syndrome risk; federally Schedule '
+                      'IV'),
+           'gc0478': (0.55,
+                      'Rx',
+                      'II',
+                      'Immediate-release opioid plus acetaminophen for moderate-to-severe pain · Typical labeled adult use: 1 tablet every 4–6 hr as needed, individualized '
+                      'to opioid tolerance and total acetaminophen exposure · Effect about 4–6 hr · Adds acetaminophen analgesia but creates a hard ceiling from total '
+                      'acetaminophen; federally Schedule II'),
+           'gc0479': (0.12,
+                      'Rx',
+                      'II',
+                      'Immediate-release opioid analgesic without acetaminophen · Typical adult starting regimens often use 5–15 mg every 4–6 hr as needed, individualized '
+                      'to opioid exposure · Effect about 4–6 hr · Easier to titrate independently of acetaminophen than hydrocodone/APAP, but carries the same major '
+                      'respiratory-depression/dependence risks; federally Schedule II'),
+           'gc0480': (0.2,
+                      'Rx',
+                      None,
+                      'Triptan migraine-abortive that constricts cranial vessels and modulates trigeminal signaling · Typical adult use: 25–100 mg at migraine onset; may '
+                      'repeat after 2 hr, max 200 mg/day · Oral onset often ~30–60 min · Treats migraine attacks specifically rather than general pain; vascular '
+                      'contraindications matter'),
+           'gc0481': (0.15,
+                      'Rx',
+                      None,
+                      'Centrally acting skeletal-muscle relaxant for short-term acute muscle spasm · Typical adult use: 5–10 mg up to three times daily, usually for only a '
+                      'few weeks · Sedation can outlast the nominal dose interval because half-life is often ~18 hr · Helps spasm rather than inflammation or neuropathic '
+                      'pain'),
+           'gc0482': (0.2,
+                      'Rx',
+                      None,
+                      'SSRI for depression, OCD, PTSD, panic and anxiety disorders · Typical adult start: 25–50 mg once daily, with gradual titration · Benefit builds over '
+                      'roughly 2–6 weeks; once-daily dosing maintains steady effect · Broad anxiety/OCD evidence and flexible dosing, with common GI/sexual adverse effects'),
+           'gc0483': (0.25,
+                      'Rx',
+                      None,
+                      'SSRI with a very long half-life for depression, panic, OCD and related disorders · Typical adult depression dose: 20 mg once daily · Benefit builds '
+                      'over weeks; parent plus active metabolite persist for days to weeks · More activating and less prone to abrupt-withdrawal symptoms than shorter-lived '
+                      'SSRIs'),
+           'gc0484': (0.15,
+                      'Rx',
+                      None,
+                      'SSRI for depression and several anxiety disorders · Typical adult start: 10 mg once daily; max commonly 20 mg/day · Therapeutic effect builds over '
+                      'roughly 2–6 weeks · Often well tolerated and relatively simple once-daily dosing; sexual/GI effects and discontinuation symptoms remain possible'),
+           'gc0485': (0.35,
+                      'Rx',
+                      None,
+                      'Once-daily extended-release norepinephrine/dopamine reuptake inhibitor antidepressant · Typical adult start: 150 mg each morning, often increased to '
+                      '300 mg/day · Therapeutic benefit develops over several weeks; XL formulation covers about 24 hr · Less sexual dysfunction than SSRIs and can aid '
+                      'smoking cessation, but lowers seizure threshold'),
+           'gc0486': (0.18,
+                      'Rx',
+                      None,
+                      'Non-benzodiazepine 5-HT1A partial agonist for generalized anxiety · Typical adult start: 7.5 mg twice daily or 5 mg three times daily; common total '
+                      '20–30 mg/day · Not useful as an immediate PRN drug; benefit usually builds over 2–4 weeks · Little sedation/dependence compared with benzodiazepines'),
+           'gc0487': (0.18,
+                      'Rx',
+                      None,
+                      'Sedating first-generation antihistamine used for anxiety, itching and nausea · Typical anxiety regimens often use 25–50 mg up to several times daily, '
+                      'indication-dependent · Onset about 15–30 min; effect roughly 4–6 hr · Non-controlled PRN alternative to benzodiazepines but causes '
+                      'drowsiness/anticholinergic effects'),
+           'gc0488': (0.1,
+                      'Rx',
+                      'IV',
+                      'Short/intermediate-acting benzodiazepine for anxiety/panic · Typical adult anxiety start: 0.25–0.5 mg three times daily, then individualized · Onset '
+                      'often 30–60 min; noticeable anxiolysis commonly 4–6 hr · Fast relief but high rebound/dependence potential; federally Schedule IV'),
+           'gc0489': (0.1,
+                      'Rx',
+                      'IV',
+                      'Intermediate-acting benzodiazepine for anxiety and acute agitation/seizure uses · Typical anxiety dosing is individualized, often 1–2 mg two to three '
+                      'times daily · Onset about 30–60 min; effect commonly 6–8 hr · No long-lived active metabolites, making it pharmacokinetically cleaner than diazepam; '
+                      'federally Schedule IV'),
+           'gc0490': (0.15,
+                      'Rx',
+                      'IV',
+                      'Long-acting benzodiazepine used for anxiety, muscle spasm, alcohol withdrawal and seizures · Adult doses vary widely; 2–10 mg two to four times daily '
+                      'is within labeled ranges for some indications · Onset 15–60 min; parent/metabolite effects can last many hours to days · Long duration and '
+                      'muscle-relaxant effect distinguish it; federally Schedule IV'),
+           'gc0491': (0.15,
+                      'Rx',
+                      'II',
+                      'Immediate-release stimulant that blocks dopamine/norepinephrine reuptake · Typical ADHD dosing is individualized; 5–20 mg two or three times daily '
+                      'is common · Effect about 3–4 hr · Shorter acting and mechanistically distinct from amphetamine; appetite/sleep/BP and misuse concerns; federally '
+                      'Schedule II'),
+           'gc0492': (0.15,
+                      'Rx',
+                      'II',
+                      'Immediate-release mixed amphetamine stimulant for ADHD/narcolepsy · Dosing is individualized; 5–10 mg once or twice daily is common early therapy · '
+                      'Effect about 4–6 hr · More catecholamine-releasing activity than methylphenidate; appetite, sleep, BP and misuse concerns; federally Schedule II'),
+           'gc0493': (0.15,
+                      'Rx',
+                      None,
+                      'ACE inhibitor for hypertension, heart failure and kidney protection in selected patients · Typical adult hypertension start: 10 mg once daily · '
+                      'Effect roughly 24 hr · Lowers angiotensin II; cough/angioedema and elevated potassium distinguish it from ARBs'),
+           'gc0494': (0.22,
+                      'Rx',
+                      None,
+                      'ARB for hypertension and related cardiovascular/renal uses · Typical adult hypertension dose: 50 mg once daily · Effect roughly 24 hr · Similar '
+                      'renin-angiotensin blockade to ACE inhibitors with much less cough; can still raise potassium'),
+           'gc0495': (0.15,
+                      'Rx',
+                      None,
+                      'Long-acting dihydropyridine calcium-channel blocker for hypertension/angina · Typical adult start: 5 mg once daily · Effect spans about 24 hr and BP '
+                      'benefit builds over days · Lowers vascular resistance without much slowing the heart; ankle edema is common'),
+           'gc0496': (0.16,
+                      'Rx',
+                      None,
+                      'Immediate-release beta-1 blocker for heart-rate/BP control, angina and other cardiac uses · Typical adult regimens often use 25–100 mg twice daily '
+                      'depending on indication · Effect roughly 6–12 hr · Slows heart rate and reduces cardiac workload; tartrate is shorter-acting than metoprolol '
+                      'succinate'),
+           'gc0497': (0.15,
+                      'Rx',
+                      None,
+                      'Thiazide diuretic for hypertension/edema · Typical adult hypertension dose: 12.5–25 mg once daily, usually in the morning · Diuresis begins within '
+                      'hours and lasts roughly 6–12 hr; BP effect is chronic · Can alter sodium/potassium and raise uric acid/glucose'),
+           'gc0498': (0.22,
+                      'Rx',
+                      None,
+                      'Statin that lowers LDL cholesterol and cardiovascular risk · Typical adult dosing: 10–80 mg once daily · LDL reduction develops over days to weeks; '
+                      'active metabolites extend HMG-CoA reductase inhibition beyond the plasma half-life · Preventive/chronic rather than an acute symptom drug'),
+           'gc0499': (0.08,
+                      'Rx',
+                      None,
+                      'Rapid nitrate vasodilator for acute angina · Typical labeled use: 0.3–0.4 mg under the tongue at onset, repeat every 5 min for up to 3 doses while '
+                      'seeking emergency evaluation if pain persists · Onset 1–3 min; effect roughly 20–30 min · Can cause marked hypotension; dangerous with PDE-5 '
+                      'inhibitors'),
+           'gc0500': (0.75,
+                      'Rx',
+                      None,
+                      'Biguanide antihyperglycemic for type 2 diabetes · Common immediate-release start: 500 mg once or twice daily with meals, then titrated · Glucose '
+                      'benefit is sustained with regular use rather than a single-dose \'duration\' · Low hypoglycemia risk by itself; GI upset is common'),
+           'gc0501': (0.1,
+                      'Rx',
+                      None,
+                      'Synthetic T4 thyroid-hormone replacement · Typical adult use is once daily on an empty stomach; exact dose is individualized from TSH, age and '
+                      'cardiac status · Half-life about 7 days and symptom/TSH effects evolve over weeks · Narrow therapeutic dosing; absorption is affected by food, iron '
+                      'and calcium'),
+           'gc0502': (0.16,
+                      'Rx',
+                      None,
+                      'Systemic glucocorticoid with broad anti-inflammatory/immunosuppressive effects · Dose varies widely by condition; many short courses use once-daily '
+                      'morning dosing · Plasma half-life is only hours but biologic effects often last about 18–36 hr · Much stronger/systemic anti-inflammatory action than '
+                      'NSAIDs, with greater metabolic/infection risks'),
+           'gc0503': (36.0,
+                      'Rx',
+                      None,
+                      'Rapid-acting insulin pen for meal/correction dosing in diabetes · Dose is individualized to carbohydrate intake, glucose and insulin sensitivity · '
+                      'Typical onset about 10–20 min, peak about 1–3 hr, duration about 3–5 hr · Faster than basal insulin and carries immediate hypoglycemia risk'),
+           'gc0504': (4.3,
+                      'OTC',
+                      None,
+                      'Fast oral glucose for conscious mild-to-moderate hypoglycemia · Each tablet supplies about 4 g glucose; a common rescue amount is about 15–20 g '
+                      '(roughly 4 tablets), then glucose is reassessed after about 15 min · Faster and more predictable than complex food'),
+           'gc0505': (27.0,
+                      'Rx',
+                      None,
+                      'Single-dose intranasal glucagon rescue device for severe hypoglycemia when a person cannot safely take oral carbohydrate · Adult dose: 3 mg into one '
+                      'nostril; a new device may be used after 15 min if there is no response · Raises glucose within minutes · Does not require inhalation and is easier to '
+                      'use than reconstituted injectable glucagon'),
+           'gc0506': (29.0,
+                      'Rx',
+                      None,
+                      'Short-acting beta-2 bronchodilator rescue inhaler · Typical adult/adolescent use: 2 inhalations every 4–6 hr as needed for bronchospasm; exercise '
+                      'prevention often uses 2 puffs 15–30 min before activity · Onset within minutes; effect about 3–6 hr · Relieves bronchospasm quickly but does not treat '
+                      'underlying airway inflammation'),
+           'gc0507': (36.0,
+                      'OTC',
+                      None,
+                      'Intranasal corticosteroid for allergic rhinitis · Typical adult start: 2 sprays in each nostril once daily, then reduce when controlled · Some '
+                      'benefit within 12 hr but full effect may take several days; daily effect about 24 hr · Better for ongoing nasal inflammation than oral decongestants; '
+                      'not an instant rescue spray'),
+           'gc0508': (36.0,
+                      'Rx',
+                      None,
+                      '0.3 mg intramuscular epinephrine auto-injector for severe allergic reaction/anaphylaxis in appropriate body-weight range · Used into the outer thigh; '
+                      'repeat dosing may be required while emergency care is activated · Onset within minutes but effect is short · First-line anaphylaxis rescue, unlike '
+                      'antihistamines which do not reverse airway/circulatory collapse'),
+           'gc0509': (18.0,
+                      'OTC',
+                      None,
+                      'Single-use 4 mg intranasal naloxone device for suspected opioid overdose · Typical label: 1 spray in one nostril and repeat with a new device every '
+                      '2–3 min if needed while emergency response is activated · Onset within minutes; naloxone can wear off before the opioid · Reverses opioid '
+                      'respiratory/CNS depression but has no role for non-opioid sedation'),
+           'gc0510': (0.7,
+                      'Rx',
+                      None,
+                      'Broad-spectrum anticonvulsant with few drug interactions · Common adult starting regimen: 500 mg twice daily, titrated as needed · Half-life about '
+                      '6–8 hr; regular twice-daily dosing maintains effect · Often chosen for simple interactions/rapid titration; irritability or behavioral changes can be '
+                      'limiting'),
+           'gc0511': (0.25,
+                      'Rx',
+                      None,
+                      'Broad-spectrum anticonvulsant and bipolar-maintenance drug · Dosing must be titrated slowly; common adult maintenance is roughly 100–400 mg/day '
+                      'depending on interacting drugs · Half-life often about 24–35 hr · Less sedating/weight-promoting than many alternatives, but rapid titration increases '
+                      'risk of serious rash'),
+           'gc0512': (0.45,
+                      'Rx',
+                      None,
+                      'Valproate anticonvulsant/mood stabilizer also used for migraine prevention · Adult dosing is weight/indication dependent and commonly divided 2–3 '
+                      'times daily; epilepsy often starts around 10–15 mg/kg/day · Half-life roughly 9–16 hr · Broad-spectrum but notable liver, platelet, weight-gain and '
+                      'teratogenic risks'),
+           'gc0513': (0.16,
+                      'Rx',
+                      'IV',
+                      'Long-acting barbiturate anticonvulsant/sedative · Adult maintenance is individualized, often around 60–200 mg/day in divided or once-daily dosing · '
+                      'Very long half-life, commonly 2–5 days · Effective and inexpensive but sedating and a strong hepatic enzyme inducer; federally Schedule IV'),
+           'gc2180': (22.0,
+                      'Rx',
+                      'III',
+                      'Dissociative anesthetic/analgesic supplied in medical injection vials; common concentrations include 10, 50 and 100 mg/mL · Dose, route and '
+                      'monitoring are highly indication-specific and clinician-administered · IV/IM effects begin within minutes and the intense dissociative/anesthetic '
+                      'phase usually lasts tens of minutes, with residual effects longer · Preserves airway reflexes better than many anesthetics but can raise BP/HR; '
+                      'federally Schedule III')}
+          
+          path = Path("index.html")
+          text = path.read_text()
+          prefix = "const GEAR_CATALOG = "
+          s = text.index(prefix) + len(prefix)
+          e = text.index(";\n", s)
+          cat = json.loads(text[s:e])
+          byid = {x["id"]: x for x in cat}
+          
+          for iid, (grams, status, schedule, body) in M.items():
+              item = byid[iid]
+              item["weight"] = grams / 453.59237
+              item["medicationStatus"] = status
+              if schedule:
+                  item["controlledSchedule"] = schedule
+              else:
+                  item.pop("controlledSchedule", None)
+              prefix_text = status + (f" · Federally controlled Schedule {schedule}" if schedule else "")
+              item["specs"] = f"{prefix_text} · {body}"
+          
+          for item in cat:
+              if item.get("subcategory") == "Medications > Prescription Antibiotics":
+                  item["subcategory"] = "Medications > Antibiotics"
+              elif item.get("subcategory") == "Medications > Prescription Pain & Neurologic":
+                  item["subcategory"] = "Medications > Pain & Neurologic"
+          
+          ped = byid["gc2132"]
+          ped.update({
+              "category": "Everyday Carry & Personal",
+              "subcategory": "Recreational Drugs > Performance-Enhancing Drugs",
+              "specs": "Special character-level item representing ongoing performance-enhancing drug use; exact substances, dose and regimen are intentionally abstracted · This item remains linked to the character PED setting rather than representing one specific medication",
+              "aliases": ["PEDs","performance enhancing drugs","performance-enhancing drugs","steroids","anabolic steroids","illicit PEDs"]
+          })
+          ped.pop("medicationStatus", None)
+          ped.pop("controlledSchedule", None)
+          
+          text = text[:s] + json.dumps(cat, ensure_ascii=False, separators=(",", ":")) + text[e:]
+          
+          css_anchor = """    .bulk-gear-detail-value {
+            margin-top: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            overflow-wrap: anywhere;
+          }
+          """
+          css_repl = css_anchor + """    .medication-status-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: var(--panel-2);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .025em;
+            white-space: nowrap;
+          }
+          """
+          assert css_anchor in text
+          text = text.replace(css_anchor, css_repl, 1)
+          
+          search_anchor = """      best = Math.max(best, catalogFieldTermScore(item?.availability, term, 80, 40, 20));
+            best = Math.max(best, catalogFieldTermScore(item?.unit, term, 80, 40, 20));
+          """
+          search_repl = """      best = Math.max(best, catalogFieldTermScore(item?.availability, term, 80, 40, 20));
+            best = Math.max(best, catalogFieldTermScore(item?.medicationStatus, term, 120, 80, 40));
+            best = Math.max(best, catalogFieldTermScore(item?.controlledSchedule, term, 100, 60, 30));
+            best = Math.max(best, catalogFieldTermScore(item?.unit, term, 80, 40, 20));
+          """
+          assert search_anchor in text
+          text = text.replace(search_anchor, search_repl, 1)
+          
+          detail_anchor = """    const aliases = Array.isArray(item.aliases) && item.aliases.length ? item.aliases.join(', ') : '—';
+            const bundleEntries = bulkSelectedGear.has(item.id)
+          """
+          detail_repl = """    const aliases = Array.isArray(item.aliases) && item.aliases.length ? item.aliases.join(', ') : '—';
+            const medicationStatusField = item.medicationStatus
+              ? `<div class="bulk-gear-detail-field"><div class="bulk-gear-detail-label">Medication Status</div><div class="bulk-gear-detail-value"><span class="medication-status-badge">${esc(item.medicationStatus)}</span></div></div>`
+              : '';
+            const controlledScheduleField = item.controlledSchedule
+              ? `<div class="bulk-gear-detail-field"><div class="bulk-gear-detail-label">Federal Controlled Schedule</div><div class="bulk-gear-detail-value"><span class="medication-status-badge">C-${esc(item.controlledSchedule)}</span></div></div>`
+              : '';
+            const bundleEntries = bulkSelectedGear.has(item.id)
+          """
+          assert detail_anchor in text
+          text = text.replace(detail_anchor, detail_repl, 1)
+          
+          detail_insert_anchor = """        <div class="bulk-gear-detail-field"><div class="bulk-gear-detail-label">Availability</div><div class="bulk-gear-detail-value">${esc(item.availability || '—')}</div></div>
+                  ${randomStateField}
+          """
+          detail_insert_repl = """        <div class="bulk-gear-detail-field"><div class="bulk-gear-detail-label">Availability</div><div class="bulk-gear-detail-value">${esc(item.availability || '—')}</div></div>
+                  ${medicationStatusField}
+                  ${controlledScheduleField}
+                  ${randomStateField}
+          """
+          assert detail_insert_anchor in text
+          text = text.replace(detail_insert_anchor, detail_insert_repl, 1)
+          
+          row_anchor = """      const packageMeta = catalogPackageQuantity(item) > 1 ? ` · ${catalogQuantityText(item, q)}` : '';
+                const meta = `${formatCatalogWeight(totals.weight)} · ${formatCatalogPrice(totals.price)} · ${item.availability || '—'}${packageMeta}${generatedMeta}`;
+          """
+          row_repl = """      const packageMeta = catalogPackageQuantity(item) > 1 ? ` · ${catalogQuantityText(item, q)}` : '';
+                const medicationMeta = item.medicationStatus ? ` · ${item.medicationStatus}${item.controlledSchedule ? ` · C-${item.controlledSchedule}` : ''}` : '';
+                const meta = `${formatCatalogWeight(totals.weight)} · ${formatCatalogPrice(totals.price)} · ${item.availability || '—'}${medicationMeta}${packageMeta}${generatedMeta}`;
+          """
+          assert row_anchor in text
+          text = text.replace(row_anchor, row_repl, 1)
+          
+          assert text.count("Character Sheet v534") == 1
+          text = text.replace("Character Sheet v534", "Character Sheet v535", 1)
+          
+          path.write_text(text)
+          PY
+          grep -q "Character Sheet v535" index.html
+          git diff --check
+      - name: Commit app update
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/apply-v535.yml
+          git add index.html .github/workflows/apply-v535.yml
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Overhaul medication data and PED catalog (v535)"
+          git push origin main
