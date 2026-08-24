@@ -1,0 +1,49 @@
+name: Apply v531
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/apply-v531.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply v531 measurement audit
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import json,zlib,base64
+          path=Path("index.html")
+          text=path.read_text()
+          assert "Character Sheet v530" in text
+          prefix="const GEAR_CATALOG = "
+          start=text.index(prefix)+len(prefix); end=text.index(";\n",start)
+          catalog=json.loads(text[start:end])
+          changed=json.loads(zlib.decompress(base64.b64decode("eNrNlt9u2zYUxl+F0EWv7DR24mR1gQKL0ybFHDSbMwTDsAtaPLKIUKTGP3aMos+xR9n99mL7KMuyNAdFUnRLgSARjxjqO7/z8ZAfk0V6OBp+l4w/JlIk4+2wl2heEMaTXBkrNbFzae6lIHbD54o8JqTc08LYNSa9M0b02C0Clr1gE2PupF5gigvz1qzN+xtL3Bek4xIrkovcJ+PDg8PDUS8prUwpjk4w4EsuFZ9LJX3854kpCqPjZw0EuWT8a3KbS0/Jb/hMSSkiyXst5FKKwBXLjFT9leVlSYKldQ59Ueewikr6fquE+Sqn16yKOMbnJng2YNP4uRgiNzVIRELAOOPKEeQpyR1FHRAQtEQWid+iEZTxoPyPgWtfyR986kWyg5NBG3QcNqAvgUJFHGS7cC9NcJQbJYD2gjRZrvbQfsgyoMOEc5OGmFIllr1ht1Z61AJvZpsYYX4H/HAHfnCwz/3nufw9SA8NHfZnKhACF5YoFuWD5XoRA9dS38U/wZYqjn8hpcyqXaQZ5ChipUnvyPedX2OQqWAsuTTWIu9yeAJ+4mn+Ofij0w58DBv416R77JpswXXU8L5K4llqMHxKDXgadda1+InEA5yz6PvSSGRVbvPro0gsI+X7XpYI668L+ujVqzboOGxAnwWPwmZqzSbKuGAJTKwsu7SvSMgUm/gFeyet8+x7LLXXTEzQgk24pX/1kWGrj3xZG6nJWZI6MzZFA+EiJyeXxBwaWz+tlbuovMfQY6y5P2CDl8fs7z/YEZNfmefp8XGbZxw2PKcxcXZFgNpjl1xDqBJdmjfGKAeWl9yK1YZXF+UslTCFhHsr4liAvYXfyqo1vqkjV8Rj0nuNe+fcEejv8Z6BqeTKrz/n3AvL1w81k+joh1rIo/AmKtyzgjZtRCoVCqm5xgbdxqomwxQtSdWxJ1Rk1K3IaFeRWWXMabXsN1GXk2+sLgJfnjfMAfmseZxdT5tnV3EscSxUm+0L6zTs1mm4q9MthOa4jzxjjdpt///bPdtM2aomUEHF7ygynlMrCfCYTbjTeSpwbHAP+T10RIWqog3m2EwCEntszq3B/yOJplToiApVCCI+YSVB2mFuE33NfiC0TlJopNw5nFBRjNSIhRrRI1y0Fe/qYzbf1Q9nXGG2NsrXC7sb1Lobk9Xyq+eob/tcIXiq2br3i9P2/WJitAgp2MWP/6eOm/GiVJvb985oR8/QDBqbkaI0GoSj4G0MG9vhhN1cxyuvOKNCLKdjf/3J3k5qU1Y7B7b0OWuv0J/DDILdnM9eOjhDx0XxfknWRUfgx1I05eYqBtsWRpByj/NX9fGNGXYJsP0E8B4Cdl1rK+Tx5vn0D4vvhkg=")))
+          added=json.loads(zlib.decompress(base64.b64decode("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")))
+          by_id={x["id"]:i for i,x in enumerate(catalog)}
+          for k,v in changed.items():
+              assert k in by_id
+              catalog[by_id[k]]=v
+          existing={x["id"] for x in catalog}
+          assert all(x["id"] not in existing for x in added)
+          at=next(i for i,x in enumerate(catalog) if x["id"]=="gc2246")+1
+          catalog[at:at]=added
+          text=text[:start]+json.dumps(catalog,ensure_ascii=False,separators=(",",":"))+text[end:]
+          text=text.replace("Character Sheet v530","Character Sheet v531",1)
+          path.write_text(text)
+          PY
+          git diff --check
+          node -e "const fs=require('fs');const s=fs.readFileSync('index.html','utf8');for(const m of s.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi))new Function(m[1]);"
+          grep -q "Character Sheet v531" index.html
+          rm .github/workflows/apply-v531.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/apply-v531.yml
+          git commit -m "Add measurement tools and pricing fixes (v531)"
+          git push
