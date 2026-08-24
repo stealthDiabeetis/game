@@ -56,8 +56,8 @@ jobs:
           if old_input not in s:
               raise SystemExit('gear item input marker not found')
           s=s.replace(old_input,new_input,1)
-          if 'Character Sheet v524' not in s:
-              raise SystemExit('v524 footer not found')
+          if s.count('Character Sheet v524') != 1:
+              raise SystemExit('v524 footer not found exactly once')
           s=s.replace('Character Sheet v524','Character Sheet v525')
           p.write_text(s)
           PY
@@ -68,3 +68,4 @@ jobs:
           git add index.html .github/workflows/apply-v525.yml
           git commit -m "Update ultralight packs and gear hover specs (v525)"
           git push origin main
+          # retrigger
