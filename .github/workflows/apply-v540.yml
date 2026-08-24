@@ -1,0 +1,114 @@
+name: Apply v540 catalog update
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-v540.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply exact v540 changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object index.html)" = "2de95c7efb9db943cde0e2bd483de6846181b026"
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path('index.html')
+          text=p.read_text(encoding='utf-8')
+          marker='const GEAR_CATALOG = '
+          start=text.index(marker)+len(marker)
+          assert text[start]=='['
+          in_str=False; esc=False; depth=0; end=None
+          for i,ch in enumerate(text[start:], start):
+              if in_str:
+                  if esc: esc=False
+                  elif ch=='\\': esc=True
+                  elif ch=='"': in_str=False
+                  continue
+              if ch=='"': in_str=True
+              elif ch=='[': depth+=1
+              elif ch==']':
+                  depth-=1
+                  if depth==0:
+                      end=i+1; break
+          assert end is not None
+          catalog=json.loads(text[start:end])
+          byid={x['id']:x for x in catalog}
+          byname={x['name']:x for x in catalog}
+          assert max(int(x['id'][2:]) for x in catalog if x['id'].startswith('gc'))==2338
+          hammer=byid['gc1900']
+          assert hammer['name']=='Hammer, Climbing'
+          hammer['subcategory']='Climbing & Rope'
+          hammer['aliases']=sorted(set(hammer.get('aliases',[])+['climbing hammer','piton hammer','caving hammer']))
+          new_items=[
+          {'id':'gc2339','name':'Sticky Hand Toy','category':'Sports, Games & Recreation','subcategory':'Toys > Classic Toys','weight':0.02,'price':1.0,'availability':'Ubiquitous','colors':['Blue','Green','Orange','Pink','Purple','Red','Yellow'],'specs':'Small elastic sticky-hand novelty toy with a tacky hand on a stretchable cord · Typically about 0.3 oz / 9 g · Can stretch several feet and temporarily stick to smooth surfaces','createsLocation':False,'aliases':['sticky hand','slap hand toy','stretchy sticky hand','sticky slap hand','stick hand toy'],'unit':'each','defaultQuantity':1},
+          {'id':'gc2340','name':'Climbing Piton','category':'Outdoor & Survival','subcategory':'Climbing & Rope','weight':0.21,'price':35.0,'availability':'Specialty','colors':['Gray'],'specs':'Forged steel rock-climbing piton · Representative 7 cm universal-style piton weighs about 95 g / 0.21 lb · Driven into suitable rock cracks as protection or an anchor; holding strength depends heavily on placement and rock quality','createsLocation':False,'aliases':['piton','rock piton','climbing pin','piton anchor'],'unit':'each','defaultQuantity':1},
+          {'id':'gc2341','name':'Quickdraw, Climbing, 12 cm','category':'Outdoor & Survival','subcategory':'Climbing & Rope','weight':0.21,'price':23.0,'availability':'Specialty','colors':['Blue','Gray','Green','Orange','Red','Yellow'],'specs':'12 cm climbing quickdraw with two load-rated carabiners joined by a sewn runner · Representative weight about 94 g / 0.21 lb · Used to connect the rope to bolts or other protection while lead climbing','createsLocation':False,'aliases':['quickdraw','climbing quickdraw','draw','sport climbing draw'],'unit':'each','defaultQuantity':1,'wetRetention':'low','dirtRetention':'low'},
+          {'id':'gc2342','name':'Climbing Nut, Medium','category':'Outdoor & Survival','subcategory':'Climbing & Rope','weight':0.09,'price':14.0,'availability':'Specialty','colors':['Blue','Gray','Green','Red','Yellow'],'specs':'Wired passive climbing protection with an aluminum wedge head and steel cable · Representative medium stopper weighs about 39–43 g / 0.09 lb; individual sizes commonly range about 7–71 g · Placed in constrictions in rock cracks','createsLocation':False,'aliases':['climbing nut','nut','stopper','climbing stopper','wired nut','passive protection'],'unit':'each','defaultQuantity':1},
+          {'id':'gc2343','name':'Climbing Cam, Medium','category':'Outdoor & Survival','subcategory':'Climbing & Rope','weight':0.27,'price':90.0,'availability':'Specialty','colors':['Blue','Gray','Green','Purple','Red','Yellow'],'specs':'Spring-loaded camming device (SLCD) for active rock protection · Representative medium unit weighs about 124 g / 0.27 lb; actual cam weights vary substantially by size · Trigger retracts lobes for placement in parallel-sided cracks','createsLocation':False,'aliases':['climbing cam','cam','spring-loaded camming device','SLCD','active protection','camming device'],'unit':'each','defaultQuantity':1,'wetRetention':'low','dirtRetention':'low'},
+          {'id':'gc2344','name':'Nut Tool, Climbing','category':'Outdoor & Survival','subcategory':'Climbing & Rope','weight':0.10,'price':24.0,'availability':'Specialty','colors':['Black','Gray'],'specs':'Thin steel climbing tool for removing wedged nuts and other passive protection · Representative weight about 46 g / 0.10 lb · Often includes holes or a wiregate for racking','createsLocation':False,'aliases':['nut tool','nut removal tool','nut key','climbing nut tool','pro removal tool'],'unit':'each','defaultQuantity':1},
+          {'id':'gc2345','name':'Chalk Bag, Climbing','category':'Outdoor & Survival','subcategory':'Climbing & Rope','weight':0.17,'price':24.0,'availability':'Specialty','colors':['Black','Blue','Gray','Green','Orange','Pink','Purple','Red','Tan'],'specs':'Waist-worn climbing chalk bag with cinch closure and belt · Representative empty weight about 75 g / 0.17 lb · Sized for loose climbing chalk and easy one-hand access while climbing','createsLocation':True,'aliases':['chalk bag','climbing chalk bag','magnesium chalk bag'],'unit':'each','defaultQuantity':1,'locationCapacityPounds':0.75,'wetRetention':'moderate','dirtRetention':'high'},
+          {'id':'gc2346','name':'Personal Anchor System, Climbing','category':'Outdoor & Survival','subcategory':'Climbing & Rope','weight':0.26,'price':75.0,'availability':'Specialty','colors':['Black','Blue','Orange'],'specs':'Compact climber tether/personal anchor system for attaching to a suitable anchor · Representative adjustable single-arm model weighs about 120 g / 0.26 lb and adjusts roughly 15–95 cm · Requires compatible locking carabiner and proper anchor technique','createsLocation':False,'aliases':['personal anchor system','PAS','climbing tether','anchor tether','adjustable climbing lanyard'],'unit':'each','defaultQuantity':1,'wetRetention':'low','dirtRetention':'low'},
+          {'id':'gc2347','name':'Climbing Shoes','category':'Outdoor & Survival','subcategory':'Climbing & Rope','weight':1.28,'price':130.0,'availability':'Specialty','colors':['Black','Blue','Gray','Green','Red'],'specs':'Pair of entry-level rock-climbing shoes with sticky rubber soles and a neutral/flat last for comfort · Representative adult pair weighs about 581 g / 1.28 lb · Typically worn snug for precise foothold contact','createsLocation':False,'aliases':['rock climbing shoes','climbing shoe','rock shoes','climbing footwear'],'unit':'pair','defaultQuantity':1,'wetRetention':'moderate','dirtRetention':'moderate'}]
+          for item in new_items:
+              assert item['id'] not in byid and item['name'] not in byname
+          classic_idxs=[i for i,x in enumerate(catalog) if x.get('category')=='Sports, Games & Recreation' and x.get('subcategory')=='Toys > Classic Toys']
+          assert classic_idxs
+          catalog.insert(max(classic_idxs)+1,new_items[0])
+          climb_idxs=[i for i,x in enumerate(catalog) if x.get('category')=='Outdoor & Survival' and x.get('subcategory')=='Climbing & Rope']
+          assert climb_idxs
+          insert_at=max(climb_idxs)+1
+          for item in new_items[1:]:
+              catalog.insert(insert_at,item); insert_at+=1
+          kit={'category':'Kits','subcategory':'Outdoor & Travel','weight':0.0,'price':0.0,'availability':'Specialty','colors':[],'createsLocation':False,'unit':'kit','defaultQuantity':1,'bundleMode':'preset','id':'gc2348','name':'Climbing Kit, Beginner','specs':'Convenience preset for a novice-friendly outdoor sport-climbing setup. Includes personal protective gear, a dynamic rope, belay hardware, 12 quickdraws, chalk setup, climbing shoes, and a personal anchor system. Adds the component items individually; route-specific gear and competent instruction are still required.','aliases':['beginner climbing kit','rock climbing kit','sport climbing kit','starter climbing kit','climbing starter kit'],'bundleContents':[{'catalogId':'gc0381','quantity':1},{'catalogId':'gc0383','quantity':1},{'catalogId':'gc2347','quantity':1},{'catalogId':'gc0380','quantity':1},{'catalogId':'gc0382','quantity':1},{'catalogId':'gc0384','quantity':2},{'catalogId':'gc2341','quantity':12},{'catalogId':'gc2345','quantity':1},{'catalogId':'gc2171','quantity':1},{'catalogId':'gc2346','quantity':1}],'bundlePlacement':{'gc2171':'gc2345'}}
+          assert kit['id'] not in {x['id'] for x in catalog} and kit['name'] not in {x['name'] for x in catalog}
+          kit_idxs=[i for i,x in enumerate(catalog) if x.get('category')=='Kits']
+          assert kit_idxs
+          catalog.insert(max(kit_idxs)+1,kit)
+          ids=[x['id'] for x in catalog]
+          assert len(ids)==len(set(ids))
+          all_ids=set(ids)
+          for x in catalog:
+              for bc in x.get('bundleContents',[]): assert bc['catalogId'] in all_ids
+              for child,parent in x.get('bundlePlacement',{}).items(): assert child in all_ids and parent in all_ids
+          new_catalog=json.dumps(catalog,separators=(',',':'),ensure_ascii=False)
+          text=text[:start]+new_catalog+text[end:]
+          assert text.count('Character Sheet v539')==1
+          text=text.replace('Character Sheet v539','Character Sheet v540',1)
+          p.write_text(text,encoding='utf-8')
+          PY
+          echo 'a4a99cf79c4c7351d3067e683f8262c4eb31c75c05da474c7afab1f848a575e1  index.html' | sha256sum -c -
+          test "$(git hash-object index.html)" = "9c83167826ef39be610022f0b84a9b123dd9e3b3"
+          test "$(wc -c < index.html)" -eq 2327366
+          grep -q 'Character Sheet v540' index.html
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S|re.I)
+          assert len(scripts)==1
+          Path('/tmp/v540.js').write_text(scripts[0],encoding='utf-8')
+          PY
+          node --check /tmp/v540.js
+      - name: Commit v540 and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'ChatGPT GitHub Integration'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/apply-v540.yml
+          git add index.html
+          git commit -m 'Update index.html to v540'
+          git push origin HEAD:main
