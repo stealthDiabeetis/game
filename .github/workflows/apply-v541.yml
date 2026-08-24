@@ -1,0 +1,111 @@
+name: Apply v541 catalog updates
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-v541.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply exact v541 update
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object index.html)" = "9c83167826ef39be610022f0b84a9b123dd9e3b3"
+
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          p=Path('index.html')
+          text=p.read_text(encoding='utf-8')
+          marker='const GEAR_CATALOG = '
+          s=text.index(marker)+len(marker)
+          e=text.index(';\n',s)
+          cat=json.loads(text[s:e])
+          byid={x['id']:x for x in cat}
+          byname={x['name']:x for x in cat}
+          assert 'gc2348' in byid and byid['gc2348']['name']=='Climbing Kit, Beginner'
+          assert not any(x['name']=='Body Paint' for x in cat)
+
+          sport=byid['gc2348']
+          sport['name']='Climbing Kit, Sport'
+          sport['specs']='Convenience preset for outdoor sport climbing on established bolted routes. Includes personal protective gear, a dynamic rope, belay hardware, 12 quickdraws, chalk setup, climbing shoes, and a personal anchor system. Adds the component items individually; route-specific gear and competent instruction are still required.'
+          sport['aliases']=['sport climbing kit','beginner sport climbing kit','beginner climbing kit','rock climbing kit','starter climbing kit','climbing starter kit']
+
+          body={
+           'id':'gc2349','name':'Body Paint','category':'Everyday Carry & Personal','subcategory':'Beauty & Personal Care > Cosmetics > Face',
+           'weight':0.12,'price':15.0,'availability':'Specialty',
+           'colors':['Black','Blue','Brown','Gold','Gray','Green','Orange','Pink','Purple','Red','Silver','Tan','Teal','White','Yellow'],
+           'specs':'Professional theatrical face/body paint · Representative single-color 1.4 oz / 40 g cake or jar; gross carried weight about 0.12 lb including container · Water-activated or cream formulations are common · Used for theater, cosplay, costumes, SFX, and body art',
+           'createsLocation':False,'aliases':['face paint','body makeup','theatrical makeup','costume paint','theatrical body paint'],'unit':'each','defaultQuantity':1
+          }
+          nutset={
+           'id':'gc2350','name':'Climbing Nut Set, 13-Piece','category':'Outdoor & Survival','subcategory':'Climbing & Rope',
+           'weight':1.01,'price':180.0,'availability':'Specialty','colors':['Multicolor'],
+           'specs':'Assorted wired passive-protection set spanning small through large rock-crack placements · Representative 13-piece aluminum/steel set weighs about 456 g / 1.01 lb · Carried as a varied rack rather than repeated identical nut sizes',
+           'createsLocation':False,'aliases':['nut set','stopper set','climbing stopper set','trad nut rack','passive protection set'],'unit':'set','defaultQuantity':1
+          }
+          camset={
+           'id':'gc2351','name':'Climbing Cam Set, 6-Piece','category':'Outdoor & Survival','subcategory':'Climbing & Rope',
+           'weight':1.59,'price':520.0,'availability':'Specialty','colors':['Multicolor'],
+           'specs':'Six assorted spring-loaded camming devices covering a representative roughly 0.4-to-3 in-size trad rack · Representative set weight about 723 g / 1.59 lb · Provides varied active protection for different crack widths',
+           'createsLocation':False,'aliases':['cam set','climbing cam set','cam rack','trad cam rack','SLCD set','active protection set'],'unit':'set','defaultQuantity':1,'wetRetention':'low','dirtRetention':'low'
+          }
+          first={
+           'id':'gc2352','name':'Climbing Kit, First Ascent','category':'Kits','subcategory':'Outdoor & Travel',
+           'weight':0.0,'price':0.0,'availability':'Specialty','colors':[],'createsLocation':False,'unit':'kit','defaultQuantity':1,'bundleMode':'preset',
+           'specs':'Comprehensive rock-climbing preset for an unknown, unbolted route / first-ascent scenario. Builds on normal lead-climbing essentials with assorted removable protection, anchor material, extra carabiners/slings, Prusiks, and piton/hammer backup. Adds components individually; actual first-ascent racks vary heavily with rock, route length, ethics, and conditions.',
+           'aliases':['first ascent climbing kit','virgin climb kit','trad first ascent kit','exploratory climbing kit','unbolted climbing kit'],
+           'bundleContents':[
+            {'catalogId':'gc0381','quantity':1}, {'catalogId':'gc0383','quantity':1}, {'catalogId':'gc2347','quantity':1},
+            {'catalogId':'gc0380','quantity':1}, {'catalogId':'gc0382','quantity':1}, {'catalogId':'gc0384','quantity':4},
+            {'catalogId':'gc0385','quantity':20}, {'catalogId':'gc0386','quantity':10}, {'catalogId':'gc2341','quantity':4},
+            {'catalogId':'gc2350','quantity':1}, {'catalogId':'gc2351','quantity':1}, {'catalogId':'gc2344','quantity':1},
+            {'catalogId':'gc1971','quantity':1}, {'catalogId':'gc0390','quantity':2}, {'catalogId':'gc2346','quantity':1},
+            {'catalogId':'gc2340','quantity':4}, {'catalogId':'gc1900','quantity':1}, {'catalogId':'gc2345','quantity':1}, {'catalogId':'gc2171','quantity':1}
+           ],
+           'bundlePlacement':{'gc2171':'gc2345'}
+          }
+          for item in [body,nutset,camset,first]:
+              assert item['id'] not in byid and item['name'] not in byname
+          cat.extend([body,nutset,camset,first])
+
+          text=text[:s]+json.dumps(cat,separators=(',',':'),ensure_ascii=False)+text[e:]
+          assert text.count('Character Sheet v540')==1
+          text=text.replace('Character Sheet v540','Character Sheet v541',1)
+          p.write_text(text,encoding='utf-8')
+          PY
+
+          echo 'af2487aab7f2bb0d901fc798b6f481694e782b0f2f67543808f1915723e16638  index.html' | sha256sum -c -
+          test "$(git hash-object index.html)" = "0767731d519fe0b95bfb6462576adecb70778a46"
+          test "$(wc -c < index.html)" -eq 2330858
+          grep -q 'Character Sheet v541' index.html
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S|re.I)
+          assert len(scripts)==1
+          Path('/tmp/v541.js').write_text(scripts[0],encoding='utf-8')
+          PY
+          node --check /tmp/v541.js
+
+          git config user.name 'ChatGPT GitHub Integration'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/apply-v541.yml
+          git add index.html
+          git commit -m 'Update index.html to v541'
+          git push origin HEAD:main
