@@ -1,0 +1,20 @@
+name: Push trigger v537 promotion
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/v537-trigger'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch exact v537 promotion
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run promote-v537.yml --repo "$GITHUB_REPOSITORY" --ref main
