@@ -1,0 +1,88 @@
+name: Apply v544 queued gear updates
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-v544.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply exact v544 changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object index.html)" = "9397bbe479c56c1b42a2d40858114d896197dc9c"
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path('index.html')
+          t=p.read_text(encoding='utf-8')
+          marker='const GEAR_CATALOG = '
+          s=t.index(marker)+len(marker)
+          e=t.index(';\n',s)
+          cat=json.loads(t[s:e])
+          new_items=[
+          ('gc0555',{'id':'gc2357','name':'Insulated Pizza Delivery Bag','category':'Food, Water & Cooking','subcategory':'Utensils & Storage','weight':1.5,'price':20.0,'availability':'Specialty','colors':['Black','Blue','Green','Red','Yellow'],'specs':'Soft-sided commercial insulated pizza transport bag · Representative size about 18 × 18 × 5 in, sized for up to two 16 in pizza boxes or one 18 in box · Foam-insulated nylon/PVC construction with carry straps and ventilation · Representative empty weight about 1.5 lb','createsLocation':True,'aliases':['pizza bag','pizza delivery bag','hot food delivery bag','insulated food delivery bag'],'unit':'each','defaultQuantity':1,'locationCapacityPounds':12,'wetRetention':'low','dirtRetention':'moderate'}),
+          ('gc0784',{'id':'gc2358','name':'Cleaning Duster','category':'Household & General','subcategory':'Cleaning','weight':0.35,'price':8.0,'availability':'Common','colors':['Black','Blue','Gray','Green','Red','White','Yellow'],'specs':'Reusable handheld household duster with poly-fiber, microfiber, or feather-style dusting head · Representative length about 18–23 in · Representative weight about 0.35 lb','createsLocation':False,'aliases':['feather duster','dusting wand','hand duster','microfiber duster'],'unit':'each','defaultQuantity':1,'wetRetention':'high','dirtRetention':'high'}),
+          ('gc0849',{'id':'gc2359','name':'Athletic Protective Cup','category':'Sports, Games & Recreation','subcategory':'Combat Sports','weight':0.22,'price':15.0,'availability':'Common','colors':['Black','Blue','Gray','Red','White'],'specs':'Adult athletic groin-protection cup with rigid vented polymer shell and cushioned perimeter · Representative cup weight about 3.5 oz / 0.22 lb · Worn in a compatible athletic supporter or cup-pocket compression garment; supporter not included','createsLocation':False,'aliases':['athletic cup','sports cup','groin protector','protective cup','athletic groin protector'],'unit':'each','defaultQuantity':1,'wetRetention':'very_low','dirtRetention':'low'}),
+          ('gc0003',{'id':'gc2360','name':'Jockstrap / Athletic Supporter','category':'Clothing & Footwear','subcategory':'Underwear','weight':0.1,'price':15.0,'availability':'Common','colors':['Black','Gray','White'],'specs':'Elastic-waist athletic supporter / jockstrap with supportive front pouch and rear leg straps · Representative weight about 1.6 oz / 0.10 lb · This item is the supporter only; protective cup is separate','createsLocation':False,'aliases':['athletic supporter','sports supporter','jock strap','jockstrap'],'unit':'each','defaultQuantity':1,'wetRetention':'high','dirtRetention':'low'})
+          ]
+          ids={x['id'] for x in cat}
+          names={x['name'] for x in cat}
+          for anchor,item in new_items:
+              assert anchor in ids
+              assert item['id'] not in ids
+              assert item['name'] not in names
+              idx=next(i for i,x in enumerate(cat) if x['id']==anchor)+1
+              cat.insert(idx,item)
+              ids.add(item['id'])
+              names.add(item['name'])
+          t=t[:s]+json.dumps(cat,separators=(',',':'),ensure_ascii=False)+t[e:]
+          assert t.count('Character Sheet v543')==1
+          t=t.replace('Character Sheet v543','Character Sheet v544',1)
+          p.write_text(t,encoding='utf-8')
+          PY
+          echo '34c2b11c2e7de157434647054e8502a9d6386f5e4b35419077ce0e7864d9557b  index.html' | sha256sum -c -
+          test "$(git hash-object index.html)" = "ea6acf8594494add003723f8419a042a37611b8a"
+          test "$(wc -c < index.html)" -eq 2337135
+          grep -q 'Character Sheet v544' index.html
+          python - <<'PY'
+          from pathlib import Path
+          import json,re
+          text=Path('index.html').read_text(encoding='utf-8')
+          marker='const GEAR_CATALOG = '
+          s=text.index(marker)+len(marker)
+          e=text.index(';\n',s)
+          cat=json.loads(text[s:e])
+          ids=[x['id'] for x in cat]
+          assert len(ids)==len(set(ids))
+          byid={x['id']:x for x in cat}
+          assert byid['gc2357']['name']=='Insulated Pizza Delivery Bag'
+          assert byid['gc2358']['name']=='Cleaning Duster'
+          assert byid['gc2359']['name']=='Athletic Protective Cup'
+          assert byid['gc2360']['name']=='Jockstrap / Athletic Supporter'
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S|re.I)
+          assert len(scripts)==1
+          Path('/tmp/v544.js').write_text(scripts[0],encoding='utf-8')
+          PY
+          node --check /tmp/v544.js
+      - name: Commit v544 and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'ChatGPT GitHub Integration'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/apply-v544.yml
+          git add index.html
+          git commit -m 'Update index.html to v544'
+          git push origin HEAD:main
