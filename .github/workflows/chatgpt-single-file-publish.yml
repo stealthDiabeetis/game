@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.chatgpt-upload.b64'
+      - '.chatgpt-upload.ready'
 
 permissions:
   contents: write
@@ -21,7 +21,7 @@ jobs:
       - name: Rebuild index.html
         shell: bash
         run: |
-          base64 --decode .chatgpt-upload.b64 | gzip -dc > index.html
+          cat .chatgpt-upload.part-* | base64 --decode | gzip -dc > index.html
           echo "f7e177564099e1584f49505357fb33485b4090cc260d59ed6ca961725d08e77f  index.html" | sha256sum --check --strict
           grep -q 'Character Sheet v547' index.html
 
