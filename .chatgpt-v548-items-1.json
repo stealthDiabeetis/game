@@ -1,0 +1,202 @@
+[
+  {
+    "id": "gc2380",
+    "name": "Evidence Collection Kit, Crime Scene",
+    "category": "Tools & Hardware",
+    "subcategory": "Scientific & Field Equipment > Forensics",
+    "weight": 10.0,
+    "price": 420.0,
+    "availability": "Specialty",
+    "colors": [
+      "Black",
+      "Blue"
+    ],
+    "specs": "Portable crime-scene evidence collection kit with representative assortment of evidence bags/containers, seals and labels, measuring tools, markers, tweezers/scissors, swabs, PPE, and documentation supplies · Exact contents vary by agency and kit",
+    "createsLocation": false,
+    "aliases": [
+      "evidence collection kit",
+      "crime scene kit",
+      "forensic evidence kit",
+      "evidence kit",
+      "CSI kit"
+    ],
+    "unit": "kit",
+    "defaultQuantity": 1,
+    "wetRetention": "moderate",
+    "dirtRetention": "moderate"
+  },
+  {
+    "id": "gc2381",
+    "name": "Automotive Lockout Tool Kit",
+    "category": "Tools & Hardware",
+    "subcategory": "Locksmithing",
+    "weight": 4.35,
+    "price": 155.0,
+    "availability": "Specialty",
+    "colors": [
+      "Black",
+      "Blue"
+    ],
+    "specs": "Professional vehicle-entry tool kit with long-reach rod, inflatable air wedge, non-marring wedges, and protective accessories · Intended for authorized automotive lockout service; exact tools vary by kit",
+    "createsLocation": false,
+    "aliases": [
+      "car opening kit",
+      "vehicle lockout kit",
+      "auto lockout kit",
+      "long reach lockout kit"
+    ],
+    "unit": "kit",
+    "defaultQuantity": 1,
+    "wetRetention": "low",
+    "dirtRetention": "moderate"
+  },
+  {
+    "id": "gc2382",
+    "name": "Minor Surgery Instrument Set, Sterile",
+    "category": "Medical & First Aid",
+    "subcategory": "Surgical",
+    "weight": 0.31,
+    "price": 30.0,
+    "availability": "Specialty",
+    "colors": [
+      "Silver"
+    ],
+    "specs": "Sterile single-use minor-surgery instrument set · Representative set includes straight and curved hemostats, needle holder, tissue/Adson forceps, probe, #3 scalpel handle, and scissors · About 5 oz packaged",
+    "createsLocation": false,
+    "aliases": [
+      "minor surgery set",
+      "minor surgical kit",
+      "surgical instrument set",
+      "field surgical set"
+    ],
+    "unit": "set",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2383",
+    "name": "Bloodborne Pathogen Spill Kit",
+    "category": "Medical & First Aid",
+    "subcategory": "Kits",
+    "weight": 1.3,
+    "price": 35.0,
+    "availability": "Common",
+    "colors": [
+      "Red",
+      "White"
+    ],
+    "specs": "Single-response bodily-fluid cleanup kit · Representative contents include disposable gloves, absorbent/solidifier, scraper/scoop, germicidal and antiseptic wipes, towels, biohazard bags, secondary waste bags, and instructions",
+    "createsLocation": false,
+    "aliases": [
+      "biohazard spill kit",
+      "bodily fluid cleanup kit",
+      "blood spill kit",
+      "BBP spill kit"
+    ],
+    "unit": "kit",
+    "defaultQuantity": 1,
+    "wetRetention": "moderate",
+    "dirtRetention": "moderate"
+  },
+  {
+    "id": "gc2384",
+    "name": "Riot Helmet with Face Shield",
+    "category": "Clothing & Footwear",
+    "subcategory": "Protective & Tactical Gear > Helmets",
+    "weight": 3.4,
+    "price": 165.0,
+    "availability": "Specialty",
+    "colors": [
+      "Black",
+      "White"
+    ],
+    "specs": "Non-ballistic public-order/riot-control helmet · Impact-resistant shell with clear polycarbonate face shield and neck protection · Representative weight about 3.4 lb",
+    "createsLocation": false,
+    "aliases": [
+      "public order helmet",
+      "riot control helmet",
+      "crowd control helmet"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2385",
+    "name": "Satellite Phone, Handheld",
+    "category": "Electronics & Communications",
+    "subcategory": "Navigation & Communication",
+    "weight": 0.54,
+    "price": 1500.0,
+    "availability": "Specialty",
+    "colors": [
+      "Black"
+    ],
+    "specs": "Handheld satellite voice telephone · Representative Iridium-class unit about 247 g / 0.54 lb with GPS/SOS capability, weather-resistant housing, roughly 4 h talk time and 30 h standby · Airtime/service plan required",
+    "createsLocation": false,
+    "aliases": [
+      "satphone",
+      "sat phone",
+      "satellite telephone",
+      "satellite cellphone"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2386",
+    "name": "Propane Torch Head",
+    "category": "Tools & Hardware",
+    "subcategory": "Metalworking",
+    "weight": 1.6,
+    "price": 58.0,
+    "availability": "Common",
+    "colors": [
+      "Black",
+      "Silver"
+    ],
+    "specs": "Trigger-start handheld torch head for standard disposable propane or MAP-Pro style fuel cylinders · Representative heavy-duty pressure-regulated torch head weighs about 1.6 lb · Adjustable high-intensity swirl flame for soldering, brazing, heat-shaping, seized-fastener heating, and similar shop work · Fuel cylinder not included",
+    "createsLocation": false,
+    "aliases": [
+      "propane torch",
+      "blowtorch",
+      "blow torch",
+      "torch head",
+      "MAP-Pro torch"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2387",
+    "name": "Oxy-Acetylene Cutting and Welding Outfit, Portable",
+    "category": "Tools & Hardware",
+    "subcategory": "Metalworking",
+    "weight": 37.7,
+    "price": 380.0,
+    "availability": "Specialty",
+    "colors": [
+      "Black",
+      "Red"
+    ],
+    "specs": "Portable oxy-acetylene cutting/welding outfit with 20 cu ft oxygen cylinder, 10 cu ft acetylene cylinder, regulators, torch handle, cutting and welding tips, twin hose, goggles, striker, and carrier · Representative shipping weight about 37.7 lb; gas fill may be sold separately",
+    "createsLocation": false,
+    "aliases": [
+      "oxy acetylene torch kit",
+      "oxy-fuel torch",
+      "cutting torch set",
+      "gas welding outfit",
+      "portable torch outfit"
+    ],
+    "unit": "kit",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "moderate"
+  }
+]

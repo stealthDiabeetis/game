@@ -1,0 +1,160 @@
+[
+  {
+    "id": "gc2404",
+    "name": "Blacksmith Tongs, Wolf-Jaw, 16-Inch",
+    "category": "Tools & Hardware",
+    "subcategory": "Metalworking",
+    "weight": 1.5,
+    "price": 40.0,
+    "availability": "Specialty",
+    "colors": [
+      "Black",
+      "Silver"
+    ],
+    "specs": "16 in steel wolf-jaw forging tongs · Versatile jaw profile grips several common sizes and shapes of hot bar stock · Representative weight about 1.5 lb",
+    "createsLocation": false,
+    "aliases": [
+      "forge tongs",
+      "blacksmith tongs",
+      "smithing tongs",
+      "wolf jaw tongs"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "moderate"
+  },
+  {
+    "id": "gc2405",
+    "name": "Blacksmith Bellows, Hand-Operated",
+    "category": "Tools & Hardware",
+    "subcategory": "Metalworking",
+    "weight": 12.0,
+    "price": 150.0,
+    "availability": "Specialty",
+    "colors": [
+      "Brown",
+      "Black"
+    ],
+    "specs": "Traditional hand-operated wooden-and-leather forge bellows for supplying combustion air to a solid-fuel forge · Representative shop bellows; dimensions, air volume, and weight vary substantially by construction",
+    "createsLocation": false,
+    "aliases": [
+      "forge bellows",
+      "smithing bellows",
+      "blacksmith bellows",
+      "hand bellows"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "high",
+    "dirtRetention": "moderate"
+  },
+  {
+    "id": "gc2406",
+    "name": "Electric Pick Gun",
+    "category": "Tools & Hardware",
+    "subcategory": "Locksmithing",
+    "weight": 0.9,
+    "price": 275,
+    "availability": "Specialty",
+    "colors": [
+      "Black",
+      "Red"
+    ],
+    "specs": "Professional rechargeable electric pick gun for compatible pin-tumbler cylinders · Representative tool about 14 oz with battery, adjustable needle travel, approximately 13,000 rpm, and interchangeable pick needles · Requires tension tools and appropriate authorization/skill",
+    "createsLocation": false,
+    "aliases": [
+      "electric lock pick gun",
+      "electric lock pick",
+      "EPG",
+      "vibrating lock pick"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2407",
+    "name": "Attaché Case, Hard-Sided",
+    "category": "Bags, Packs & Containers",
+    "subcategory": "Hard Cases",
+    "weight": 5.0,
+    "price": 100.0,
+    "availability": "Common",
+    "colors": [
+      "Black",
+      "Silver",
+      "Brown"
+    ],
+    "specs": "Rigid business/document attaché case with hinged shell, handle, and latches · Representative briefcase-size case around 18 × 13 × 4 in",
+    "createsLocation": true,
+    "aliases": [
+      "hard attache case",
+      "hard-sided briefcase",
+      "hard briefcase",
+      "business case",
+      "document case"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "locationCapacityPounds": 20,
+    "wetRetention": "very_low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2408",
+    "name": "Range Bag, Medium",
+    "category": "Bags, Packs & Containers",
+    "subcategory": "Duffels & Luggage",
+    "weight": 2.85,
+    "price": 67.5,
+    "availability": "Common",
+    "colors": [
+      "Black",
+      "Tan",
+      "Green",
+      "Blue"
+    ],
+    "specs": "Purpose-built padded shooting-range gear bag with reinforced base, internal padded pockets, magazine/accessory storage, carry handles, and shoulder strap · Representative medium 600D polyester bag about 18 × 10 × 10 in and 2.85 lb",
+    "createsLocation": true,
+    "aliases": [
+      "shooting bag",
+      "range gear bag",
+      "range duffel"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "locationCapacityPounds": 35,
+    "wetRetention": "moderate",
+    "dirtRetention": "moderate"
+  },
+  {
+    "id": "gc2409",
+    "name": "Rifle Case, Soft, 42-Inch",
+    "category": "Bags, Packs & Containers",
+    "subcategory": "Duffels & Luggage",
+    "weight": 2.2,
+    "price": 50.0,
+    "availability": "Common",
+    "colors": [
+      "Black",
+      "Tan",
+      "Green",
+      "Blue"
+    ],
+    "specs": "Padded soft-sided long-gun case sized for a rifle up to about 42 in · Representative polyester/Endura-style case about 2.2 lb with lockable zipper and carry handle",
+    "createsLocation": true,
+    "aliases": [
+      "soft rifle case",
+      "rifle bag",
+      "soft gun case",
+      "long gun case"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "locationCapacityPounds": 15,
+    "wetRetention": "moderate",
+    "dirtRetention": "moderate"
+  }
+]

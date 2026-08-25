@@ -1,0 +1,198 @@
+[
+  {
+    "id": "gc2388",
+    "name": "Epoxy Putty Stick, 2 oz",
+    "category": "Tools & Hardware",
+    "subcategory": "Materials & Repair",
+    "weight": 0.15,
+    "price": 8.0,
+    "availability": "Common",
+    "colors": [
+      "Gray"
+    ],
+    "specs": "Two-part kneadable repair epoxy putty in a 2 oz stick · Representative steel-reinforced formulation sets in about 5 min, cures in about 1 h, and reaches roughly 4,000 psi tensile strength · For compatible metal and other rigid repairs",
+    "createsLocation": false,
+    "aliases": [
+      "epoxy putty",
+      "repair epoxy putty",
+      "kneadable epoxy",
+      "steel epoxy putty"
+    ],
+    "unit": "stick",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2389",
+    "name": "Ammunition Can, Steel, M2A1",
+    "category": "Bags, Packs & Containers",
+    "subcategory": "Hard Cases",
+    "weight": 5.2,
+    "price": 20.0,
+    "availability": "Common",
+    "colors": [
+      "Green",
+      "Tan",
+      "Black"
+    ],
+    "specs": "Standard M2A1 steel ammunition can commonly known as a .50-cal ammo can · Roughly 11.75 × 6 × 7.5 in exterior with gasketed hinged lid and folding handle · Commonly reused as rugged general-purpose storage",
+    "createsLocation": true,
+    "aliases": [
+      "ammo can",
+      "50 cal ammo can",
+      "M2A1 ammo can",
+      "steel ammunition box"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "locationCapacityPounds": 30,
+    "wetRetention": "very_low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2390",
+    "name": "Shipping Crate, Wood, 1 cu ft",
+    "category": "Household & General",
+    "subcategory": "Storage",
+    "weight": 6.0,
+    "price": 30.0,
+    "availability": "Common",
+    "colors": [
+      "Brown"
+    ],
+    "specs": "Small general-purpose wooden shipping/storage crate with roughly 1 cu ft internal volume · Representative empty weight about 6 lb and practical load around 50 lb; construction and exact dimensions vary",
+    "createsLocation": true,
+    "aliases": [
+      "wooden crate",
+      "wood crate",
+      "utility crate",
+      "shipping crate"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "locationCapacityPounds": 50,
+    "wetRetention": "moderate",
+    "dirtRetention": "moderate"
+  },
+  {
+    "id": "gc2391",
+    "name": "Automotive Battery, BCI Group 35, 12 V",
+    "category": "Tools & Hardware",
+    "subcategory": "Automotive & Mechanical > Tire & Electrical",
+    "weight": 38.0,
+    "price": 210.0,
+    "availability": "Common",
+    "colors": [
+      "Black"
+    ],
+    "specs": "BCI Group 35 top-post 12 V automotive starting battery · Representative flooded unit about 9 × 6.9 × 8.75 in, 550 CCA, and roughly 38 lb · Physical group size is standardized, but terminal orientation, required CCA, and vehicle fit must still match",
+    "createsLocation": false,
+    "aliases": [
+      "car battery group 35",
+      "group 35 battery",
+      "12v car battery",
+      "automotive battery"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2392",
+    "name": "Automotive Battery, BCI Group 48 (H6), 12 V",
+    "category": "Tools & Hardware",
+    "subcategory": "Automotive & Mechanical > Tire & Electrical",
+    "weight": 45.0,
+    "price": 225.0,
+    "availability": "Common",
+    "colors": [
+      "Black"
+    ],
+    "specs": "BCI Group 48 / DIN H6 12 V automotive starting battery · Representative AGM unit about 10.9 × 6.9 × 7.5 in, around 760 CCA and 70 Ah, approximately 45 lb · Group dimensions are standardized; chemistry, terminal details, CCA, and fit must match vehicle requirements",
+    "createsLocation": false,
+    "aliases": [
+      "car battery H6",
+      "group 48 battery",
+      "H6 battery",
+      "12v car battery"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2393",
+    "name": "Automotive Battery, BCI Group 65, 12 V",
+    "category": "Tools & Hardware",
+    "subcategory": "Automotive & Mechanical > Tire & Electrical",
+    "weight": 45.0,
+    "price": 225.0,
+    "availability": "Common",
+    "colors": [
+      "Black"
+    ],
+    "specs": "BCI Group 65 top-post 12 V automotive/light-truck starting battery · Representative flooded unit about 11.6 × 7.4 × 7.6 in, 750 CCA and roughly 45 lb · Common in trucks and SUVs; terminal layout, CCA, and fit must match vehicle requirements",
+    "createsLocation": false,
+    "aliases": [
+      "car battery group 65",
+      "group 65 battery",
+      "truck battery",
+      "12v automotive battery"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "low"
+  },
+  {
+    "id": "gc2394",
+    "name": "Passenger Car Tire, 205/55R16",
+    "category": "Tools & Hardware",
+    "subcategory": "Automotive & Mechanical > Lifting & Wheels",
+    "weight": 22.0,
+    "price": 170.0,
+    "availability": "Common",
+    "colors": [
+      "Black"
+    ],
+    "specs": "Common 205/55R16 passenger-car tire size · Representative all-season radial weighs about 22 lb · Requires a compatible 16 in wheel and vehicle-appropriate load/speed rating; tire only",
+    "createsLocation": false,
+    "aliases": [
+      "205/55R16 tire",
+      "205 55 R16 tire",
+      "passenger tire",
+      "car tire"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "moderate"
+  },
+  {
+    "id": "gc2395",
+    "name": "Crossover/SUV Tire, 225/65R17",
+    "category": "Tools & Hardware",
+    "subcategory": "Automotive & Mechanical > Lifting & Wheels",
+    "weight": 25.0,
+    "price": 180.0,
+    "availability": "Common",
+    "colors": [
+      "Black"
+    ],
+    "specs": "Common 225/65R17 crossover/SUV tire size · Representative all-season radial weighs about 25 lb · Requires compatible 17 in wheel and vehicle-appropriate load/speed rating; tire only",
+    "createsLocation": false,
+    "aliases": [
+      "225/65R17 tire",
+      "225 65 R17 tire",
+      "SUV tire",
+      "crossover tire"
+    ],
+    "unit": "each",
+    "defaultQuantity": 1,
+    "wetRetention": "very_low",
+    "dirtRetention": "moderate"
+  }
+]

@@ -1,0 +1,29 @@
+name: ChatGPT single-file publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.chatgpt-v548.ready'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build and verify v548
+        run: python .chatgpt-transform-v548.py
+      - name: Commit v548 and remove transfer files
+        shell: bash
+        run: |
+          rm -f .chatgpt-transform-v548.py .chatgpt-v548-items-*.json .chatgpt-v548.ready
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Update character sheet to v548"
+          git push
