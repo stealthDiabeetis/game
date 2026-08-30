@@ -2715,9 +2715,10 @@
     .vehicle-energy-button:disabled { opacity:.28; cursor:default; background:transparent; transform:none; }
     .vehicle-energy-reading { display:inline-flex; align-items:center; gap:0; white-space:nowrap; }
     .vehicle-energy-input {
-      width:42px !important; min-width:42px !important; height:18px !important; min-height:18px !important;
-      padding:0 2px !important; border:0 !important; background:transparent !important; color:inherit !important;
-      text-align:right; font:inherit; font-variant-numeric:tabular-nums; appearance:textfield; -moz-appearance:textfield;
+      width:calc(var(--vehicle-energy-chars, 2) * 1ch + 2px) !important; min-width:0 !important; max-width:none !important;
+      height:18px !important; min-height:18px !important; padding:0 1px !important; border:0 !important;
+      background:transparent !important; color:inherit !important; text-align:right; font:inherit;
+      font-variant-numeric:tabular-nums; appearance:textfield; -moz-appearance:textfield;
     }
     .vehicle-energy-input::-webkit-outer-spin-button, .vehicle-energy-input::-webkit-inner-spin-button { appearance:none; margin:0; }
     .gear-item-input-wrap.vehicle-item-input-wrap { display:flex; align-items:center; gap:4px; }
@@ -8384,9 +8385,10 @@
     .vehicle-energy-button:disabled { opacity:.28; cursor:default; background:transparent; transform:none; }
     .vehicle-energy-reading { display:inline-flex; align-items:center; gap:0; white-space:nowrap; }
       .vehicle-energy-input {
-        width:42px !important; min-width:42px !important; height:18px !important; min-height:18px !important;
-        padding:0 2px !important; border:0 !important; background:transparent !important; color:inherit !important;
-        text-align:right; font:inherit; font-variant-numeric:tabular-nums; appearance:textfield; -moz-appearance:textfield;
+        width:calc(var(--vehicle-energy-chars, 2) * 1ch + 2px) !important; min-width:0 !important; max-width:none !important;
+        height:18px !important; min-height:18px !important; padding:0 1px !important; border:0 !important;
+        background:transparent !important; color:inherit !important; text-align:right; font:inherit;
+        font-variant-numeric:tabular-nums; appearance:textfield; -moz-appearance:textfield;
       }
       .vehicle-energy-input::-webkit-outer-spin-button, .vehicle-energy-input::-webkit-inner-spin-button { appearance:none; margin:0; }
       .gear-item-input-wrap.vehicle-item-input-wrap { display:flex; align-items:center; gap:4px; }
@@ -8402,6 +8404,9 @@
       .vehicle-energy-chip, .vehicle-range-chip { padding:0 3px; }
     }
 
+    /* v596: energy numeric inputs size to their live character count instead of
+       reserving a fixed-width number field. This keeps common 1–2 digit fuel
+       and charge readouts tight while still expanding for triple-digit tanks. */
     /* v595: wide desktop standalone-vehicle headers show operational fields only.
        Curb/dry vehicle weight is intentionally omitted; cargo load/capacity is what
        matters during play. Fuel/charge + range stays beside the name on wide screens. */
@@ -8695,8 +8700,9 @@
         font-size: 11px !important;
       }
       #gear .standalone-vehicle-header .vehicle-energy-input {
-        width: 32px !important;
-        min-width: 32px !important;
+        width: calc(var(--vehicle-energy-chars, 2) * 1ch + 2px) !important;
+        min-width: 0 !important;
+        max-width: none !important;
         height: 17px !important;
         min-height: 17px !important;
         padding: 0 1px !important;
@@ -8986,7 +8992,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v595</div>
+<div class="footer-note no-print">Character Sheet v596</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -12848,7 +12854,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const rangeUnit = String(catalog.vehicleRangeUnit || 'mi');
     const rangeText = Number.isFinite(range) ? `${Math.max(0, Math.round(range))} ${rangeUnit}` : '—';
     const key = `${ownerType}:${ownerId}`;
-    return `<span class="vehicle-status-inline no-print" data-vehicle-status-owner="${esc(key)}"><span class="vehicle-energy-chip ${isElectric ? 'electric' : 'fuel'}${levelClass}" title="${isElectric ? 'Battery charge' : `${catalog.vehicleFuelType || 'Fuel'} remaining; tank ${maxDisplay} gal`}"><button type="button" class="vehicle-energy-button" data-vehicle-energy-step="-${step}" aria-label="Decrease ${isElectric ? 'charge' : 'fuel'}"${atMin ? ' disabled aria-disabled="true"' : ''}>−</button><span aria-hidden="true">${icon}</span><span class="vehicle-energy-reading"><input class="vehicle-energy-input" type="number" min="0" max="${esc(String(max))}" step="${esc(String(step))}" value="${esc(display)}" data-vehicle-energy-input aria-label="${isElectric ? 'Charge percent' : 'Fuel gallons'}"><span>${esc(readingSuffix)}</span></span><button type="button" class="vehicle-energy-button" data-vehicle-energy-step="${step}" aria-label="Increase ${isElectric ? 'charge' : 'fuel'}"${atMax ? ' disabled aria-disabled="true"' : ''}>+</button></span><span class="vehicle-range-chip" data-vehicle-range-output title="Estimated remaining range from representative full-range rating">↗ ${esc(rangeText)}</span></span>`;
+    return `<span class="vehicle-status-inline no-print" data-vehicle-status-owner="${esc(key)}"><span class="vehicle-energy-chip ${isElectric ? 'electric' : 'fuel'}${levelClass}" title="${isElectric ? 'Battery charge' : `${catalog.vehicleFuelType || 'Fuel'} remaining; tank ${maxDisplay} gal`}"><button type="button" class="vehicle-energy-button" data-vehicle-energy-step="-${step}" aria-label="Decrease ${isElectric ? 'charge' : 'fuel'}"${atMin ? ' disabled aria-disabled="true"' : ''}>−</button><span aria-hidden="true">${icon}</span><span class="vehicle-energy-reading"><input class="vehicle-energy-input" type="number" min="0" max="${esc(String(max))}" step="${esc(String(step))}" value="${esc(display)}" data-vehicle-energy-input style="--vehicle-energy-chars:${Math.max(1, display.length)}" aria-label="${isElectric ? 'Charge percent' : 'Fuel gallons'}"><span>${esc(readingSuffix)}</span></span><button type="button" class="vehicle-energy-button" data-vehicle-energy-step="${step}" aria-label="Increase ${isElectric ? 'charge' : 'fuel'}"${atMax ? ' disabled aria-disabled="true"' : ''}>+</button></span><span class="vehicle-range-chip" data-vehicle-range-output title="Estimated remaining range from representative full-range rating">↗ ${esc(rangeText)}</span></span>`;
   }
 
   function vehicleStatusOwnerFromKey(key) {
@@ -12887,6 +12893,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       }));
       const input = status.querySelector('[data-vehicle-energy-input]');
       input?.addEventListener('click', event => event.stopPropagation());
+      input?.addEventListener('input', () => {
+        const chars = Math.max(1, String(input.value || '0').length);
+        input.style.setProperty('--vehicle-energy-chars', String(chars));
+      });
       input?.addEventListener('change', () => commit(input.value));
       input?.addEventListener('keydown', event => {
         if (event.key === 'Enter') { event.preventDefault(); commit(input.value); }
