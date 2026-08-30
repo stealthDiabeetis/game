@@ -2711,7 +2711,9 @@
       width:17px; height:17px; min-width:17px; padding:0; border:0; border-radius:4px;
       background:transparent; color:currentColor; font-size:12px; font-weight:900; line-height:1;
     }
-    .vehicle-energy-button:hover { background:color-mix(in srgb, currentColor 10%, transparent); transform:none; }
+    .vehicle-energy-button:not(:disabled):hover { background:color-mix(in srgb, currentColor 10%, transparent); transform:none; }
+    .vehicle-energy-button:disabled { opacity:.28; cursor:default; background:transparent; transform:none; }
+    .vehicle-energy-reading { display:inline-flex; align-items:center; gap:0; white-space:nowrap; }
     .vehicle-energy-input {
       width:42px !important; min-width:42px !important; height:18px !important; min-height:18px !important;
       padding:0 2px !important; border:0 !important; background:transparent !important; color:inherit !important;
@@ -8378,7 +8380,9 @@
         width:17px; height:17px; min-width:17px; padding:0; border:0; border-radius:4px;
         background:transparent; color:currentColor; font-size:12px; font-weight:900; line-height:1;
       }
-      .vehicle-energy-button:hover { background:color-mix(in srgb, currentColor 10%, transparent); transform:none; }
+      .vehicle-energy-button:not(:disabled):hover { background:color-mix(in srgb, currentColor 10%, transparent); transform:none; }
+    .vehicle-energy-button:disabled { opacity:.28; cursor:default; background:transparent; transform:none; }
+    .vehicle-energy-reading { display:inline-flex; align-items:center; gap:0; white-space:nowrap; }
       .vehicle-energy-input {
         width:42px !important; min-width:42px !important; height:18px !important; min-height:18px !important;
         padding:0 2px !important; border:0 !important; background:transparent !important; color:inherit !important;
@@ -8398,14 +8402,12 @@
       .vehicle-energy-chip, .vehicle-range-chip { padding:0 3px; }
     }
 
-    /* v593/v594: the wide desktop location header intentionally hides
-       Dirty/Wet here because those bulk toggles live in the Gear column headers.
-       Standalone vehicles still need their own color, curb weight, cargo load,
-       condition, and live fuel/range controls, so give those six cells an explicit
-       one-row desktop grid instead of inheriting the generic four-column header. */
-    @media screen and (min-width: 1101px) {
+    /* v595: wide desktop standalone-vehicle headers show operational fields only.
+       Curb/dry vehicle weight is intentionally omitted; cargo load/capacity is what
+       matters during play. Fuel/charge + range stays beside the name on wide screens. */
+    @media screen and (min-width: 1201px) {
       #gear .gear-location-header.standalone-vehicle-header {
-        grid-template-columns: minmax(0, 1fr) 104px 72px 92px 124px 48px !important;
+        grid-template-columns: minmax(0, 1fr) 104px 110px 124px 48px !important;
         grid-template-rows: 46px !important;
         min-height: 46px !important;
         padding: 0 0 !important;
@@ -8432,20 +8434,15 @@
         padding: 3px 20px 3px 6px !important;
         justify-self: center !important;
       }
-      #gear .standalone-vehicle-header .gear-location-vehicle-weight {
-        grid-column: 3 !important;
-        grid-row: 1 !important;
-        justify-self: center !important;
-      }
       #gear .standalone-vehicle-header .gear-location-total {
-        grid-column: 4 !important;
+        grid-column: 3 !important;
         grid-row: 1 !important;
         justify-self: center !important;
         margin: 0 !important;
         padding: 0 !important;
       }
       #gear .standalone-vehicle-header .gear-location-vehicle-condition {
-        grid-column: 5 !important;
+        grid-column: 4 !important;
         grid-row: 1 !important;
         width: 116px !important;
         height: 30px !important;
@@ -8458,26 +8455,25 @@
         display: none !important;
       }
       #gear .standalone-vehicle-header .gear-location-delete {
-        grid-column: 6 !important;
+        grid-column: 5 !important;
         grid-row: 1 !important;
         justify-self: center !important;
       }
     }
 
-    /* v594: medium-width/tablet screens need their own standalone-vehicle
-       header. The v593 desktop row technically fit the viewport, but the live
-       energy/range controls shared the name cell and made that row visually
-       cramped on tablets. Keep the title alone on row one, put the ordinary
-       vehicle metadata on row two, and give fuel/charge + remaining range a
-       dedicated third row. Dirty/Wet remain in the Gear column bulk controls. */
-    @media screen and (min-width: 601px) and (max-width: 1100px) {
+    /* v595: tablets use two rows, not three. Row one is the vehicle title;
+       row two fits color, cargo load/capacity, live fuel/charge + range, and
+       condition now that curb/dry weight is no longer displayed. The coarse-
+       pointer clause keeps large landscape tablets in this layout as well. */
+    @media screen and (min-width: 601px) and (max-width: 1200px),
+           screen and (min-width: 601px) and (max-width: 1400px) and (pointer: coarse) {
       #gear .gear-location-header.standalone-vehicle-header {
         grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
-        grid-template-rows: 38px 34px 30px !important;
+        grid-template-rows: 38px 34px !important;
         column-gap: 5px !important;
         row-gap: 4px !important;
-        min-height: 116px !important;
-        padding: 5px 8px 7px !important;
+        min-height: 81px !important;
+        padding: 5px 8px 6px !important;
         align-items: center !important;
       }
       #gear .standalone-vehicle-header .gear-location-name-wrap.vehicle-location-name-wrap {
@@ -8521,20 +8517,23 @@
         min-width: 0 !important;
         justify-self: stretch !important;
       }
-      #gear .standalone-vehicle-header .gear-location-vehicle-weight {
-        grid-column: 4 / 6 !important;
-        grid-row: 2 !important;
-        justify-self: center !important;
-      }
       #gear .standalone-vehicle-header .gear-location-total {
-        grid-column: 6 / 9 !important;
+        grid-column: 4 / 6 !important;
         grid-row: 2 !important;
         justify-self: center !important;
         margin: 0 !important;
         padding: 0 !important;
       }
+      #gear .standalone-vehicle-header .gear-location-vehicle-status {
+        grid-column: 6 / 10 !important;
+        grid-row: 2 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        justify-content: center !important;
+        justify-self: stretch !important;
+      }
       #gear .standalone-vehicle-header .gear-location-vehicle-condition {
-        grid-column: 9 / 13 !important;
+        grid-column: 10 / 13 !important;
         grid-row: 2 !important;
         width: 100% !important;
         min-width: 0 !important;
@@ -8544,19 +8543,10 @@
       #gear .standalone-vehicle-header .gear-location-check-wet {
         display: none !important;
       }
-
-      #gear .standalone-vehicle-header .gear-location-vehicle-status {
-        grid-column: 1 / 13 !important;
-        grid-row: 3 !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        justify-content: center !important;
-        justify-self: stretch !important;
-      }
       #gear .standalone-vehicle-header .vehicle-status-inline {
         max-width: 100% !important;
         margin-left: 0 !important;
-        gap: 5px !important;
+        gap: 4px !important;
         transform: none !important;
       }
       #gear .standalone-vehicle-header .vehicle-energy-chip,
@@ -8566,10 +8556,9 @@
       }
     }
 
-    /* v593: standalone vehicles get a purpose-built phone header. The normal
-       two-row location header was too dense once live fuel/charge and remaining
-       range were added. Keep the title on row one, vehicle metadata on row two,
-       and dedicate row three to weight/cargo plus the live energy/range controls. */
+    /* v595: standalone vehicles keep a purpose-built three-row phone header.
+       Row three is now cargo load/capacity plus live fuel/charge + range only;
+       curb/dry vehicle weight is deliberately not shown. */
     @media screen and (max-width: 600px),
            screen and (max-height: 520px) and (pointer: coarse) {
       #gear .gear-location-header.standalone-vehicle-header {
@@ -8668,16 +8657,10 @@
         white-space: nowrap !important;
       }
 
-      /* Dedicated third row: curb/dry weight, cargo load/capacity, then live
-         fuel/charge and estimated remaining range. */
-      #gear .standalone-vehicle-header .gear-location-vehicle-weight {
-        grid-column: 1 / 3 !important;
-        grid-row: 3 !important;
-        justify-self: start !important;
-        font-size: 9px !important;
-      }
+      /* Dedicated third row: cargo load/capacity, then live fuel/charge and
+         estimated remaining range. */
       #gear .standalone-vehicle-header .gear-location-total {
-        grid-column: 3 / 6 !important;
+        grid-column: 1 / 5 !important;
         grid-row: 3 !important;
         justify-self: start !important;
         margin: 0 !important;
@@ -8685,7 +8668,7 @@
         font-size: 9px !important;
       }
       #gear .standalone-vehicle-header .gear-location-vehicle-status {
-        grid-column: 6 / 13 !important;
+        grid-column: 5 / 13 !important;
         grid-row: 3 !important;
         width: 100% !important;
         min-width: 0 !important;
@@ -9003,7 +8986,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v594</div>
+<div class="footer-note no-print">Character Sheet v595</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -12856,13 +12839,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const step = isElectric ? 5 : 1;
     const decimals = isElectric || Number.isInteger(max) ? 0 : 1;
     const display = value.toFixed(decimals).replace(/\.0$/,'');
-    const suffix = isElectric ? '%' : ' gal';
+    const maxDisplay = max.toFixed(decimals).replace(/\.0$/,'');
+    const readingSuffix = isElectric ? '%' : `/${maxDisplay} gal`;
+    const atMin = value <= 1e-9;
+    const atMax = value >= max - 1e-9;
     const icon = isElectric ? '⚡' : '⛽';
     const range = vehicleRemainingRange(owner, catalog);
     const rangeUnit = String(catalog.vehicleRangeUnit || 'mi');
     const rangeText = Number.isFinite(range) ? `${Math.max(0, Math.round(range))} ${rangeUnit}` : '—';
     const key = `${ownerType}:${ownerId}`;
-    return `<span class="vehicle-status-inline no-print" data-vehicle-status-owner="${esc(key)}"><span class="vehicle-energy-chip ${isElectric ? 'electric' : 'fuel'}${levelClass}" title="${isElectric ? 'Battery charge' : `${catalog.vehicleFuelType || 'Fuel'} remaining; tank ${max} gal`}"><button type="button" class="vehicle-energy-button" data-vehicle-energy-step="-${step}" aria-label="Decrease ${isElectric ? 'charge' : 'fuel'}">−</button><span aria-hidden="true">${icon}</span><input class="vehicle-energy-input" type="number" min="0" max="${esc(String(max))}" step="${esc(String(step))}" value="${esc(display)}" data-vehicle-energy-input aria-label="${isElectric ? 'Charge percent' : 'Fuel gallons'}"><span>${suffix}</span><button type="button" class="vehicle-energy-button" data-vehicle-energy-step="${step}" aria-label="Increase ${isElectric ? 'charge' : 'fuel'}">+</button></span><span class="vehicle-range-chip" data-vehicle-range-output title="Estimated remaining range from representative full-range rating">↗ ${esc(rangeText)}</span></span>`;
+    return `<span class="vehicle-status-inline no-print" data-vehicle-status-owner="${esc(key)}"><span class="vehicle-energy-chip ${isElectric ? 'electric' : 'fuel'}${levelClass}" title="${isElectric ? 'Battery charge' : `${catalog.vehicleFuelType || 'Fuel'} remaining; tank ${maxDisplay} gal`}"><button type="button" class="vehicle-energy-button" data-vehicle-energy-step="-${step}" aria-label="Decrease ${isElectric ? 'charge' : 'fuel'}"${atMin ? ' disabled aria-disabled="true"' : ''}>−</button><span aria-hidden="true">${icon}</span><span class="vehicle-energy-reading"><input class="vehicle-energy-input" type="number" min="0" max="${esc(String(max))}" step="${esc(String(step))}" value="${esc(display)}" data-vehicle-energy-input aria-label="${isElectric ? 'Charge percent' : 'Fuel gallons'}"><span>${esc(readingSuffix)}</span></span><button type="button" class="vehicle-energy-button" data-vehicle-energy-step="${step}" aria-label="Increase ${isElectric ? 'charge' : 'fuel'}"${atMax ? ' disabled aria-disabled="true"' : ''}>+</button></span><span class="vehicle-range-chip" data-vehicle-range-output title="Estimated remaining range from representative full-range rating">↗ ${esc(rangeText)}</span></span>`;
   }
 
   function vehicleStatusOwnerFromKey(key) {
@@ -19664,7 +19650,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         ? `<select class="gear-location-vehicle-color no-print" data-vehicle-location-color aria-label="Vehicle color">${gearColorOptionsForItem({catalogId:locationVehicleCatalog.id,color:location.vehicleColor}).map(color => `<option value="${esc(color)}" ${color === location.vehicleColor ? 'selected' : ''}>${esc(color)}</option>`).join('')}</select><span class="gear-print-value print-only">${esc(location.vehicleColor || '')}</span>`
         : '<span class="gear-location-color-spacer no-print" aria-hidden="true"></span>';
       const vehicleWeightControl = standaloneVehicle
-        ? `<span class="gear-location-vehicle-weight" title="Vehicle dry/curb weight">${esc(formatGearWeight(locationVehicleCatalog.weight, weightUnit))} ${esc(weightUnit)}</span>`
+        ? ''
         : '<span class="gear-location-quantity-spacer no-print" aria-hidden="true"></span>';
       const vehicleConditionControl = standaloneVehicle
         ? `<select class="gear-location-vehicle-condition no-print" data-vehicle-location-condition aria-label="Vehicle condition">${GEAR_CONDITION_OPTIONS.map(option => `<option value="${esc(option)}" ${option === (location.vehicleCondition || 'New') ? 'selected' : ''}>${esc(option)}</option>`).join('')}</select><span class="gear-print-value print-only">${esc(location.vehicleCondition || 'New')}</span>`
