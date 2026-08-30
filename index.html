@@ -8734,6 +8734,47 @@
       }
     }
 
+
+    /* v597: make the live fuel/charge chip hug its actual contents. v596 made
+       the numeric field dynamic, but the surrounding chip still kept more
+       padding/gap/button footprint than the compact readout needs. */
+    @media screen {
+      .vehicle-energy-chip {
+        width: max-content !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        flex: 0 0 auto !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+        gap: 0 !important;
+      }
+      .vehicle-energy-chip .vehicle-energy-button {
+        width: 14px !important;
+        min-width: 14px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .vehicle-energy-chip > span[aria-hidden="true"] {
+        flex: 0 0 auto !important;
+        margin: 0 1px !important;
+      }
+      .vehicle-energy-chip .vehicle-energy-reading {
+        width: max-content !important;
+        min-width: 0 !important;
+        flex: 0 0 auto !important;
+        gap: 0 !important;
+      }
+      .vehicle-energy-chip .vehicle-energy-input {
+        width: calc(var(--vehicle-energy-chars, 2) * 1ch) !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        box-sizing: content-box !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -8992,7 +9033,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v596</div>
+<div class="footer-note no-print">Character Sheet v597</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
