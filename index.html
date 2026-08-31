@@ -9229,7 +9229,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v612</div>
+<div class="footer-note no-print">Character Sheet v616</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -10047,6 +10047,18 @@
      - Adds Dead as the known floor below Low for replaceable alkaline cells.
      - Dead cells/set report zero usable runtime; Untested remains orthogonal/unknown.
      - Used-generated alkaline cells still always start Untested. */
+  /* INTERNAL v613 RUNTIME + LIQUID DISCARD PASS — NOT USER-FACING
+     - Battery/device runtime estimates under one hour display rounded minutes; estimates of one hour or more round to the nearest whole hour.
+     - Gear-item actions expose destructive red Pour Out for loose bulk liquids and filled liquid containers. Pouring out a container removes only its embedded liquid contents; the container remains.
+  */
+  /* INTERNAL v614 USED INSTALLED-CONTENTS + SPRAYER PASS — NOT USER-FACING
+     - Used Bulk Gear generation now creates plausible embedded contents for loadable weapons, detachable magazines, replaceable-battery devices, and liquid containers, while rechargeable devices retain randomized charge and fuel-powered vehicles receive randomized remaining fuel.
+     - Detachable-magazine weapons can generate with no magazine or with a real embedded compatible magazine containing a random real ammunition load; internal/tube/cylinder/belt-fed weapons can generate with random compatible ammunition already loaded.
+     - Replaceable-battery devices can generate empty, partially populated, or fully populated with real embedded Untested alkaline cells whose hidden physical conditions persist.
+     - Liquid-container generation uses purpose-weighted contents: water vessels and fuel cans match their intended liquid family 99% of the time when filled, while general containers and sprayers allow plausible scavenged/misused combinations. Generated liquid amounts are rounded to at most two decimals.
+     - Existing squirt guns remain true liquid containers; existing 1-gallon pump sprayer is wired into the liquid system; adds a 4-gallon backpack sprayer plus bulk household bleach, herbicide, and insecticide liquids.
+  */
+
   /* INTERNAL v612 BATTERY TESTING PASS — NOT USER-FACING
      - Used-generated alkaline batteries remain visibly Untested but now receive a persistent hidden physical Dead/Low/Medium/Fresh state that testing reveals rather than rolling at test time.
      - Adds Battery Tester, Household, Digital and updates Clamp Meter, Digital specs for probe-based DC voltage measurement.
@@ -10078,6 +10090,104 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       clampMeter.aliases = Array.from(new Set([...(clampMeter.aliases || []), 'clamp multimeter', 'current clamp meter']));
     }
   }
+  // v616: modernize the pen-style precision electric screwdriver to USB-C rechargeable and add a dedicated 4 mm precision bit set.
+  // v615: add queued tongue scraper and pen-style precision electric screwdriver.
+  // v614: additional transferable liquids and field sprayers.
+  GEAR_CATALOG.push(
+    {
+      id:'gc2757', name:'Bleach, Household, 1 L', category:'Household & General', subcategory:'Cleaning',
+      weight:2.38, price:2.0, availability:'Common', colors:['Clear'],
+      specs:'One liter of standard household chlorine bleach solution; container weight not included',
+      aliases:['household bleach','chlorine bleach','sodium hypochlorite solution'], unit:'L',
+      liquidFamily:'bleach', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+    },
+    {
+      id:'gc2758', name:'Herbicide Solution, Ready-to-Use, 1 L', category:'Tools & Hardware', subcategory:'Pest Control',
+      weight:2.2, price:8.0, availability:'Common', colors:['Clear'],
+      specs:'One liter of generic ready-to-use liquid herbicide / weed-killer solution; container weight not included',
+      aliases:['herbicide','weed killer','weedkiller','weed control spray'], unit:'L',
+      liquidFamily:'herbicide', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+    },
+    {
+      id:'gc2759', name:'Insecticide Solution, Ready-to-Use, 1 L', category:'Tools & Hardware', subcategory:'Pest Control',
+      weight:2.2, price:8.0, availability:'Common', colors:['Clear'],
+      specs:'One liter of generic ready-to-use liquid insecticide solution for household, garden, or landscape application; container weight not included',
+      aliases:['insecticide','bug killer','pesticide spray','insect killer'], unit:'L',
+      liquidFamily:'insecticide', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+    },
+    {
+      id:'gc2760', name:'Backpack Sprayer, 4 Gallon', category:'Tools & Hardware', subcategory:'Pest Control',
+      weight:10.0, price:100.0, availability:'Common', colors:['Black','White','Yellow'],
+      specs:'Manual-pump backpack sprayer with approximately 4 gal / 15.1 L poly tank, shoulder straps, hose and spray wand; representative landscape/home-and-garden class for herbicide, insecticide, water and compatible cleaning solutions; empty weight about 10 lb',
+      aliases:['backpack sprayer','weed sprayer backpack','herbicide backpack sprayer','pesticide backpack sprayer','insecticide backpack sprayer'],
+      liquidCapacityLiters:15.141647136, liquidAllowedFamilies:['water','water-nonpotable','bleach','herbicide','insecticide'], liquidPreferredUnit:'gal', liquidUsedProfile:'sprayer'
+    },
+    {
+      id:'gc2761', name:'Tongue Scraper', category:'Everyday Carry & Personal', subcategory:'Hygiene & Sanitation > Dental',
+      weight:0.04, price:7.0, availability:'Common', colors:['Silver','White','Blue'],
+      specs:'Reusable manual tongue-cleaning scraper for removing surface coating and debris from the tongue; representative stainless-steel or molded-plastic personal-care tool',
+      aliases:['tongue cleaner','tongue cleaning scraper','tongue cleaner tool','tongue scraper tool']
+    },
+    {
+      id:'gc2762', name:'Electric Screwdriver, Precision, Pen-Style', category:'Tools & Hardware', subcategory:'Sockets & Drivers',
+      weight:0.20, price:35.0, availability:'Specialty', colors:['Black','Gray','Silver'],
+      specs:'Pen-shaped USB-C rechargeable precision electric screwdriver for electronics and small fasteners · Accepts standard 4 mm / 5/32 in hex precision bits · Internal ~350 mAh lithium-ion battery · Representative powered torque approximately 0.05–0.20 N·m with higher manual breakaway torque · Approximately 180–200 rpm · Integrated work light · Bits not included',
+      aliases:['electric precision screwdriver','precision electric screwdriver','mini electric screwdriver','pen screwdriver','electric pen screwdriver','electronics screwdriver','electric bit driver','cordless precision screwdriver','USB-C precision screwdriver','rechargeable precision screwdriver'],
+      rechargeable:true, batteryRuntimeHours:2.0,
+      batteryRuntimeBasis:'representative continuous powered precision screwdriving',
+      batteryRuntimeReference:'modern USB-C pen-style precision driver with ~350 mAh lithium-ion battery'
+    },
+    {
+      id:'gc2763', name:'Precision Driver Bit Set, 4 mm, 50-Piece', category:'Tools & Hardware', subcategory:'Sockets & Drivers',
+      weight:0.60, price:25.0, availability:'Specialty', colors:['Black','Silver'], unit:'set',
+      specs:'Compact 50-piece precision screwdriver-bit assortment with standard 4 mm / 5/32 in hex shanks for electronics and small fasteners · Representative S2-steel assortment includes Phillips, slotted, Torx and security Torx, hex, pentalobe, tri-point/tri-wing and other small specialty profiles · Compatible with 4 mm precision hand drivers and electric precision screwdrivers',
+      aliases:['precision bit set','precision screwdriver bit set','4 mm bit set','4mm bit set','electronics screwdriver bits','mini screwdriver bits','precision driver bits','4 mm precision bits']
+    }
+  );
+
+  // Container compatibility describes what can physically be carried, while
+  // liquidUsedProfile below controls what is *likely* to be found in it.
+  const V614_AQUEOUS_LIQUID_FAMILIES = Object.freeze(['water','water-nonpotable','bleach','herbicide','insecticide']);
+  const V614_GENERAL_LIQUID_FAMILIES = Object.freeze([...V614_AQUEOUS_LIQUID_FAMILIES,'gasoline','diesel']);
+  const v614SetLiquidContainer = (id, capacityLiters, allowedFamilies, preferredUnit='L', usedProfile='general') => {
+    const item = GEAR_CATALOG.find(entry => entry.id === id);
+    if (!item) return;
+    if (Number(capacityLiters) > 0) item.liquidCapacityLiters = Number(capacityLiters);
+    item.liquidAllowedFamilies = Array.from(new Set(allowedFamilies));
+    item.liquidPreferredUnit = preferredUnit;
+    item.liquidUsedProfile = usedProfile;
+  };
+
+  // Existing sprayers and open/general containers.
+  v614SetLiquidContainer('gc0946', 3.785411784, V614_AQUEOUS_LIQUID_FAMILIES, 'gal', 'sprayer'); // Pump Sprayer, 1 Gallon
+  v614SetLiquidContainer('gc0887', 0.946352946, V614_GENERAL_LIQUID_FAMILIES, 'L', 'general');   // Canning Jar, 1 qt
+  v614SetLiquidContainer('gc1014', 0.2365882365, V614_GENERAL_LIQUID_FAMILIES, 'L', 'general'); // Specimen Jar, 8 oz
+
+  for (const item of GEAR_CATALOG) {
+    const name = String(item.name || '');
+    if (!(Number(item.liquidCapacityLiters) > 0)) continue;
+
+    if (/\b(?:Gas Can|Fuel Bottle)\b/i.test(name)) {
+      item.liquidAllowedFamilies = Array.from(new Set([...item.liquidAllowedFamilies || [], 'gasoline','diesel','water','water-nonpotable']));
+      item.liquidUsedProfile = 'fuel';
+      continue;
+    }
+    if (/\b(?:Backpack Sprayer|Pump Sprayer|Spray Bottle|Spray Mister)\b/i.test(name)) {
+      item.liquidAllowedFamilies = Array.from(new Set([...item.liquidAllowedFamilies || [], ...V614_AQUEOUS_LIQUID_FAMILIES]));
+      item.liquidUsedProfile = 'sprayer';
+      continue;
+    }
+    if (/\b(?:Bucket|Canning Jar|Specimen Jar|Sample Bottle)\b/i.test(name)) {
+      item.liquidAllowedFamilies = Array.from(new Set([...item.liquidAllowedFamilies || [], ...V614_GENERAL_LIQUID_FAMILIES]));
+      item.liquidUsedProfile = 'general';
+      continue;
+    }
+    if (/\b(?:Water Bottle|Canteen|Hydration Reservoir|Water Jug|Water Storage|Collapsible Water Container|Vacuum Bottle|Hot Water Bottle|Watering Can|Rain Barrel|Squirt Gun|Water Sample Bottle)\b/i.test(name)) {
+      item.liquidAllowedFamilies = Array.from(new Set([...item.liquidAllowedFamilies || [], ...V614_AQUEOUS_LIQUID_FAMILIES]));
+      item.liquidUsedProfile = 'water';
+    }
+  }
+
   // Restore catalog defaults omitted above to keep this single-file app compact.
   for (const item of GEAR_CATALOG) {
     if (item.createsLocation === undefined) item.createsLocation = false;
@@ -13035,6 +13145,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (family === 'water-nonpotable') return 'Non-Potable Water';
     if (family === 'gasoline') return 'Gasoline';
     if (family === 'diesel') return 'Diesel';
+    if (family === 'bleach') return 'Household Bleach';
+    if (family === 'herbicide') return 'Herbicide';
+    if (family === 'insecticide') return 'Insecticide';
     return family ? family[0].toUpperCase() + family.slice(1) : 'Empty';
   }
 
@@ -14089,16 +14202,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function formatBatteryRuntimeHours(hours) {
     if (!Number.isFinite(hours)) return '—';
-    const totalMinutes = Math.max(0, Math.round(hours * 60));
-    if (totalMinutes < 60) return `${totalMinutes} min`;
-    if (totalMinutes < 1440) {
-      const wholeHours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      return minutes ? `${wholeHours}h ${minutes}m` : `${wholeHours}h`;
-    }
-    const days = Math.floor(totalMinutes / 1440);
-    const hoursRemainder = Math.floor((totalMinutes % 1440) / 60);
-    return hoursRemainder ? `${days}d ${hoursRemainder}h` : `${days}d`;
+    const value = Math.max(0, Number(hours));
+    if (value < 1) return `${Math.max(0, Math.round(value * 60))} min`;
+    return `${Math.max(1, Math.round(value))}h`;
   }
 
   function gearBatteryStatusMarkup(item, catalog) {
@@ -18867,7 +18973,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (conditionMode !== 'used') return packageQuantity;
     // Stateful containers need one concrete instance so their generated contents
     // can be tracked accurately instead of assigning one fill state to a stack.
-    if (catalogIsMagazine(item) || catalogIsLiquidContainer(item)) return 1;
+    if (catalogIsMagazine(item) || catalogIsLiquidContainer(item) || catalogIsLoadableWeapon(item) || item?.replaceableBatteryType) return 1;
     if (packageQuantity <= 1) return packageQuantity;
     return 1 + Math.floor(Math.random() * packageQuantity);
   }
@@ -18880,49 +18986,158 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return 5 * (13 + Math.floor(Math.random() * 8));                      // 65–100%
   }
 
+  function randomUsedVehicleFuelGallons(catalog) {
+    const tank = Math.max(0, Number(catalog?.vehicleFuelTankGallons) || 0);
+    if (!(tank > 0)) return 0;
+    const roll = Math.random();
+    if (roll < .25) return 0;
+    if (roll < .35) return Math.round((tank + Number.EPSILON) * 100) / 100;
+    const gallons = tank * (.03 + Math.pow(Math.random(), 1.25) * .92);
+    return Math.max(0, Math.min(tank, Math.round((gallons + Number.EPSILON) * 100) / 100));
+  }
+
   function randomUsedPrimaryBatteryCondition() {
     // A loose alkaline cell found in used gear has not been tested by the character yet.
     // The visible state is always Untested; a separate hidden physical state is generated once.
     return 'untested';
   }
 
-  function randomCompatibleAmmoCatalog(magazineCatalog) {
-    const family = String(magazineCatalog?.ammoFamily || '');
+  function randomCompatibleAmmoCatalog(parentCatalog) {
+    const family = String(parentCatalog?.ammoFamily || '');
     const candidates = GEAR_CATALOG.filter(candidate => catalogIsAmmunition(candidate) && candidate.ammoFamily === family);
     return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
   }
 
-  function randomCompatibleLiquidCatalog(containerCatalog) {
-    const allowed = Array.isArray(containerCatalog?.liquidAllowedFamilies) ? containerCatalog.liquidAllowedFamilies : [];
-    const candidates = GEAR_CATALOG.filter(candidate => catalogIsBulkLiquid(candidate) && allowed.includes(candidate.liquidFamily));
-    return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
+  function randomCompatibleMagazineCatalog(weaponCatalog) {
+    const family = String(weaponCatalog?.magazineFamily || '');
+    const candidates = GEAR_CATALOG.filter(candidate => catalogIsMagazine(candidate) && candidate.magazineFamily === family);
+    if (!candidates.length) return null;
+    const standardCapacity = Math.max(0, Math.floor(Number(weaponCatalog?.standardMagazineCapacity) || 0));
+    const standard = standardCapacity ? candidates.filter(candidate => Math.floor(Number(candidate.capacityRounds) || 0) === standardCapacity) : [];
+    if (standard.length && Math.random() < .95) return standard[Math.floor(Math.random() * standard.length)];
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  function randomUsedRoundCount(capacity) {
+    const cap = Math.max(0, Math.floor(Number(capacity) || 0));
+    if (!cap) return 0;
+    const roll = Math.random();
+    if (roll < .18) return 0;
+    if (roll < .28) return cap;
+    if (cap <= 1) return 1;
+    return 1 + Math.floor(Math.random() * (cap - 1));
   }
 
   function randomUsedMagazineLoadPlan(catalog) {
     if (!catalogIsMagazine(catalog)) return null;
     const capacity = Math.max(0, Math.floor(Number(catalog.capacityRounds) || 0));
     if (!capacity) return null;
-    const roll = Math.random();
-    let quantity = 0;
-    if (roll >= .25 && roll < .35) quantity = capacity;
-    else if (roll >= .35) quantity = capacity <= 1 ? capacity : 1 + Math.floor(Math.random() * (capacity - 1));
+    const quantity = randomUsedRoundCount(capacity);
     if (quantity <= 0) return {kind:'magazine', quantity:0, capacity};
     const ammo = randomCompatibleAmmoCatalog(catalog);
     return ammo ? {kind:'magazine', quantity, capacity, catalogId:ammo.id} : {kind:'magazine', quantity:0, capacity};
+  }
+
+  function randomUsedWeaponLoadPlan(catalog) {
+    if (!catalogIsLoadableWeapon(catalog)) return null;
+    if (catalog.feedType === 'detachable-magazine') {
+      if (Math.random() < .20) return {kind:'weapon-detachable', magazineInstalled:false};
+      const magazine = randomCompatibleMagazineCatalog(catalog);
+      if (!magazine) return {kind:'weapon-detachable', magazineInstalled:false};
+      const capacity = Math.max(0, Math.floor(Number(magazine.capacityRounds) || 0));
+      const quantity = randomUsedRoundCount(capacity);
+      const ammo = quantity > 0 ? randomCompatibleAmmoCatalog(catalog) : null;
+      return {
+        kind:'weapon-detachable', magazineInstalled:true,
+        magazineCatalogId:magazine.id, capacity, quantity:ammo ? quantity : 0,
+        ammoCatalogId:ammo?.id || ''
+      };
+    }
+
+    let capacity = Math.max(0, Math.floor(Number(catalog.internalCapacity) || 0));
+    const ammo = randomCompatibleAmmoCatalog(catalog);
+    if (!capacity && catalog.feedType === 'belt' && ammo) capacity = Math.max(1, Math.floor(Number(ammo.defaultQuantity) || 0));
+    if (!capacity || !ammo) return null;
+    return {kind:'weapon-internal', capacity, quantity:randomUsedRoundCount(capacity), ammoCatalogId:ammo.id};
+  }
+
+  function primaryBatteryCatalogForType(type) {
+    return GEAR_CATALOG.find(candidate => candidate.primaryBatteryChemistry === 'alkaline' && candidate.primaryBatteryType === type) || null;
+  }
+
+  function randomUsedReplaceableBatteryLoadPlan(catalog) {
+    const required = Math.max(0, Math.floor(Number(catalog?.replaceableBatteryCount) || 0));
+    const type = String(catalog?.replaceableBatteryType || '');
+    const battery = required && type ? primaryBatteryCatalogForType(type) : null;
+    if (!battery) return null;
+    const roll = Math.random();
+    let count = 0;
+    if (roll >= .20 && roll < .35 && required > 1) count = 1 + Math.floor(Math.random() * (required - 1));
+    else if (roll >= .20) count = required;
+    return {
+      kind:'batteries', count, required, batteryType:type, catalogId:battery.id,
+      actualConditions:Array.from({length:count}, () => randomUsedPrimaryBatteryActualCondition())
+    };
+  }
+
+  function liquidUsedProfile(catalog) {
+    const explicit = String(catalog?.liquidUsedProfile || '');
+    if (['water','fuel','sprayer','general'].includes(explicit)) return explicit;
+    return 'general';
+  }
+
+  function randomCompatibleLiquidCatalog(containerCatalog) {
+    const allowed = Array.isArray(containerCatalog?.liquidAllowedFamilies) ? containerCatalog.liquidAllowedFamilies : [];
+    const byFamily = new Map();
+    for (const candidate of GEAR_CATALOG) {
+      if (!catalogIsBulkLiquid(candidate) || !allowed.includes(candidate.liquidFamily)) continue;
+      if (!byFamily.has(candidate.liquidFamily)) byFamily.set(candidate.liquidFamily, []);
+      byFamily.get(candidate.liquidFamily).push(candidate);
+    }
+    if (!byFamily.size) return null;
+
+    // Intended-purpose vessels are overwhelmingly found with the expected fluid;
+    // general/open containers have much looser scavenged-content probabilities.
+    const profiles = {
+      water:{water:75,'water-nonpotable':24,bleach:.5,herbicide:.25,insecticide:.25},
+      fuel:{gasoline:84,diesel:15,'water-nonpotable':.8,water:.2},
+      sprayer:{herbicide:40,insecticide:30,'water-nonpotable':15,water:10,bleach:5},
+      general:{'water-nonpotable':35,water:20,gasoline:12,diesel:8,bleach:10,herbicide:8,insecticide:7}
+    };
+    const profile = profiles[liquidUsedProfile(containerCatalog)] || profiles.general;
+    const weighted = [...byFamily.keys()].map(family => ({value:family, weight:Number(profile[family]) || .01}));
+    const family = weightedRandomChoice(weighted) || [...byFamily.keys()][0];
+    const candidates = byFamily.get(family) || [];
+    return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
+  }
+
+  function roundGeneratedLiquidLiters(value, capacityLiters) {
+    const capacity = Math.max(0, Number(capacityLiters) || 0);
+    if (!(capacity > 0)) return 0;
+    const rounded = Math.round((Math.max(0, Number(value) || 0) + Number.EPSILON) * 100) / 100;
+    return Math.max(0, Math.min(capacity, rounded));
   }
 
   function randomUsedLiquidLoadPlan(catalog) {
     if (!catalogIsLiquidContainer(catalog)) return null;
     const capacityLiters = Math.max(0, Number(catalog.liquidCapacityLiters) || 0);
     if (!(capacityLiters > 0)) return null;
-    if (Math.random() < .30) return {kind:'liquid', liters:0, capacityLiters};
+    if (Math.random() < .25) return {kind:'liquid', liters:0, capacityLiters, displayUnit:String(catalog.liquidPreferredUnit || 'L')};
     const liquid = randomCompatibleLiquidCatalog(catalog);
-    if (!liquid) return {kind:'liquid', liters:0, capacityLiters};
-    const percent = 5 * (1 + Math.floor(Math.random() * 20));
-    const liters = capacityLiters * percent / 100;
+    if (!liquid) return {kind:'liquid', liters:0, capacityLiters, displayUnit:String(catalog.liquidPreferredUnit || 'L')};
+
+    const full = Math.random() < .10;
+    const rawFraction = full ? 1 : (.03 + Math.pow(Math.random(), 1.35) * .94);
+    let liters = roundGeneratedLiquidLiters(capacityLiters * rawFraction, capacityLiters);
+    if (liters <= 0 && capacityLiters >= .01) liters = Math.min(capacityLiters, .01);
     const perUnit = Number(liquid.liquidVolumeLitersPerUnit) || 0;
     const quantity = perUnit > 0 ? liters / perUnit : 0;
-    return {kind:'liquid', liters, capacityLiters, percent, quantity, catalogId:liquid.id, family:liquid.liquidFamily};
+    return {
+      kind:'liquid', liters, capacityLiters,
+      percent:capacityLiters > 0 ? Math.round(liters / capacityLiters * 100) : 0,
+      quantity, catalogId:liquid.id, family:liquid.liquidFamily,
+      displayUnit:String(catalog.liquidPreferredUnit || (['gasoline','diesel'].includes(liquid.liquidFamily) ? 'gal' : 'L'))
+    };
   }
 
   function applyUsedGeneratedResourceState(catalog, generated) {
@@ -18934,8 +19149,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if ((catalog.rechargeable === true && catalog.category !== 'Vehicles') || catalog.vehicleEnergyType === 'electric') {
       generated.generatedChargePercent = randomUsedRechargeableChargePercent();
     }
+    if (catalog.vehicleEnergyType === 'fuel') generated.generatedFuelGallons = randomUsedVehicleFuelGallons(catalog);
     if (catalogIsMagazine(catalog)) generated.generatedLoad = randomUsedMagazineLoadPlan(catalog);
     else if (catalogIsLiquidContainer(catalog)) generated.generatedLoad = randomUsedLiquidLoadPlan(catalog);
+    if (catalogIsLoadableWeapon(catalog)) generated.generatedWeaponLoad = randomUsedWeaponLoadPlan(catalog);
+    if (catalog.replaceableBatteryType && Number(catalog.replaceableBatteryCount) > 0) generated.generatedBatteryLoad = randomUsedReplaceableBatteryLoadPlan(catalog);
     return generated;
   }
 
@@ -18944,14 +19162,28 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const parts = [];
     if (generated.primaryBatteryCondition) parts.push(`Battery: ${primaryBatteryConditionLabel(generated.primaryBatteryCondition)}`);
     if (Number.isFinite(Number(generated.generatedChargePercent))) parts.push(`Charge: ${Math.round(Number(generated.generatedChargePercent))}%`);
+    if (Number.isFinite(Number(generated.generatedFuelGallons)) && catalog.vehicleEnergyType === 'fuel') {
+      parts.push(`Fuel: ${Number(Number(generated.generatedFuelGallons).toFixed(2))}/${Number(Number(catalog.vehicleFuelTankGallons || 0).toFixed(2))} gal`);
+    }
     const load = generated.generatedLoad;
     if (load?.kind === 'magazine') parts.push(`Loaded: ${Math.max(0, Math.floor(Number(load.quantity) || 0))}/${Math.max(0, Math.floor(Number(load.capacity) || 0))}`);
     if (load?.kind === 'liquid') {
-      const unit = liquidFamilyIsWater(load.family) ? 'L' : 'gal';
+      const unit = String(load.displayUnit || (['gasoline','diesel'].includes(load.family) ? 'gal' : 'L'));
+      const liquidName = load.catalogId ? String(GEAR_CATALOG_BY_ID.get(load.catalogId)?.name || liquidFamilyLabel(load.family)) : '';
       parts.push(load.liters > 1e-9
-        ? `Filled: ${formatLiquidVolume(load.liters, unit)}/${formatLiquidVolume(load.capacityLiters, unit)} ${unit}`
+        ? `${liquidName || liquidFamilyLabel(load.family)}: ${formatLiquidVolume(load.liters, unit)}/${formatLiquidVolume(load.capacityLiters, unit)} ${unit}`
         : 'Empty');
     }
+    const weaponLoad = generated.generatedWeaponLoad;
+    if (weaponLoad?.kind === 'weapon-detachable') {
+      parts.push(weaponLoad.magazineInstalled
+        ? `Weapon: ${Math.max(0, Math.floor(Number(weaponLoad.quantity) || 0))}/${Math.max(0, Math.floor(Number(weaponLoad.capacity) || 0))} in magazine`
+        : 'Weapon: no magazine');
+    } else if (weaponLoad?.kind === 'weapon-internal') {
+      parts.push(`Weapon: ${Math.max(0, Math.floor(Number(weaponLoad.quantity) || 0))}/${Math.max(0, Math.floor(Number(weaponLoad.capacity) || 0))} loaded`);
+    }
+    const batteryLoad = generated.generatedBatteryLoad;
+    if (batteryLoad?.kind === 'batteries') parts.push(`Batteries: ${Math.max(0, Math.floor(Number(batteryLoad.count) || 0))}/${Math.max(0, Math.floor(Number(batteryLoad.required) || 0))} installed`);
     return parts.join(' · ');
   }
 
@@ -19367,7 +19599,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     document.getElementById('bulkGearDialog')?.close();
   }
 
-  function createGeneratedEmbeddedConsumable(parentItem, childCatalog, quantity) {
+  function createGeneratedEmbeddedConsumable(parentItem, childCatalog, quantity, options={}) {
     if (!parentItem || !childCatalog || !(Number(quantity) > 0)) return null;
     const catalogWeight = (childCatalog.weight === null || childCatalog.weight === undefined || childCatalog.weight === '') ? NaN : Number(childCatalog.weight);
     const soleColor = Array.isArray(childCatalog.colors) && childCatalog.colors.length === 1 ? childCatalog.colors[0] : '';
@@ -19385,6 +19617,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       embeddedInGearId:parentItem.id
     };
     if (catalogIsWaterLiquid(childCatalog)) child.liquidDisplayUnit = childCatalog.liquidDisplayUnit === 'gal' ? 'gal' : 'L';
+    if (options.primaryBatteryState) child.primaryBatteryState = {...options.primaryBatteryState};
     state.gear.push(child);
     return child;
   }
@@ -19403,18 +19636,54 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (catalog.rechargeable === true && catalog.category !== 'Vehicles') item.batteryEnergy = {chargePercent};
       if (catalog.vehicleEnergyType === 'electric') item.vehicleEnergy = {chargePercent};
     }
+    if (Number.isFinite(Number(selectedState.generatedFuelGallons)) && catalog.vehicleEnergyType === 'fuel') {
+      const tank = Math.max(0, Number(catalog.vehicleFuelTankGallons) || 0);
+      item.vehicleEnergy = {fuelGallons:Math.max(0, Math.min(tank, Number(selectedState.generatedFuelGallons) || 0))};
+    }
+    if (gearItemQuantity(item) !== 1) return;
+
     const load = selectedState.generatedLoad;
-    if (!load || gearItemQuantity(item) !== 1) return;
-    if (load.kind === 'magazine' && catalogIsMagazine(catalog) && Number(load.quantity) > 0) {
+    if (load?.kind === 'magazine' && catalogIsMagazine(catalog) && Number(load.quantity) > 0) {
       const ammo = GEAR_CATALOG_BY_ID.get(load.catalogId);
       if (ammo && catalogIsAmmunition(ammo) && ammo.ammoFamily === catalog.ammoFamily) {
         createGeneratedEmbeddedConsumable(item, ammo, Math.min(Math.floor(Number(load.quantity) || 0), Math.floor(Number(catalog.capacityRounds) || 0)));
       }
-    } else if (load.kind === 'liquid' && catalogIsLiquidContainer(catalog) && Number(load.quantity) > 0) {
+    } else if (load?.kind === 'liquid' && catalogIsLiquidContainer(catalog) && Number(load.quantity) > 0) {
       const liquid = GEAR_CATALOG_BY_ID.get(load.catalogId);
       if (liquid && catalogIsBulkLiquid(liquid) && catalog.liquidAllowedFamilies.includes(liquid.liquidFamily)) {
         const maxQuantity = Number(catalog.liquidCapacityLiters) / Number(liquid.liquidVolumeLitersPerUnit);
         createGeneratedEmbeddedConsumable(item, liquid, Math.min(Number(load.quantity) || 0, maxQuantity));
+      }
+    }
+
+    const weaponLoad = selectedState.generatedWeaponLoad;
+    if (weaponLoad?.kind === 'weapon-internal' && catalogIsLoadableWeapon(catalog) && catalog.feedType !== 'detachable-magazine' && Number(weaponLoad.quantity) > 0) {
+      const ammo = GEAR_CATALOG_BY_ID.get(weaponLoad.ammoCatalogId);
+      if (ammo && catalogIsAmmunition(ammo) && ammo.ammoFamily === catalog.ammoFamily) {
+        createGeneratedEmbeddedConsumable(item, ammo, Math.min(Math.floor(Number(weaponLoad.quantity) || 0), Math.floor(Number(weaponLoad.capacity) || 0)));
+      }
+    } else if (weaponLoad?.kind === 'weapon-detachable' && catalog.feedType === 'detachable-magazine' && weaponLoad.magazineInstalled) {
+      const magazineCatalog = GEAR_CATALOG_BY_ID.get(weaponLoad.magazineCatalogId);
+      if (magazineCatalog && catalogIsMagazine(magazineCatalog) && magazineCatalog.magazineFamily === catalog.magazineFamily) {
+        const magazineItem = createGeneratedEmbeddedConsumable(item, magazineCatalog, 1);
+        const ammo = GEAR_CATALOG_BY_ID.get(weaponLoad.ammoCatalogId);
+        if (magazineItem && ammo && catalogIsAmmunition(ammo) && ammo.ammoFamily === catalog.ammoFamily && Number(weaponLoad.quantity) > 0) {
+          createGeneratedEmbeddedConsumable(magazineItem, ammo, Math.min(Math.floor(Number(weaponLoad.quantity) || 0), Math.floor(Number(magazineCatalog.capacityRounds) || 0)));
+        }
+      }
+    }
+
+    const batteryLoad = selectedState.generatedBatteryLoad;
+    if (batteryLoad?.kind === 'batteries' && catalog.replaceableBatteryType && Number(batteryLoad.count) > 0) {
+      const batteryCatalog = GEAR_CATALOG_BY_ID.get(batteryLoad.catalogId);
+      if (batteryCatalog && batteryCatalog.primaryBatteryChemistry === 'alkaline' && batteryCatalog.primaryBatteryType === catalog.replaceableBatteryType) {
+        const count = Math.min(Math.floor(Number(batteryLoad.count) || 0), Math.floor(Number(catalog.replaceableBatteryCount) || 0));
+        for (let index = 0; index < count; index += 1) {
+          const actualCondition = PRIMARY_BATTERY_CONDITION_ORDER.includes(batteryLoad.actualConditions?.[index])
+            ? batteryLoad.actualConditions[index]
+            : randomUsedPrimaryBatteryActualCondition();
+          createGeneratedEmbeddedConsumable(item, batteryCatalog, 1, {primaryBatteryState:{condition:'untested', actualCondition}});
+        }
       }
     }
   }
@@ -19424,7 +19693,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (catalog.category === 'Vehicles' && vehicleBehaviorForCatalog(catalog) === 'location') {
       const generatedVehicleEnergy = Number.isFinite(Number(selectedState.generatedChargePercent)) && catalog.vehicleEnergyType === 'electric'
         ? {chargePercent:Math.max(0, Math.min(100, Math.round(Number(selectedState.generatedChargePercent))))}
-        : null;
+        : (Number.isFinite(Number(selectedState.generatedFuelGallons)) && catalog.vehicleEnergyType === 'fuel'
+          ? {fuelGallons:Math.max(0, Math.min(Math.max(0, Number(catalog.vehicleFuelTankGallons) || 0), Number(selectedState.generatedFuelGallons) || 0))}
+          : null);
       const location = createStandaloneVehicleLocation(catalog, {color:selectedState.color, condition:selectedState.condition, vehicleEnergy:generatedVehicleEnergy});
       return {item:null, location};
     }
@@ -21430,6 +21701,20 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     else transferFuelIntoVehicle(source, destination.owner, destination.catalog, liters);
   }
 
+  function pourOutGearItemLiquid(item) {
+    if (!item) return false;
+    const info = liquidSourceInfo(item);
+    if (!info || !(info.liters > 1e-9)) return false;
+    const poured = consumeLiquidSourceLiters(item, info.liters, info.family);
+    if (!(poured > 1e-9)) return false;
+    closeGearItemActionMenu();
+    clearGearSortState();
+    renderGear();
+    calculate();
+    queueSave();
+    return true;
+  }
+
   function renderGearItemLiquidTransferMenu(item) {
     const menu = document.getElementById('gearItemActionMenu');
     if (!menu || !item) return;
@@ -21454,8 +21739,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const splitAction = gearItemQuantity(item) > 1
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-split role="menuitem">Split</button>'
       : '';
-    const transferLiquidAction = liquidSourceInfo(item)
+    const liquidInfo = liquidSourceInfo(item);
+    const transferLiquidAction = liquidInfo
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-transfer-liquid role="menuitem"><span>Transfer Liquid</span><span aria-hidden="true">›</span></button>'
+      : '';
+    const pourOutLiquidAction = liquidInfo
+      ? '<button type="button" class="gear-item-action-option danger" data-gear-item-action-pour-out role="menuitem">Pour Out</button>'
       : '';
     const unloadAction = canUnloadGearItem(item)
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-unload role="menuitem">Unload</button>'
@@ -21470,6 +21759,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       <button type="button" class="gear-item-action-option" data-gear-item-action-move role="menuitem"><span>Move</span><span aria-hidden="true">›</span></button>
       <button type="button" class="gear-item-action-option" data-gear-item-action-carry role="menuitem">${carryAction}</button>
       ${transferLiquidAction}
+      ${pourOutLiquidAction}
       ${unloadAction}
       ${removeBatteriesAction}
       ${testBatteryAction}
@@ -21479,6 +21769,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     menu.querySelector('[data-gear-item-action-move]')?.addEventListener('click', () => renderGearItemMoveMenu(item));
     menu.querySelector('[data-gear-item-action-carry]')?.addEventListener('click', () => setDownOrPickUpGearItem(item));
     menu.querySelector('[data-gear-item-action-transfer-liquid]')?.addEventListener('click', () => renderGearItemLiquidTransferMenu(item));
+    menu.querySelector('[data-gear-item-action-pour-out]')?.addEventListener('click', () => pourOutGearItemLiquid(item));
     menu.querySelector('[data-gear-item-action-unload]')?.addEventListener('click', () => unloadGearItem(item));
     menu.querySelector('[data-gear-item-action-remove-batteries]')?.addEventListener('click', () => removeInstalledBatteries(item));
     menu.querySelector('[data-gear-item-action-test-battery]')?.addEventListener('click', () => renderPrimaryBatteryTestMenu(item));
