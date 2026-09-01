@@ -4184,6 +4184,49 @@
       color: var(--danger);
       border-color: color-mix(in srgb, var(--danger) 58%, var(--line));
     }
+    .gear-drag-touch-proxy {
+      position: fixed;
+      z-index: 10055;
+      pointer-events: none;
+      max-width: min(260px, calc(100vw - 24px));
+      padding: 7px 10px;
+      border: 1px solid color-mix(in srgb, var(--accent) 58%, var(--line));
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--panel) 97%, transparent);
+      box-shadow: 0 6px 20px rgba(0,0,0,.22);
+      color: var(--text);
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 850;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transform: translate(-50%, calc(-100% - 18px));
+    }
+    @media screen and (max-width:600px), screen and (max-height:520px) and (pointer:coarse) {
+      .gear-drag-hover-hint.touch-drag-hint {
+        left: max(10px, env(safe-area-inset-left)) !important;
+        right: max(10px, env(safe-area-inset-right)) !important;
+        top: auto !important;
+        bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+        width: auto !important;
+        max-width: none !important;
+        padding: 10px 12px !important;
+        border-radius: 9px !important;
+        font-size: 12px !important;
+        line-height: 1.25 !important;
+        text-align: center !important;
+        white-space: normal !important;
+      }
+      #gear .gear-table tr.gear-row.gear-embed-compatible {
+        outline: 2px solid var(--accent) !important;
+        outline-offset: 2px !important;
+      }
+      #gear .gear-table tr.gear-row.gear-embed-incompatible {
+        outline: 2px solid var(--danger) !important;
+        outline-offset: 2px !important;
+      }
+    }
     .gear-row.gear-embedded-row .gear-item-input-wrap {
       padding-left: calc(var(--gear-embedded-depth, 1) * 14px);
       position: relative;
@@ -9229,7 +9272,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v616</div>
+<div class="footer-note no-print">Character Sheet v617</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -10090,7 +10133,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       clampMeter.aliases = Array.from(new Set([...(clampMeter.aliases || []), 'clamp multimeter', 'current clamp meter']));
     }
   }
-  // v616: modernize the pen-style precision electric screwdriver to USB-C rechargeable and add a dedicated 4 mm precision bit set.
+  // v617: improve touch/phone Gear dragging feedback and hit testing. Touch drags now show a floating source chip,
+  // keep contextual compatibility text in a bottom safe-area banner, and make compatible/incompatible item targets visibly outlined.
   // v615: add queued tongue scraper and pen-style precision electric screwdriver.
   // v614: additional transferable liquids and field sprayers.
   GEAR_CATALOG.push(
@@ -13509,13 +13553,41 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     document.querySelectorAll('.gear-drag-hover-hint').forEach(node => node.remove());
   }
 
+  function gearDragUsesTouchPresentation(drag=gearDrag) {
+    if (drag?.pointerType === 'touch') return true;
+    return Boolean(window.matchMedia?.('(pointer: coarse)').matches && window.matchMedia?.('(max-width: 600px), (max-height: 520px)').matches);
+  }
+
+  function clearGearDragTouchProxy() {
+    document.querySelectorAll('.gear-drag-touch-proxy').forEach(node => node.remove());
+  }
+
+  function showGearDragTouchProxy(item, clientX, clientY) {
+    if (!gearDragUsesTouchPresentation()) return;
+    let proxy = document.querySelector('.gear-drag-touch-proxy');
+    if (!proxy) {
+      proxy = document.createElement('div');
+      proxy.className = 'gear-drag-touch-proxy';
+      const catalog = catalogForGearInstance(item);
+      proxy.textContent = `Dragging ${String(item?.item || catalog?.name || 'Gear item')}`;
+      document.body.appendChild(proxy);
+    }
+    const halfWidth = Math.min(130, Math.max(50, proxy.getBoundingClientRect().width / 2));
+    const x = Math.max(halfWidth + 8, Math.min(window.innerWidth - halfWidth - 8, clientX));
+    const y = Math.max(54, Math.min(window.innerHeight - 14, clientY));
+    proxy.style.left = `${x}px`;
+    proxy.style.top = `${y}px`;
+  }
+
   function showGearDragHoverHint(text, valid, clientX, clientY) {
     clearGearDragHoverHint();
     if (!text) return;
+    const touchPresentation = gearDragUsesTouchPresentation();
     const hint = document.createElement('div');
-    hint.className = `gear-drag-hover-hint ${valid ? 'valid' : 'invalid'}`;
+    hint.className = `gear-drag-hover-hint ${valid ? 'valid' : 'invalid'}${touchPresentation ? ' touch-drag-hint' : ''}`;
     hint.textContent = `${valid ? '✓' : '✕'} ${text}`;
     document.body.appendChild(hint);
+    if (touchPresentation) return;
     const rect = hint.getBoundingClientRect();
     let left = clientX + 12;
     let top = clientY - rect.height - 14;
@@ -13523,6 +13595,21 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (top < 8) top = Math.min(window.innerHeight - rect.height - 8, clientY + 16);
     hint.style.left = `${Math.max(8, left)}px`;
     hint.style.top = `${Math.max(8, top)}px`;
+  }
+
+  function gearDragPointElements(clientX, clientY) {
+    const elements = typeof document.elementsFromPoint === 'function'
+      ? document.elementsFromPoint(clientX, clientY)
+      : [document.elementFromPoint(clientX, clientY)].filter(Boolean);
+    return elements.filter(element => !element.closest?.('.gear-drag-hover-hint, .gear-drag-touch-proxy'));
+  }
+
+  function firstGearDragClosest(elements, selector, predicate=()=>true) {
+    for (const element of elements) {
+      const match = element.closest?.(selector);
+      if (match && predicate(match)) return match;
+    }
+    return null;
   }
 
   function canEmbedGearItem(source, target) {
@@ -21022,6 +21109,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   function clearGearDragUi() {
     document.querySelectorAll('.gear-row.dragging').forEach(row => row.classList.remove('dragging'));
     clearGearDragHoverHint();
+    clearGearDragTouchProxy();
     clearGearDropSlot();
     clearGearLocationDragUi();
   }
@@ -21112,6 +21200,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       closeSizeOptionMenu();
       gearDrag = {
         pointerId:event.pointerId,
+        pointerType:event.pointerType || '',
         handle,
         sourceId:item.id,
         startX:event.clientX,
@@ -21134,9 +21223,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       gearDrag.moved = true;
       event.preventDefault();
 
-      const hit = document.elementFromPoint(event.clientX, event.clientY);
-      const fuelTarget = hit?.closest('[data-vehicle-fuel-drop-target]');
-      const slot = hit?.closest('.gear-drop-row');
+      showGearDragTouchProxy(item, event.clientX, event.clientY);
+      const pointElements = gearDragPointElements(event.clientX, event.clientY);
+      const fuelTarget = firstGearDragClosest(pointElements, '[data-vehicle-fuel-drop-target]');
+      const target = firstGearDragClosest(
+        pointElements,
+        '.gear-row[data-id]',
+        rowElement => rowElement.dataset.id !== item.id
+      );
+      const slot = firstGearDragClosest(pointElements, '.gear-drop-row');
       gearDrag.embedTargetId = null;
       gearDrag.blockedEmbedTargetId = null;
       gearDrag.fuelTargetOwnerKey = null;
@@ -21159,8 +21254,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         gearDrag.targetLocationId = slot.dataset.locationId;
         gearDrag.after = slot.dataset.after === 'true';
       } else {
-        const target = hit?.closest('.gear-row[data-id]');
-        if (target && target.dataset.id !== item.id) {
+        if (target) {
           const targetItem = state.gear.find(entry => entry.id === target.dataset.id);
           const feedback = targetItem ? specialGearDragFeedback(item, targetItem) : {applicable:false};
           if (feedback.applicable) {
@@ -21184,7 +21278,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
             showGearDropSlot(target, gearDrag.after, gearDrag.targetLocationId);
           }
         } else {
-          const locationTarget = hit?.closest('[data-location-id]');
+          const locationTarget = firstGearDragClosest(pointElements, '[data-location-id]');
           const overSourceRow = locationTarget?.classList.contains('gear-row') && locationTarget.dataset.id === item.id;
           const locationId = overSourceRow ? null : locationTarget?.dataset.locationId;
           if (locationId) {
