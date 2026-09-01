@@ -9269,7 +9269,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v618</div>
+<div class="footer-note no-print">Character Sheet v621</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -10130,19 +10130,26 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       clampMeter.aliases = Array.from(new Set([...(clampMeter.aliases || []), 'clamp multimeter', 'current clamp meter']));
     }
   }
+  // v620: consolidate household bleach onto the existing 64 fl oz catalog item and wire it into the structured liquid system.
+  // The v614 temporary 1 L bleach SKU is retired/migrated to gc1221; loose bleach displays/transfers in US fluid ounces.
   // v618: anchor touch/phone compatibility hints directly to the active destination card/target instead of the screen bottom.
   // v617: improve touch/phone Gear dragging feedback and hit testing. Touch drags now show a floating source chip,
   // keep contextual compatibility text in a bottom safe-area banner, and make compatible/incompatible item targets visibly outlined.
   // v615: add queued tongue scraper and pen-style precision electric screwdriver.
+  // v620: the longstanding 64 fl oz household bleach item is the canonical bleach liquid.
+  {
+    const bleach64 = GEAR_CATALOG.find(item => item.id === 'gc1221');
+    if (bleach64) {
+      bleach64.specs = '64 fl oz (1.89 L) of standard household chlorine bleach solution; liquid only, container weight not included';
+      bleach64.aliases = Array.from(new Set([...(bleach64.aliases || []), 'household bleach', 'chlorine bleach', 'sodium hypochlorite solution', 'bleach 64 oz', '64 oz bleach']));
+      bleach64.unit = '64 fl oz';
+      bleach64.liquidFamily = 'bleach';
+      bleach64.liquidVolumeLitersPerUnit = 1.892705892;
+      bleach64.liquidDisplayUnit = 'fl oz';
+    }
+  }
   // v614: additional transferable liquids and field sprayers.
   GEAR_CATALOG.push(
-    {
-      id:'gc2757', name:'Bleach, Household, 1 L', category:'Household & General', subcategory:'Cleaning',
-      weight:2.38, price:2.0, availability:'Common', colors:['Clear'],
-      specs:'One liter of standard household chlorine bleach solution; container weight not included',
-      aliases:['household bleach','chlorine bleach','sodium hypochlorite solution'], unit:'L',
-      liquidFamily:'bleach', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
-    },
     {
       id:'gc2758', name:'Herbicide Solution, Ready-to-Use, 1 L', category:'Tools & Hardware', subcategory:'Pest Control',
       weight:2.2, price:8.0, availability:'Common', colors:['Clear'],
@@ -10187,9 +10194,55 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
   );
 
+  // v621: urine catalog pass — synthetic/paraphernalia, pooled human laboratory urine, and common hunting/trapping urine scents.
+  GEAR_CATALOG.push(
+    {
+      id:'gc2764', name:'Synthetic Urine, 3 oz', category:'Everyday Carry & Personal', subcategory:'Recreational Drugs > Paraphernalia',
+      weight:0.20, price:20.0, availability:'Specialty', colors:['Yellow','Clear'],
+      specs:'3 US fl oz (88.7 mL) of commercial simulated human urine solution; consumer products are commonly sold as novelty/fetish or calibration products and are also associated with urine-specimen substitution; liquid only, bottle/heater accessories not included',
+      aliases:['synthetic urine','fake urine','artificial urine','fetish urine','novelty urine','simulated urine','urine substitute'], unit:'3 fl oz',
+      liquidFamily:'urine-synthetic', liquidVolumeLitersPerUnit:0.0887205886875, liquidDisplayUnit:'fl oz'
+    },
+    {
+      id:'gc2765', name:'Human Urine, Pooled, 1 L', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Laboratory',
+      weight:2.20, price:250.0, availability:'Limited', colors:['Yellow','Clear'],
+      specs:'One liter of pooled normal human-donor urine used as a biological matrix for laboratory research, diagnostics, assay development and validation; ordinary pooled urine is not assumed toxicology-negative unless specifically certified; liquid only, container weight not included',
+      aliases:['human urine','pooled human urine','real urine','human urine sample','urine sample','pee'], unit:'L',
+      liquidFamily:'urine-human', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+    },
+    {
+      id:'gc2766', name:'Deer Urine, 4 oz, (specific)', category:'Outdoor & Survival', subcategory:'Hunting',
+      weight:0.26, price:15.0, availability:'Specialty', colors:['Yellow','Brown'],
+      specs:'4 US fl oz (118 mL) of natural deer urine hunting scent / attractant; declare the specific type in place of “(specific)” such as doe urine, doe estrous urine, buck urine, or buck-with-tarsal blend; liquid only, container weight not included',
+      aliases:['deer urine','doe urine','buck urine','doe estrous urine','doe in estrus urine','deer pee','deer scent','deer attractant'], unit:'4 fl oz',
+      liquidFamily:'urine-deer', liquidVolumeLitersPerUnit:0.11829411825, liquidDisplayUnit:'fl oz'
+    },
+    {
+      id:'gc2767', name:'Elk Urine, 4 oz, (specific)', category:'Outdoor & Survival', subcategory:'Hunting',
+      weight:0.26, price:16.0, availability:'Specialty', colors:['Yellow','Brown'],
+      specs:'4 US fl oz (118 mL) of natural elk urine hunting scent / attractant; declare the specific type in place of “(specific)” such as cow elk urine, cow-in-estrus urine, or bull elk urine; liquid only, container weight not included',
+      aliases:['elk urine','cow elk urine','bull elk urine','elk estrous urine','elk pee','elk scent','elk attractant'], unit:'4 fl oz',
+      liquidFamily:'urine-elk', liquidVolumeLitersPerUnit:0.11829411825, liquidDisplayUnit:'fl oz'
+    },
+    {
+      id:'gc2768', name:'Coyote Urine, 4 oz', category:'Outdoor & Survival', subcategory:'Hunting',
+      weight:0.26, price:13.0, availability:'Specialty', colors:['Yellow','Brown'],
+      specs:'4 US fl oz (118 mL) of natural coyote urine sold as a predator/trapping lure, territorial scent, and hunting cover scent; liquid only, container weight not included',
+      aliases:['coyote urine','coyote pee','coyote scent','predator urine','predator scent','trapping urine'], unit:'4 fl oz',
+      liquidFamily:'urine-coyote', liquidVolumeLitersPerUnit:0.11829411825, liquidDisplayUnit:'fl oz'
+    },
+    {
+      id:'gc2769', name:'Fox Urine, 4 oz', category:'Outdoor & Survival', subcategory:'Hunting',
+      weight:0.26, price:8.0, availability:'Specialty', colors:['Yellow','Brown'],
+      specs:'4 US fl oz (118 mL) of natural fox urine sold as a trapping/predator lure, territorial scent, and hunting cover scent; red fox is a common commercial form; liquid only, container weight not included',
+      aliases:['fox urine','red fox urine','fox pee','fox scent','predator urine','predator scent','trapping urine'], unit:'4 fl oz',
+      liquidFamily:'urine-fox', liquidVolumeLitersPerUnit:0.11829411825, liquidDisplayUnit:'fl oz'
+    }
+  );
+
   // Container compatibility describes what can physically be carried, while
   // liquidUsedProfile below controls what is *likely* to be found in it.
-  const V614_AQUEOUS_LIQUID_FAMILIES = Object.freeze(['water','water-nonpotable','bleach','herbicide','insecticide']);
+  const V614_AQUEOUS_LIQUID_FAMILIES = Object.freeze(['water','water-nonpotable','bleach','herbicide','insecticide','urine-human','urine-synthetic','urine-deer','urine-elk','urine-coyote','urine-fox']);
   const V614_GENERAL_LIQUID_FAMILIES = Object.freeze([...V614_AQUEOUS_LIQUID_FAMILIES,'gasoline','diesel']);
   const v614SetLiquidContainer = (id, capacityLiters, allowedFamilies, preferredUnit='L', usedProfile='general') => {
     const item = GEAR_CATALOG.find(entry => entry.id === id);
@@ -10454,7 +10507,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     gc2199:'gc2201', gc2200:'gc2201', gc2185:'gc2201', gc2202:'gc2201',
     gc2400:'gc2399', gc2401:'gc2399',
     gc2395:'gc2394',
-    gc2392:'gc2391', gc2393:'gc2391'
+    gc2392:'gc2391', gc2393:'gc2391',
+    gc2757:'gc1221'
   });
   const GEAR_CATALOG_LEGACY_INSTANCE_NAMES = Object.freeze({
     gc2655:{'Floatplane, Amphibious':'Floatplane, Piston, Amphibious'},
@@ -10483,7 +10537,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     gc2398:{'Automotive Relay, ISO Mini, 12 V, 30/40 A, (specific)':'Automotive Relay, ISO Mini, 12 V, 30/40 A'},
     gc2402:{'Automotive Blade Fuse Assortment, ATO/ATC':'Automotive Blade Fuse Assortment'},
     gc2578:{'Modular Tool Organizer':'Modular Parts Organizer'},
-    gc2580:{'Modular 2-Drawer Tool Box':'Modular Drawer Tool Box'}
+    gc2580:{'Modular 2-Drawer Tool Box':'Modular Drawer Tool Box'},
+    gc2757:{'Bleach, Household, 1 L':'Bleach, 64 oz'}
   });
 
   const SKILL_SUGGESTIONS = Array.from(
@@ -12454,6 +12509,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const legacyCatalogId = String(item.catalogId || '');
       const migratedCatalogId = GEAR_CATALOG_ID_MIGRATIONS[legacyCatalogId];
       const legacyNameMap = GEAR_CATALOG_LEGACY_INSTANCE_NAMES[legacyCatalogId];
+      // v620: gc2757 stored quantity directly in liters; gc1221 stores 64-fl-oz package-equivalents.
+      if (legacyCatalogId === 'gc2757') {
+        const liters = Math.max(0, Number(item.quantity) || 0);
+        item.quantity = normalizeLiquidQuantity(liters / 1.892705892);
+      }
       const legacyItemName = String(item.item || '').trim();
       if (legacyNameMap?.[legacyItemName]) item.item = legacyNameMap[legacyItemName];
       if (migratedCatalogId) item.catalogId = migratedCatalogId;
@@ -13173,6 +13233,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   const LITERS_PER_US_GALLON = 3.785411784;
+  const LITERS_PER_US_FLUID_OUNCE = 0.0295735295625;
 
   function liquidFamilyIsWater(family) {
     return family === 'water' || family === 'water-nonpotable';
@@ -13190,6 +13251,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (family === 'bleach') return 'Household Bleach';
     if (family === 'herbicide') return 'Herbicide';
     if (family === 'insecticide') return 'Insecticide';
+    if (family === 'urine-human') return 'Human Urine';
+    if (family === 'urine-synthetic') return 'Synthetic Urine';
+    if (family === 'urine-deer') return 'Deer Urine';
+    if (family === 'urine-elk') return 'Elk Urine';
+    if (family === 'urine-coyote') return 'Coyote Urine';
+    if (family === 'urine-fox') return 'Fox Urine';
     return family ? family[0].toUpperCase() + family.slice(1) : 'Empty';
   }
 
@@ -13207,23 +13274,37 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function liquidQuantityDisplayValue(item, catalog=catalogForGearInstance(item)) {
     const quantity = gearItemQuantity(item);
-    if (!catalogIsWaterLiquid(catalog)) return quantity;
-    return waterDisplayUnitForGear(item, catalog) === 'gal'
-      ? quantity / LITERS_PER_US_GALLON
-      : quantity;
+    if (catalogIsWaterLiquid(catalog)) {
+      return waterDisplayUnitForGear(item, catalog) === 'gal'
+        ? quantity / LITERS_PER_US_GALLON
+        : quantity;
+    }
+    if (catalogIsBulkLiquid(catalog) && catalog?.liquidDisplayUnit === 'fl oz') {
+      return liquidVolumeLiters(item, catalog) / LITERS_PER_US_FLUID_OUNCE;
+    }
+    return quantity;
   }
 
   function liquidQuantityStoredValue(displayValue, item, catalog=catalogForGearInstance(item)) {
     const numeric = Number(displayValue);
-    if (!catalogIsWaterLiquid(catalog)) return normalizeGearQuantity(numeric);
-    const liters = waterDisplayUnitForGear(item, catalog) === 'gal'
-      ? numeric * LITERS_PER_US_GALLON
-      : numeric;
-    return normalizeLiquidQuantity(liters);
+    if (catalogIsWaterLiquid(catalog)) {
+      const liters = waterDisplayUnitForGear(item, catalog) === 'gal'
+        ? numeric * LITERS_PER_US_GALLON
+        : numeric;
+      return normalizeLiquidQuantity(liters);
+    }
+    if (catalogIsBulkLiquid(catalog) && catalog?.liquidDisplayUnit === 'fl oz') {
+      const perUnit = Number(catalog.liquidVolumeLitersPerUnit) || 0;
+      if (!(perUnit > 0)) return normalizeGearQuantity(numeric);
+      return normalizeLiquidQuantity((numeric * LITERS_PER_US_FLUID_OUNCE) / perUnit);
+    }
+    return normalizeGearQuantity(numeric);
   }
 
   function liquidQuantityStep(item, catalog=catalogForGearInstance(item)) {
-    return catalogIsWaterLiquid(catalog) ? 0.25 : 1;
+    if (catalogIsWaterLiquid(catalog)) return 0.25;
+    if (catalogIsBulkLiquid(catalog) && catalog?.liquidDisplayUnit === 'fl oz') return 1;
+    return 1;
   }
 
   function liquidQuantityInputValue(item, catalog=catalogForGearInstance(item)) {
@@ -13251,7 +13332,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function formatLiquidVolume(liters, unit='L') {
-    const value = unit === 'gal' ? Number(liters) / LITERS_PER_US_GALLON : Number(liters);
+    const value = unit === 'gal'
+      ? Number(liters) / LITERS_PER_US_GALLON
+      : unit === 'fl oz'
+        ? Number(liters) / LITERS_PER_US_FLUID_OUNCE
+        : Number(liters);
     if (!Number.isFinite(value)) return '0';
     const decimals = value < 1 ? 2 : value < 10 ? 1 : 0;
     return value.toFixed(decimals).replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1');
@@ -13261,6 +13346,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (catalogIsWaterLiquid(catalog)) return waterDisplayUnitForGear(item, catalog);
     if (catalog?.liquidDisplayUnit === 'L') return 'L';
     if (catalog?.liquidDisplayUnit === 'gal') return 'gal';
+    if (catalog?.liquidDisplayUnit === 'fl oz') return 'fl oz';
     return '';
   }
 
@@ -13296,12 +13382,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function litersToLiquidTransferDisplay(liters, unit) {
-    return unit === 'gal' ? Number(liters) / LITERS_PER_US_GALLON : Number(liters);
+    if (unit === 'gal') return Number(liters) / LITERS_PER_US_GALLON;
+    if (unit === 'fl oz') return Number(liters) / LITERS_PER_US_FLUID_OUNCE;
+    return Number(liters);
   }
 
   function liquidTransferDisplayToLiters(value, unit) {
     const numeric = Number(value);
-    return unit === 'gal' ? numeric * LITERS_PER_US_GALLON : numeric;
+    if (unit === 'gal') return numeric * LITERS_PER_US_GALLON;
+    if (unit === 'fl oz') return numeric * LITERS_PER_US_FLUID_OUNCE;
+    return numeric;
   }
 
   function liquidContainerTransferCompatibility(source, target) {
@@ -19210,10 +19300,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     // Intended-purpose vessels are overwhelmingly found with the expected fluid;
     // general/open containers have much looser scavenged-content probabilities.
     const profiles = {
-      water:{water:75,'water-nonpotable':24,bleach:.5,herbicide:.25,insecticide:.25},
+      water:{water:74.5,'water-nonpotable':24,bleach:.5,herbicide:.25,insecticide:.25,'urine-human':.5},
       fuel:{gasoline:84,diesel:15,'water-nonpotable':.8,water:.2},
       sprayer:{herbicide:40,insecticide:30,'water-nonpotable':15,water:10,bleach:5},
-      general:{'water-nonpotable':35,water:20,gasoline:12,diesel:8,bleach:10,herbicide:8,insecticide:7}
+      general:{'water-nonpotable':34,water:20,gasoline:12,diesel:8,bleach:10,herbicide:8,insecticide:6,'urine-human':1.5,'urine-synthetic':.05,'urine-deer':.15,'urine-elk':.05,'urine-coyote':.1,'urine-fox':.15}
     };
     const profile = profiles[liquidUsedProfile(containerCatalog)] || profiles.general;
     const weighted = [...byFamily.keys()].map(family => ({value:family, weight:Number(profile[family]) || .01}));
@@ -22325,7 +22415,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       });
     });
 
-    const promoteDraft = (row, location, field, openConditionMenu=false) => {
+    const promoteDraft = (row, location, field, openConditionMenu=false, deferRender=false) => {
       const item = createGearItem(location.id);
       item.item = row.querySelector('[data-field="item"]')?.value || '';
       item.quantity = normalizeGearQuantity(row.querySelector('[data-field="quantity"]')?.value);
@@ -22345,9 +22435,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       );
       state.gear.splice(lastLocationIndex >= 0 ? lastLocationIndex + 1 : state.gear.length, 0, item);
       clearGearSortState();
-      renderGear();
       calculate();
       queueSave();
+
+      // v619: iOS resets a manually selected keyboard page (for example the
+      // numbers/symbols page of a text field) when the focused input element is
+      // destroyed and recreated. Draft Gear used to do exactly that on the first
+      // keystroke. Allow callers to promote the draft into saved state without
+      // rebuilding the Gear DOM until the active editing interaction has ended.
+      if (deferRender) return item;
+
+      renderGear();
       focusGearItem(item.id, field);
       if (field === 'item' && String(item.item || '').trim()) {
         requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -22363,18 +22461,73 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
           if (input) openGearConditionMenu(input, item);
         });
       }
+      return item;
     };
 
     body.querySelectorAll('.gear-draft-row[data-draft-location-id]').forEach(row => {
       const location = gearLocationById(row.dataset.draftLocationId);
       let promoted = false;
-      const promoteOnce = (field, openConditionMenu=false) => {
-        if (promoted) return;
-        promoted = true;
-        promoteDraft(row, location, field, openConditionMenu);
+      let promotedItem = null;
+      let itemAutocompleteBound = false;
+
+      const syncPromotedDraft = () => {
+        if (!promotedItem) return;
+        promotedItem.item = row.querySelector('[data-field="item"]')?.value || '';
+        promotedItem.quantity = normalizeGearQuantity(row.querySelector('[data-field="quantity"]')?.value);
+        const displayedWeight = row.querySelector('[data-field="weight"]')?.value || '';
+        if (displayedWeight === '') promotedItem.weight = '';
+        else {
+          const pounds = gearWeightToPounds(displayedWeight, weightUnit);
+          promotedItem.weight = Number.isFinite(pounds) ? roundGearPounds(Math.max(0, pounds)) : '';
+        }
+        promotedItem.condition = row.querySelector('[data-field="condition"]')?.value || 'New';
+        promotedItem.color = row.querySelector('[data-field="color"]')?.value || '';
+        promotedItem.wet = Boolean(row.querySelector('[data-field="wet"]')?.checked);
+        promotedItem.dirty = Boolean(row.querySelector('[data-field="dirty"]')?.checked);
+        updateGearLocationSummary(location.id);
+        calculate();
+        queueSave();
       };
 
-      row.querySelector('[data-field="item"]')?.addEventListener('input', () => promoteOnce('item'));
+      const promoteOnce = (field, openConditionMenu=false) => {
+        if (!promoted) {
+          promoted = true;
+          promotedItem = promoteDraft(row, location, field, openConditionMenu, true);
+        } else {
+          syncPromotedDraft();
+        }
+        return promotedItem;
+      };
+
+      const itemInput = row.querySelector('[data-field="item"]');
+      itemInput?.addEventListener('input', () => {
+        if (!promoted) {
+          const item = promoteOnce('item');
+          if (item && !itemAutocompleteBound) {
+            itemAutocompleteBound = true;
+            bindGearItemAutocomplete(itemInput, item);
+            updateSpecificGearInputAppearance(itemInput);
+            updateSpecificGearWarning();
+            updateGearItemAutocomplete(itemInput, item);
+          }
+        } else {
+          syncPromotedDraft();
+        }
+      });
+
+      // Once the user actually leaves Gear editing, rebuild normally so the
+      // promoted row gains its full catalog/status/action UI and a fresh draft
+      // row appears. Moving among fields inside Gear does not replace the active
+      // input, preserving the iPhone keyboard and viewport position.
+      row.addEventListener('focusout', () => {
+        if (!promotedItem) return;
+        setTimeout(() => {
+          if (row.contains(document.activeElement)) return;
+          if (gearItemAutocompleteMenu && !gearItemAutocompleteMenu.hidden) return;
+          if (body.contains(document.activeElement)) return;
+          renderGear();
+        }, 0);
+      });
       const draftQuantityInput = row.querySelector('[data-field="quantity"]');
       draftQuantityInput?.addEventListener('keydown', event => {
         if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -22387,12 +22540,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       draftQuantityInput?.addEventListener('input', () => {
         const sanitized = sanitizeGearQuantityInput(draftQuantityInput.value);
         if (sanitized !== draftQuantityInput.value) draftQuantityInput.value = sanitized;
-        if (sanitized !== '' && sanitized !== '.' &&
+        if (promotedItem) {
+          syncPromotedDraft();
+        } else if (sanitized !== '' && sanitized !== '.' &&
             normalizeGearQuantity(sanitized) !== 1) {
           promoteOnce('quantity');
         }
       });
-      row.querySelector('[data-field="weight"]')?.addEventListener('input', () => promoteOnce('weight'));
+      row.querySelector('[data-field="weight"]')?.addEventListener('input', () => {
+        if (promotedItem) syncPromotedDraft();
+        else promoteOnce('weight');
+      });
       const conditionInput = row.querySelector('[data-field="condition"]');
       const openDraftConditionMenu = () => {
         if (isSectionLocked('gear') || promoted || !conditionInput) return;
@@ -22402,14 +22560,22 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
           promoteOnce('condition');
         });
       };
-      conditionInput?.addEventListener('input', () => promoteOnce('condition'));
+      conditionInput?.addEventListener('input', () => {
+        if (promotedItem) syncPromotedDraft();
+        else promoteOnce('condition');
+      });
       row.querySelector('[data-field="color"]')?.addEventListener('change', event => {
-        if (event.target.value) promoteOnce('color');
+        if (!event.target.value) return;
+        if (promotedItem) syncPromotedDraft();
+        else promoteOnce('color');
       });
       conditionInput?.addEventListener('focus', openDraftConditionMenu);
       conditionInput?.addEventListener('click', openDraftConditionMenu);
       for (const key of ['wet','dirty']) {
-        row.querySelector(`[data-field="${key}"]`)?.addEventListener('change', () => promoteOnce(key));
+        row.querySelector(`[data-field="${key}"]`)?.addEventListener('change', () => {
+          if (promotedItem) syncPromotedDraft();
+          else promoteOnce(key);
+        });
       }
       row.querySelector('[data-condition-toggle]')?.addEventListener('click', event => {
         event.preventDefault();
