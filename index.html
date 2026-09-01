@@ -4205,13 +4205,10 @@
     }
     @media screen and (max-width:600px), screen and (max-height:520px) and (pointer:coarse) {
       .gear-drag-hover-hint.touch-drag-hint {
-        left: max(10px, env(safe-area-inset-left)) !important;
-        right: max(10px, env(safe-area-inset-right)) !important;
-        top: auto !important;
-        bottom: calc(10px + env(safe-area-inset-bottom)) !important;
-        width: auto !important;
-        max-width: none !important;
-        padding: 10px 12px !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: max-content !important;
+        padding: 8px 11px !important;
         border-radius: 9px !important;
         font-size: 12px !important;
         line-height: 1.25 !important;
@@ -9272,7 +9269,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v617</div>
+<div class="footer-note no-print">Character Sheet v618</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -10133,6 +10130,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       clampMeter.aliases = Array.from(new Set([...(clampMeter.aliases || []), 'clamp multimeter', 'current clamp meter']));
     }
   }
+  // v618: anchor touch/phone compatibility hints directly to the active destination card/target instead of the screen bottom.
   // v617: improve touch/phone Gear dragging feedback and hit testing. Touch drags now show a floating source chip,
   // keep contextual compatibility text in a bottom safe-area banner, and make compatible/incompatible item targets visibly outlined.
   // v615: add queued tongue scraper and pen-style precision electric screwdriver.
@@ -13579,7 +13577,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     proxy.style.top = `${y}px`;
   }
 
-  function showGearDragHoverHint(text, valid, clientX, clientY) {
+  function showGearDragHoverHint(text, valid, clientX, clientY, anchorElement=null) {
     clearGearDragHoverHint();
     if (!text) return;
     const touchPresentation = gearDragUsesTouchPresentation();
@@ -13587,7 +13585,33 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     hint.className = `gear-drag-hover-hint ${valid ? 'valid' : 'invalid'}${touchPresentation ? ' touch-drag-hint' : ''}`;
     hint.textContent = `${valid ? '✓' : '✕'} ${text}`;
     document.body.appendChild(hint);
-    if (touchPresentation) return;
+    if (touchPresentation) {
+      const anchorRect = anchorElement?.getBoundingClientRect?.();
+      if (anchorRect && anchorRect.width > 0 && anchorRect.height > 0) {
+        const availableWidth = Math.max(96, Math.min(280, anchorRect.width - 16, window.innerWidth - 16));
+        hint.style.maxWidth = `${availableWidth}px`;
+        const hintRect = hint.getBoundingClientRect();
+        const centerX = anchorRect.left + anchorRect.width / 2;
+        const maxLeft = Math.max(8, window.innerWidth - hintRect.width - 8);
+        const left = Math.max(8, Math.min(maxLeft, centerX - hintRect.width / 2));
+        let top = anchorRect.top + 7;
+        if (top + hintRect.height > anchorRect.bottom - 5) {
+          top = anchorRect.top + Math.max(4, (anchorRect.height - hintRect.height) / 2);
+        }
+        top = Math.max(8, Math.min(window.innerHeight - hintRect.height - 8, top));
+        hint.style.left = `${left}px`;
+        hint.style.top = `${top}px`;
+        return;
+      }
+      const hintRect = hint.getBoundingClientRect();
+      let left = clientX - hintRect.width / 2;
+      let top = clientY - hintRect.height - 52;
+      left = Math.max(8, Math.min(window.innerWidth - hintRect.width - 8, left));
+      top = Math.max(8, Math.min(window.innerHeight - hintRect.height - 8, top));
+      hint.style.left = `${left}px`;
+      hint.style.top = `${top}px`;
+      return;
+    }
     const rect = hint.getBoundingClientRect();
     let left = clientX + 12;
     let top = clientY - rect.height - 14;
@@ -21248,7 +21272,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         gearDrag.targetLocationId = null;
         gearDrag.after = false;
         fuelTarget.classList.add(feedback.valid ? 'vehicle-fuel-drop-compatible' : 'vehicle-fuel-drop-incompatible');
-        showGearDragHoverHint(feedback.text, feedback.valid, event.clientX, event.clientY);
+        showGearDragHoverHint(feedback.text, feedback.valid, event.clientX, event.clientY, fuelTarget);
       } else if (slot) {
         gearDrag.targetId = slot.dataset.targetId || null;
         gearDrag.targetLocationId = slot.dataset.locationId;
@@ -21269,7 +21293,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
               target.classList.add('gear-embed-incompatible');
               gearDrag.blockedEmbedTargetId = targetItem.id;
             }
-            showGearDragHoverHint(feedback.text, feedback.valid, event.clientX, event.clientY);
+            showGearDragHoverHint(feedback.text, feedback.valid, event.clientX, event.clientY, target);
           } else {
             const rect = target.getBoundingClientRect();
             gearDrag.targetId = target.dataset.id;
