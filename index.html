@@ -4249,7 +4249,17 @@
     .loaded-ammo-chip { color:#765828; border-color:color-mix(in srgb, #765828 42%, var(--line)); }
     .liquid-volume-chip.water { color:#287d9b; border-color:color-mix(in srgb, #287d9b 42%, var(--line)); }
     .liquid-volume-chip.fuel { color:#9a681b; border-color:color-mix(in srgb, #9a681b 42%, var(--line)); }
+    .liquid-volume-chip.filled { color:var(--text); border-color:var(--line); }
     .loaded-ammo-chip.empty, .liquid-volume-chip.empty { color:var(--muted); border-color:var(--line); }
+    .liquid-family-name { font-weight:900; }
+    .liquid-volume-reading { color:inherit; opacity:.82; }
+    .liquid-chip-stepper { display:inline-flex; flex-direction:column; align-self:stretch; margin-left:1px; border-left:1px solid var(--line); }
+    .liquid-chip-stepper button {
+      appearance:none; border:0; background:transparent; color:inherit; padding:0 3px; margin:0;
+      min-width:16px; flex:1 1 50%; line-height:1; font-size:7px; font-weight:900; cursor:pointer;
+    }
+    .liquid-chip-stepper button:first-child { border-bottom:1px solid var(--line); }
+    .liquid-chip-stepper button:disabled { opacity:.28; cursor:not-allowed; }
     .gear-quantity-with-unit { display:flex; align-items:center; gap:3px; min-width:0; }
     .gear-quantity-with-unit .numeric-stepper { flex:1 1 auto; min-width:0; }
     .gear-quantity-unit { flex:0 0 auto; color:var(--muted); font-size:9px; font-weight:850; white-space:nowrap; }
@@ -9269,7 +9279,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v621</div>
+<div class="footer-note no-print">Character Sheet v624</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -10195,6 +10205,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   );
 
   // v621: urine catalog pass — synthetic/paraphernalia, pooled human laboratory urine, and common hunting/trapping urine scents.
+  // v624: ration-friendly liquid-container intervals — most ordinary containers step by 0.25 L; gallon-scale containers use 0.25 gal; sub-0.5 L containers use smaller increments; very large vessels retain practical larger steps.
+  // v622: liquid-container status pass — show contained liquid names/appropriate units and add interval controls for filled-container volume.
   GEAR_CATALOG.push(
     {
       id:'gc2764', name:'Synthetic Urine, 3 oz', category:'Everyday Carry & Personal', subcategory:'Recreational Drugs > Paraphernalia',
@@ -13272,6 +13284,45 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return item?.liquidDisplayUnit === 'gal' ? 'gal' : 'L';
   }
 
+  function liquidContainerDisplayUnit(item, catalog=catalogForGearInstance(item), family=embeddedLiquidFamily(item)) {
+    const allowed = Array.isArray(catalog?.liquidAllowedFamilies) ? catalog.liquidAllowedFamilies : [];
+    const waterOnly = allowed.length > 0 && allowed.every(liquidFamilyIsWater);
+    if (liquidFamilyIsWater(family) || (!family && waterOnly)) return waterDisplayUnitForContainer(item, catalog, family);
+    const firstLiquid = embeddedLiquidItems(item)[0] || null;
+    const liquidCatalog = catalogForGearInstance(firstLiquid);
+    const sourceUnit = String(liquidCatalog?.liquidDisplayUnit || '');
+    if (sourceUnit === 'fl oz' || sourceUnit === 'L' || sourceUnit === 'gal') return sourceUnit;
+    if (family === 'gasoline' || family === 'diesel' || family === 'avgas' || family === 'jet-a' || family === 'jet-fuel') return 'gal';
+    return String(catalog?.liquidPreferredUnit || 'L');
+  }
+
+  function liquidContainerStepLiters(item, catalog=catalogForGearInstance(item), family=embeddedLiquidFamily(item)) {
+    const unit = liquidContainerDisplayUnit(item, catalog, family);
+    const capacityLiters = Math.max(0, Number(catalog?.liquidCapacityLiters) || 0);
+    if (!(capacityLiters > 0)) return 0;
+
+    // v624: favor ration-friendly quarter-liter / quarter-gallon steps for normal
+    // containers. Only sub-0.5 L vessels need finer control; very large vessels
+    // keep larger practical increments so drums/barrels are not hundreds of clicks.
+    if (capacityLiters < 0.5) {
+      if (unit === 'fl oz') return LITERS_PER_US_FLUID_OUNCE; // 1 fl oz
+      return capacityLiters <= 0.25 ? 0.025 : 0.05;            // 25 or 50 mL
+    }
+
+    const capacityGal = capacityLiters / LITERS_PER_US_GALLON;
+    const gallonScale = unit === 'gal' && capacityGal >= 0.75;
+    if (gallonScale) {
+      if (capacityGal <= 10) return 0.25 * LITERS_PER_US_GALLON;
+      if (capacityGal <= 25) return 0.5 * LITERS_PER_US_GALLON;
+      return LITERS_PER_US_GALLON;
+    }
+
+    if (capacityLiters <= 10) return 0.25;
+    if (capacityLiters <= 25) return 0.5;
+    if (capacityLiters <= 100) return 1;
+    return 5;
+  }
+
   function liquidQuantityDisplayValue(item, catalog=catalogForGearInstance(item)) {
     const quantity = gearItemQuantity(item);
     if (catalogIsWaterLiquid(catalog)) {
@@ -13371,6 +13422,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return null;
   }
 
+  function looseMatchingLiquid(container, family) {
+    if (!container || !family) return null;
+    return state.gear.find(item => {
+      if (!item || item.id === container.id || gearItemIsEmbedded(item) || item.locationId !== container.locationId) return false;
+      const catalog = catalogForGearInstance(item);
+      return catalogIsBulkLiquid(catalog) && String(catalog.liquidFamily || '') === family && liquidVolumeLiters(item, catalog) > 1e-9;
+    }) || null;
+  }
+
   function liquidTransferDisplayUnit(source, family=liquidSourceInfo(source)?.family || '') {
     if (family === 'gasoline' || family === 'diesel' || family === 'avgas' || family === 'jet-a' || family === 'jet-fuel') return 'gal';
     const catalog = catalogForGearInstance(source);
@@ -13456,6 +13516,40 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       consumed += takeLiters;
     }
     return consumed;
+  }
+
+  function adjustLiquidContainerVolume(container, direction) {
+    if (!container || !direction) return false;
+    const catalog = catalogForGearInstance(container);
+    if (!catalogIsLiquidContainer(catalog) || gearItemQuantity(container) !== 1) return false;
+    const liquids = embeddedLiquidItems(container);
+    const first = liquids[0] || null;
+    const liquidCatalog = catalogForGearInstance(first);
+    const family = String(liquidCatalog?.liquidFamily || '');
+    if (!first || !catalogIsBulkLiquid(liquidCatalog) || !family) return false;
+    const capacity = Math.max(0, Number(catalog.liquidCapacityLiters) || 0);
+    const current = embeddedLiquidLiters(container);
+    const step = liquidContainerStepLiters(container, catalog, family);
+    if (!(step > 0)) return false;
+
+    if (direction < 0) {
+      const removed = consumeLiquidSourceLiters(container, Math.min(step, current), family);
+      if (!(removed > 0)) return false;
+    } else {
+      const source = looseMatchingLiquid(container, family);
+      if (!source) return false;
+      const compatibility = liquidContainerTransferCompatibility(source, container);
+      if (!compatibility) return false;
+      const addLiters = Math.min(step, compatibility.liters);
+      if (!(addLiters > 1e-9)) return false;
+      return transferLiquidIntoContainer(source, container, addLiters, compatibility);
+    }
+
+    clearGearSortState();
+    renderGear();
+    calculate();
+    queueSave();
+    return true;
   }
 
   let activeLiquidTransferResolve = null;
@@ -13861,14 +13955,23 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const capacity = Number(catalog.liquidCapacityLiters) || 0;
     const allowed = Array.isArray(catalog.liquidAllowedFamilies) ? catalog.liquidAllowedFamilies : [];
     const waterContainer = liquidFamilyIsWater(family) || (!family && allowed.length > 0 && allowed.every(liquidFamilyIsWater));
-    const unit = waterContainer ? waterDisplayUnitForContainer(item, catalog, family) : family ? 'gal' : String(catalog.liquidPreferredUnit || 'L');
-    const icon = family === 'gasoline' || family === 'diesel' ? '⛽' : '💧';
+    const unit = liquidContainerDisplayUnit(item, catalog, family);
+    const fuelFamily = family === 'gasoline' || family === 'diesel' || family === 'avgas' || family === 'jet-a' || family === 'jet-fuel';
+    const icon = fuelFamily ? '⛽' : '💧';
     const reading = `${formatLiquidVolume(liters, unit)}/${formatLiquidVolume(capacity, unit)}`;
     const familyLabel = liquidFamilyLabel(family);
     const unitMarkup = waterContainer
       ? `<button type="button" class="gear-liquid-unit-toggle" data-liquid-container-unit-toggle="${esc(item.id)}" aria-label="Switch water volume between liters and US gallons" title="Switch between liters and US gallons">${esc(unit)}</button>`
       : `<span>${esc(unit)}</span>`;
-    return `<span class="liquid-status-inline no-print"><span class="liquid-volume-chip ${waterContainer ? 'water' : family ? 'fuel' : 'empty'}" title="${esc(`${familyLabel}; ${reading} ${unit}`)}"><span aria-hidden="true">${icon}</span><span>${esc(reading)}</span>${unitMarkup}</span></span>`;
+    const canAdjust = Boolean(family && liters > 1e-9);
+    const canIncrease = canAdjust && liters < capacity - 1e-9 && Boolean(looseMatchingLiquid(item, family));
+    const step = canAdjust ? liquidContainerStepLiters(item, catalog, family) : 0;
+    const stepText = canAdjust ? `${formatLiquidVolume(step, unit)} ${unit}` : '';
+    const stepperMarkup = canAdjust
+      ? `<span class="liquid-chip-stepper no-print"><button type="button" data-liquid-container-step="1" aria-label="Add ${esc(stepText)} ${esc(familyLabel)} from loose liquid in this location"${canIncrease ? '' : ' disabled aria-disabled="true"'}>▲</button><button type="button" data-liquid-container-step="-1" aria-label="Decrease contained ${esc(familyLabel)} by ${esc(stepText)}">▼</button></span>`
+      : '';
+    const chipClass = waterContainer ? 'water' : fuelFamily ? 'fuel' : family ? 'filled' : 'empty';
+    return `<span class="liquid-status-inline no-print" data-liquid-container-owner="${esc(item.id)}"><span class="liquid-volume-chip ${chipClass}" title="${esc(`${familyLabel}; ${reading} ${unit}`)}"><span aria-hidden="true">${icon}</span><span class="liquid-family-name">${esc(familyLabel)}</span><span class="liquid-volume-reading">${esc(reading)}</span>${unitMarkup}${stepperMarkup}</span></span>`;
   }
 
   function bindLoadedGearControls(root) {
@@ -13878,6 +13981,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       status.querySelectorAll('[data-loaded-ammo-step]').forEach(button => button.addEventListener('click', event => {
         event.preventDefault(); event.stopPropagation();
         adjustLoadedAmmo(item, Number(button.dataset.loadedAmmoStep || 0));
+      }));
+    });
+    root?.querySelectorAll('[data-liquid-container-owner]').forEach(status => {
+      const item = state.gear.find(entry => entry?.id === status.dataset.liquidContainerOwner);
+      if (!item) return;
+      status.querySelectorAll('[data-liquid-container-step]').forEach(button => button.addEventListener('click', event => {
+        event.preventDefault(); event.stopPropagation();
+        adjustLiquidContainerVolume(item, Number(button.dataset.liquidContainerStep || 0));
       }));
     });
     root?.querySelectorAll('[data-liquid-container-unit-toggle]').forEach(button => button.addEventListener('click', event => {
