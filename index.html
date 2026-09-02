@@ -2713,6 +2713,18 @@
     }
     .vehicle-energy-button:not(:disabled):hover { background:color-mix(in srgb, currentColor 10%, transparent); transform:none; }
     .vehicle-energy-button:disabled { opacity:.28; cursor:default; background:transparent; transform:none; }
+    .vehicle-drive-button {
+      height:23px; padding:0 7px; border:1px solid color-mix(in srgb, #287d78 38%, var(--line));
+      border-radius:6px; background:var(--panel); color:#287d78; font-size:10px; font-weight:850;
+      line-height:1; white-space:nowrap;
+    }
+    .vehicle-drive-button:hover { background:color-mix(in srgb, #287d78 9%, var(--panel)); transform:none; }
+    .energy-adjust-range { width:100%; accent-color:var(--accent); }
+    .energy-adjust-readout, .energy-adjust-cost { margin-top:6px; font-size:12px; color:var(--muted); font-weight:700; }
+    .energy-buy-toggle { display:flex; align-items:center; gap:7px; margin:12px 0 8px; font-weight:800; }
+    #vehicleEnergyPurchaseFields { display:grid; gap:9px; }
+    #vehicleEnergyPurchaseFields[hidden] { display:none; }
+    .gear-location-actions-button { margin-left:2px; }
     .vehicle-energy-reading { display:inline-flex; align-items:center; gap:0; white-space:nowrap; }
     .vehicle-energy-input {
       width:calc(var(--vehicle-energy-chars, 2) * 1ch + 2px) !important; min-width:0 !important; max-width:none !important;
@@ -8562,6 +8574,10 @@
         gap: 0 !important;
         align-items: center !important;
       }
+      #gear .standalone-vehicle-header .gear-location-actions-button {
+        flex:0 0 28px !important;
+        margin-left:2px !important;
+      }
       #gear .standalone-vehicle-header .gear-location-name-wrap {
         grid-column: 1 !important;
         grid-row: 1 !important;
@@ -8640,7 +8656,7 @@
         justify-self: center !important;
       }
       #gear .standalone-vehicle-header .gear-location-name-content {
-        grid-column: 3 / 12 !important;
+        grid-column: 3 / 11 !important;
         grid-row: 1 !important;
         min-width: 0 !important;
         overflow: hidden !important;
@@ -8653,6 +8669,11 @@
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+      }
+      #gear .standalone-vehicle-header .gear-location-actions-button {
+        grid-column: 11 !important;
+        grid-row: 1 !important;
+        justify-self: end !important;
       }
       #gear .standalone-vehicle-header .gear-location-delete {
         grid-column: 12 !important;
@@ -8738,7 +8759,7 @@
         justify-self: center !important;
       }
       #gear .standalone-vehicle-header .gear-location-name-content {
-        grid-column: 3 / 12 !important;
+        grid-column: 3 / 11 !important;
         grid-row: 1 !important;
         min-width: 0 !important;
         overflow: hidden !important;
@@ -8756,6 +8777,11 @@
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+      }
+      #gear .standalone-vehicle-header .gear-location-actions-button {
+        grid-column: 11 !important;
+        grid-row: 1 !important;
+        justify-self: end !important;
       }
       #gear .standalone-vehicle-header .gear-location-delete {
         grid-column: 12 !important;
@@ -8837,6 +8863,11 @@
         padding: 0 3px !important;
         gap: 1px !important;
         font-size: 9px !important;
+      }
+      #gear .standalone-vehicle-header .vehicle-drive-button {
+        height:22px !important;
+        padding:0 5px !important;
+        font-size:9px !important;
       }
       #gear .standalone-vehicle-header .vehicle-energy-button {
         width: 15px !important;
@@ -9279,7 +9310,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v624</div>
+<div class="footer-note no-print">Character Sheet v626</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -9316,6 +9347,44 @@
 <div class="field"><label for="liquidTransferAmount">Amount</label><div class="fund-dialog-amount"><input id="liquidTransferAmount" inputmode="decimal" autocomplete="off"/><span id="liquidTransferUnitLabel">L</span></div></div>
 <div class="fund-dialog-error" id="liquidTransferError" aria-live="polite"></div>
 <div class="dialog-actions"><button class="btn" id="liquidTransferCancel" type="button">Cancel</button><button class="btn primary" id="liquidTransferConfirm" type="button">Transfer</button></div>
+</div>
+</dialog>
+<dialog id="vehicleTravelDialog">
+<div class="dialog-inner">
+<h2 id="vehicleTravelDialogTitle">Drive vehicle</h2>
+<p class="hint" id="vehicleTravelDialogSummary"></p>
+<div class="field"><label for="vehicleTravelMiles">Miles traveled</label><div class="fund-dialog-amount"><input id="vehicleTravelMiles" inputmode="decimal" autocomplete="off"/><span>mi</span></div></div>
+<div class="fund-dialog-error" id="vehicleTravelError" aria-live="polite"></div>
+<div class="dialog-actions"><button class="btn" id="vehicleTravelCancel" type="button">Cancel</button><button class="btn primary" id="vehicleTravelConfirm" type="button">Drive</button></div>
+</div>
+</dialog>
+
+<dialog id="vehicleEnergyDialog">
+<div class="dialog-inner">
+<h2 id="vehicleEnergyDialogTitle">Fuel Up</h2>
+<p class="hint" id="vehicleEnergyDialogSummary"></p>
+<div class="field">
+<label for="vehicleEnergyTarget">Target level</label>
+<input id="vehicleEnergyTarget" class="energy-adjust-range" type="range"/>
+<div class="energy-adjust-readout" id="vehicleEnergyTargetOutput"></div>
+</div>
+<label class="energy-buy-toggle" id="vehicleEnergyBuyWrap"><input id="vehicleEnergyBuy" type="checkbox"/> Buy</label>
+<div id="vehicleEnergyPurchaseFields" hidden>
+<div class="field"><label for="vehicleEnergyUnitPrice">Unit price</label><div class="fund-dialog-amount"><span>$</span><input id="vehicleEnergyUnitPrice" inputmode="decimal" autocomplete="off"/><span id="vehicleEnergyPriceUnit">/gal</span></div></div>
+<div class="field"><label for="vehicleEnergyAccount">Pay from</label><select id="vehicleEnergyAccount"></select></div>
+<div class="energy-adjust-cost" id="vehicleEnergyCost"></div>
+</div>
+<div class="fund-dialog-error" id="vehicleEnergyError" aria-live="polite"></div>
+<div class="dialog-actions"><button class="btn" id="vehicleEnergyCancel" type="button">Cancel</button><button class="btn primary" id="vehicleEnergyConfirm" type="button">Confirm</button></div>
+</div>
+</dialog>
+<dialog id="deviceUseDialog">
+<div class="dialog-inner">
+<h2 id="deviceUseDialogTitle">Use device</h2>
+<p class="hint" id="deviceUseDialogSummary"></p>
+<div class="field"><label for="deviceUseAmount">Time used</label><div class="fund-dialog-amount"><input id="deviceUseAmount" inputmode="decimal" autocomplete="off"/><select id="deviceUseUnit" aria-label="Time unit"><option value="min">min</option><option value="h">hours</option></select></div></div>
+<div class="fund-dialog-error" id="deviceUseError" aria-live="polite"></div>
+<div class="dialog-actions"><button class="btn" id="deviceUseCancel" type="button">Cancel</button><button class="btn primary" id="deviceUseConfirm" type="button">Use</button></div>
 </div>
 </dialog>
 <div class="fund-currency-menu" id="fundCurrencyMenu" role="listbox" hidden></div>
@@ -10205,6 +10274,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   );
 
   // v621: urine catalog pass — synthetic/paraphernalia, pooled human laboratory urine, and common hunting/trapping urine scents.
+  // v626: queued energy-action + catalog pass — electric vehicles now consume charge by recorded distance and use Recharge dialogs; fuel/EV refill dialogs support partial targets and optional paid USD purchases; non-vehicle rechargeable Gear uses Use… + Recharge instead of direct charge editing; adds queued fireworks, mine classes, military trip/firing wire, and military demolition firing-device coverage.
+  // v625: liquid/vehicle resource control pass — remove liquid refill-plus controls; active dispensers use per-actuation depletion; fuel vehicles consume fuel through recorded miles traveled and use explicit Fuel Up actions; empty/potable-water containers gain Fill with Water.
   // v624: ration-friendly liquid-container intervals — most ordinary containers step by 0.25 L; gallon-scale containers use 0.25 gal; sub-0.5 L containers use smaller increments; very large vessels retain practical larger steps.
   // v622: liquid-container status pass — show contained liquid names/appropriate units and add interval controls for filled-container volume.
   GEAR_CATALOG.push(
@@ -10292,6 +10363,25 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (/\b(?:Water Bottle|Canteen|Hydration Reservoir|Water Jug|Water Storage|Collapsible Water Container|Vacuum Bottle|Hot Water Bottle|Watering Can|Rain Barrel|Squirt Gun|Water Sample Bottle)\b/i.test(name)) {
       item.liquidAllowedFamilies = Array.from(new Set([...item.liquidAllowedFamilies || [], ...V614_AQUEOUS_LIQUID_FAMILIES]));
       item.liquidUsedProfile = 'water';
+    }
+  }
+
+  // v625: active liquid-dispensing devices use a representative per-actuation/use amount
+  // for the decrement control; ordinary containers retain the ration-friendly generic step.
+  {
+    const dispenseProfiles = new Map([
+      ['gc1145', [0.010, 'one squirt/shot']],              // Squirt Gun, Pistol
+      ['gc2338', [0.025, 'one pump/shot']],               // Squirt Gun, Pump
+      ['gc1240', [0.001, 'one trigger spray']],            // Spray Bottle, Empty, 24 oz
+      ['gc1366', [0.001, 'one misting trigger actuation']], // Spray Mister Bottle, 12 oz
+      ['gc0946', [0.030, 'about one second of spraying']], // Pump Sprayer, 1 Gallon
+      ['gc2760', [0.030, 'about one second of spraying']]  // Backpack Sprayer, 4 Gallon
+    ]);
+    for (const [id, [liters, basis]] of dispenseProfiles) {
+      const item = GEAR_CATALOG.find(entry => entry.id === id);
+      if (!item) continue;
+      item.liquidDispenseLiters = liters;
+      item.liquidDispenseBasis = basis;
     }
   }
 
@@ -10511,6 +10601,119 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     item.batteryRuntimeBasis = devicePatch.basis;
     const powerSpec = `Power: ${devicePatch.count}×${devicePatch.type} alkaline ${devicePatch.count === 1 ? 'battery' : 'batteries'}`;
     if (!String(item.specs || '').includes(powerSpec)) item.specs = `${String(item.specs || '').trim()}${item.specs ? ' · ' : ''}${powerSpec}`;
+  }
+
+
+  // v626: queued fireworks / mine-support catalog pass plus EV battery-capacity completion.
+  {
+    const patchCatalog = (id, patch) => {
+      const item = GEAR_CATALOG.find(entry => entry.id === id);
+      if (!item) return;
+      Object.assign(item, patch);
+    };
+
+    patchCatalog('gc1766', {
+      aliases:['Claymore','Claymore mine','M18A1','M18A1 Claymore','directional mine'],
+      specs:'Directional fragmentation mine; representative M18A1 Claymore class',
+      accessStatus:'Restricted'
+    });
+    patchCatalog('gc1769', {
+      weight:0.07,
+      aliases:['electric blasting cap','military detonator','M6 electric blasting cap','M6 blasting cap','M130 blasting cap'],
+      specs:'Military electric blasting-cap / detonator class; representative M6/M130-type demolition initiator',
+      accessStatus:'Restricted'
+    });
+
+    // Missing energy-capacity fields needed for purchased EV recharge calculations.
+    patchCatalog('gc2712', {
+      vehicleBatteryKWh:0.60,
+      specs:'People: 1 · Self-balancing single-wheel electric board with a large central pneumatic tire; suited to paved travel plus moderate trails and rough surfaces; little to no cargo capacity · Energy: Electric · Battery: ~0.60 kWh representative · Fuel tank: none · Representative range: ~32 mi per full charge'
+    });
+    patchCatalog('gc2715', {
+      vehicleBatteryKWh:0.329,
+      specs:'People: 1 · Two-wheel self-balancing stand-up transporter with knee/steering control; about 11 mph top speed; stable last-mile transport with essentially no built-in cargo capacity · Energy: Electric · Battery: ~0.329 kWh · Fuel tank: none · Representative range: ~21.7 mi per full charge'
+    });
+
+    GEAR_CATALOG.push(
+      {
+        id:'gc2770', name:'Party Popper, Pull-String', category:'Household & General', subcategory:'Party & Seasonal',
+        weight:0.03, price:0.50, availability:'Ubiquitous', colors:['Multicolor'],
+        specs:'Small consumer pull-string party popper / confetti novelty; representative single unit',
+        aliases:['party popper','pull string popper','pull-string popper','confetti popper'], unit:'popper', defaultQuantity:12
+      },
+      {
+        id:'gc2771', name:'Firecracker', category:'Household & General', subcategory:'Party & Seasonal',
+        weight:0.004, price:0.10, availability:'Common', colors:['Red','Multicolor'],
+        specs:'Common consumer firecracker; representative individual unit where lawful',
+        aliases:['fire cracker','cracker firework'], unit:'firecracker', defaultQuantity:50
+      },
+      {
+        id:'gc2772', name:'Bottle Rocket', category:'Household & General', subcategory:'Party & Seasonal',
+        weight:0.03, price:0.35, availability:'Common', colors:['Multicolor'],
+        specs:'Small consumer stick rocket / bottle-rocket class firework; representative individual unit where lawful',
+        aliases:['bottle rocket firework','stick rocket','small rocket firework'], unit:'rocket', defaultQuantity:12
+      },
+      {
+        id:'gc2773', name:'Roman Candle', category:'Household & General', subcategory:'Party & Seasonal',
+        weight:0.20, price:3.0, availability:'Common', colors:['Multicolor'],
+        specs:'Common consumer Roman-candle class firework; representative single candle where lawful',
+        aliases:['roman candle firework'], unit:'candle'
+      },
+      {
+        id:'gc2774', name:'Sparkler', category:'Household & General', subcategory:'Party & Seasonal',
+        weight:0.015, price:0.20, availability:'Ubiquitous', colors:['Silver','Multicolor'],
+        specs:'Handheld consumer wire-sparkler class firework; representative individual unit',
+        aliases:['wire sparkler','sparkler firework'], unit:'sparkler', defaultQuantity:10
+      },
+      {
+        id:'gc2775', name:'Firework, Ground, Small, (specific)', category:'Household & General', subcategory:'Party & Seasonal',
+        weight:0.25, price:5.0, availability:'Common', colors:['Multicolor'], weightEditable:true,
+        specs:'Small ground-effect consumer firework class; specify exact type such as fountain, spinner, smoke item, wheel, or similar legal consumer device',
+        aliases:['fountain firework','ground spinner','spinner firework','smoke firework','ground firework','cone fountain']
+      },
+      {
+        id:'gc2776', name:'Firework, Aerial, Consumer, (specific)', category:'Household & General', subcategory:'Party & Seasonal',
+        weight:1.5, price:25.0, availability:'Specialty', colors:['Multicolor'], weightEditable:true,
+        specs:'Consumer aerial-firework class; specify exact type such as cake/repeater, reloadable shell kit, mine-and-shell device, sky rocket, or similar consumer device where lawful',
+        aliases:['consumer aerial firework','cake firework','repeater firework','aerial repeater','reloadable shell kit','consumer shell firework']
+      },
+      {
+        id:'gc2777', name:'Firework, Aerial, Professional, (specific)', category:'Household & General', subcategory:'Party & Seasonal',
+        weight:10.0, price:150.0, availability:'Rare', colors:['Multicolor'], weightEditable:true, accessStatus:'Restricted',
+        specs:'Professional/display aerial-firework class; exact device size and configuration varies substantially and is regulated separately from ordinary consumer fireworks',
+        aliases:['professional firework','display firework','professional aerial shell','display shell','1.3G firework']
+      },
+      {
+        id:'gc2778', name:'Mine, Anti-Personnel Blast', category:'Weapons', subcategory:'Explosives & Grenades > Mines',
+        weight:0.22, price:75.0, availability:'Rare', colors:['Green','Tan'], accessStatus:'Restricted',
+        specs:'Compact anti-personnel blast-mine class; representative M14-class military mine',
+        aliases:['anti personnel mine','AP blast mine','M14 mine','M14 anti-personnel mine']
+      },
+      {
+        id:'gc2779', name:'Mine, Bounding Fragmentation', category:'Weapons', subcategory:'Explosives & Grenades > Mines',
+        weight:8.2, price:300.0, availability:'Rare', colors:['Green','Tan'], accessStatus:'Restricted',
+        specs:'Bounding fragmentation anti-personnel mine class; representative M16-class military mine',
+        aliases:['bounding mine','bounding fragmentation mine','M16 mine','M16 anti-personnel mine']
+      },
+      {
+        id:'gc2780', name:'Trip Wire, Military, 160 ft Spool', category:'Tools & Hardware', subcategory:'Consumables & Fasteners',
+        weight:0.30, price:15.0, availability:'Specialty', colors:['Green','Yellow'],
+        specs:'Purpose-made lightweight military surplus trip/snare wire on a compact spool; representative 160 ft spool; wire only',
+        aliases:['trip wire','tripwire','military trip wire','trip wire spool','snare wire','perimeter wire'], unit:'spool'
+      },
+      {
+        id:'gc2781', name:'Firing Wire, Demolition, 100 ft', category:'Weapons', subcategory:'Explosives & Grenades > Demolitions',
+        weight:1.0, price:40.0, availability:'Limited', colors:['Green','Black'], accessStatus:'Restricted',
+        specs:'Purpose-made insulated military demolition firing-wire class on a field spool; representative 100 ft length; wire/spool only',
+        aliases:['demolition firing wire','electric firing wire','M4 firing wire','blasting wire','firing line'], unit:'spool'
+      },
+      {
+        id:'gc2782', name:'Firing Device, Demolition, Handheld', category:'Weapons', subcategory:'Explosives & Grenades > Demolitions',
+        weight:0.75, price:300.0, availability:'Rare', colors:['Green','Black'], accessStatus:'Restricted',
+        specs:'Handheld military electrical firing-device class used with authorized demolition initiating systems; representative M57-class unit',
+        aliases:['M57','M57 firing device','clacker','demolition firing device','military firing device']
+      }
+    );
   }
 
   const GEAR_CATALOG_BY_ID = new Map(GEAR_CATALOG.map(item => [item.id, item]));
@@ -13323,6 +13526,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return 5;
   }
 
+  function liquidContainerDispenseStepLiters(item, catalog=catalogForGearInstance(item), family=embeddedLiquidFamily(item)) {
+    const metered = Number(catalog?.liquidDispenseLiters);
+    if (Number.isFinite(metered) && metered > 0) return metered;
+    return liquidContainerStepLiters(item, catalog, family);
+  }
+
   function liquidQuantityDisplayValue(item, catalog=catalogForGearInstance(item)) {
     const quantity = gearItemQuantity(item);
     if (catalogIsWaterLiquid(catalog)) {
@@ -13519,7 +13728,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function adjustLiquidContainerVolume(container, direction) {
-    if (!container || !direction) return false;
+    if (!container || !(direction < 0)) return false;
     const catalog = catalogForGearInstance(container);
     if (!catalogIsLiquidContainer(catalog) || gearItemQuantity(container) !== 1) return false;
     const liquids = embeddedLiquidItems(container);
@@ -13527,24 +13736,50 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const liquidCatalog = catalogForGearInstance(first);
     const family = String(liquidCatalog?.liquidFamily || '');
     if (!first || !catalogIsBulkLiquid(liquidCatalog) || !family) return false;
+    const current = embeddedLiquidLiters(container);
+    const step = liquidContainerDispenseStepLiters(container, catalog, family);
+    if (!(step > 0)) return false;
+    const removed = consumeLiquidSourceLiters(container, Math.min(step, current), family);
+    if (!(removed > 0)) return false;
+    clearGearSortState();
+    renderGear();
+    calculate();
+    queueSave();
+    return true;
+  }
+
+  function canFillLiquidContainerWithWater(container) {
+    const catalog = catalogForGearInstance(container);
+    if (!container || !catalogIsLiquidContainer(catalog) || gearItemQuantity(container) !== 1) return false;
+    if (!Array.isArray(catalog.liquidAllowedFamilies) || !catalog.liquidAllowedFamilies.includes('water')) return false;
+    const family = embeddedLiquidFamily(container);
+    if (family && family !== 'water') return false;
+    const capacity = Math.max(0, Number(catalog.liquidCapacityLiters) || 0);
+    return capacity - embeddedLiquidLiters(container) > 1e-9;
+  }
+
+  function fillLiquidContainerWithWater(container) {
+    if (!canFillLiquidContainerWithWater(container)) return false;
+    const catalog = catalogForGearInstance(container);
     const capacity = Math.max(0, Number(catalog.liquidCapacityLiters) || 0);
     const current = embeddedLiquidLiters(container);
-    const step = liquidContainerStepLiters(container, catalog, family);
-    if (!(step > 0)) return false;
-
-    if (direction < 0) {
-      const removed = consumeLiquidSourceLiters(container, Math.min(step, current), family);
-      if (!(removed > 0)) return false;
-    } else {
-      const source = looseMatchingLiquid(container, family);
-      if (!source) return false;
-      const compatibility = liquidContainerTransferCompatibility(source, container);
-      if (!compatibility) return false;
-      const addLiters = Math.min(step, compatibility.liters);
-      if (!(addLiters > 1e-9)) return false;
-      return transferLiquidIntoContainer(source, container, addLiters, compatibility);
+    const addLiters = Math.max(0, capacity - current);
+    if (!(addLiters > 1e-9)) return false;
+    let waterItem = embeddedLiquidItems(container).find(item => String(catalogForGearInstance(item)?.liquidFamily || '') === 'water') || null;
+    if (!waterItem) {
+      const waterCatalog = GEAR_CATALOG_BY_ID.get('gc1975');
+      if (!waterCatalog) return false;
+      waterItem = {
+        id:uid(), item:catalogGearName(waterCatalog), catalogId:waterCatalog.id, quantity:0,
+        weight:roundGearPounds(Math.max(0, Number(waterCatalog.weight) || 0)), condition:'New',
+        color:Array.isArray(waterCatalog.colors) && waterCatalog.colors.length === 1 ? waterCatalog.colors[0] : 'Clear',
+        wet:false, dirty:false, locationId:container.locationId, embeddedInGearId:container.id
+      };
+      state.gear.push(waterItem);
     }
-
+    const perUnit = Number(catalogForGearInstance(waterItem)?.liquidVolumeLitersPerUnit) || 1;
+    waterItem.quantity = normalizeLiquidQuantity(gearItemQuantity(waterItem) + addLiters / perUnit);
+    closeGearItemActionMenu();
     clearGearSortState();
     renderGear();
     calculate();
@@ -13964,11 +14199,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       ? `<button type="button" class="gear-liquid-unit-toggle" data-liquid-container-unit-toggle="${esc(item.id)}" aria-label="Switch water volume between liters and US gallons" title="Switch between liters and US gallons">${esc(unit)}</button>`
       : `<span>${esc(unit)}</span>`;
     const canAdjust = Boolean(family && liters > 1e-9);
-    const canIncrease = canAdjust && liters < capacity - 1e-9 && Boolean(looseMatchingLiquid(item, family));
-    const step = canAdjust ? liquidContainerStepLiters(item, catalog, family) : 0;
+    const step = canAdjust ? liquidContainerDispenseStepLiters(item, catalog, family) : 0;
     const stepText = canAdjust ? `${formatLiquidVolume(step, unit)} ${unit}` : '';
+    const basis = String(catalog?.liquidDispenseBasis || '').trim();
+    const decreaseLabel = basis
+      ? `Use ${esc(stepText)} ${esc(familyLabel)} (${esc(basis)})`
+      : `Decrease contained ${esc(familyLabel)} by ${esc(stepText)}`;
     const stepperMarkup = canAdjust
-      ? `<span class="liquid-chip-stepper no-print"><button type="button" data-liquid-container-step="1" aria-label="Add ${esc(stepText)} ${esc(familyLabel)} from loose liquid in this location"${canIncrease ? '' : ' disabled aria-disabled="true"'}>▲</button><button type="button" data-liquid-container-step="-1" aria-label="Decrease contained ${esc(familyLabel)} by ${esc(stepText)}">▼</button></span>`
+      ? `<button type="button" class="vehicle-energy-button no-print" data-liquid-container-step="-1" aria-label="${decreaseLabel}" title="${decreaseLabel}">−</button>`
       : '';
     const chipClass = waterContainer ? 'water' : fuelFamily ? 'fuel' : family ? 'filled' : 'empty';
     return `<span class="liquid-status-inline no-print" data-liquid-container-owner="${esc(item.id)}"><span class="liquid-volume-chip ${chipClass}" title="${esc(`${familyLabel}; ${reading} ${unit}`)}"><span aria-hidden="true">${icon}</span><span class="liquid-family-name">${esc(familyLabel)}</span><span class="liquid-volume-reading">${esc(reading)}</span>${unitMarkup}${stepperMarkup}</span></span>`;
@@ -14420,20 +14658,21 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const value = Number.isFinite(raw) ? raw : max;
     const fraction = max > 0 ? value / max : 0;
     const levelClass = fraction <= .1 ? ' critical' : fraction <= .25 ? ' low' : '';
-    const step = isElectric ? 5 : 1;
     const decimals = isElectric ? 0 : (Number.isInteger(max) && Number.isInteger(value) ? 0 : 2);
     const display = value.toFixed(decimals).replace(/\.0$/,'');
     const maxDisplay = max.toFixed(decimals).replace(/\.0$/,'');
-    const readingSuffix = isElectric ? '%' : `/${maxDisplay} gal`;
-    const atMin = value <= 1e-9;
-    const atMax = value >= max - 1e-9;
     const icon = isElectric ? '⚡' : '⛽';
     const range = vehicleRemainingRange(owner, catalog);
     const rangeUnit = String(catalog.vehicleRangeUnit || 'mi');
     const rangeText = Number.isFinite(range) ? `${Math.max(0, Math.round(range))} ${rangeUnit}` : '—';
     const key = `${ownerType}:${ownerId}`;
-    const fuelDropAttr = isElectric ? '' : ` data-vehicle-fuel-drop-target="${esc(key)}"`;
-    return `<span class="vehicle-status-inline no-print" data-vehicle-status-owner="${esc(key)}"><span class="vehicle-energy-chip ${isElectric ? 'electric' : 'fuel'}${levelClass}"${fuelDropAttr} title="${isElectric ? 'Battery charge' : `${catalog.vehicleFuelType || 'Fuel'} remaining; tank ${maxDisplay} gal; drag compatible fuel here to refuel`}"><button type="button" class="vehicle-energy-button" data-vehicle-energy-step="-${step}" aria-label="Decrease ${isElectric ? 'charge' : 'fuel'}"${atMin ? ' disabled aria-disabled="true"' : ''}>−</button><span aria-hidden="true">${icon}</span><span class="vehicle-energy-reading"><input class="vehicle-energy-input" type="number" min="0" max="${esc(String(max))}" step="${esc(String(step))}" value="${esc(display)}" data-vehicle-energy-input style="--vehicle-energy-chars:${Math.max(1, display.length)}" aria-label="${isElectric ? 'Charge percent' : 'Fuel gallons'}"><span>${esc(readingSuffix)}</span></span><button type="button" class="vehicle-energy-button" data-vehicle-energy-step="${step}" aria-label="Increase ${isElectric ? 'charge' : 'fuel'}"${atMax ? ' disabled aria-disabled="true"' : ''}>+</button></span><span class="vehicle-range-chip" data-vehicle-range-output title="Estimated remaining range from representative full-range rating">↗ ${esc(rangeText)}</span></span>`;
+    const driveDisabled = !(Number.isFinite(range) && range > 1e-9);
+    const travelLabel = rangeUnit === 'mi' ? 'Drive…' : 'Travel…';
+    if (!isElectric) {
+      const fuelDropAttr = ` data-vehicle-fuel-drop-target="${esc(key)}"`;
+      return `<span class="vehicle-status-inline no-print" data-vehicle-status-owner="${esc(key)}"><span class="vehicle-energy-chip fuel${levelClass}"${fuelDropAttr} title="${esc(`${catalog.vehicleFuelType || 'Fuel'} remaining; tank ${maxDisplay} gal; drag compatible fuel here to refuel`)}"><span aria-hidden="true">${icon}</span><span class="vehicle-energy-reading">${esc(display)}/${esc(maxDisplay)} gal</span></span><span class="vehicle-range-chip" data-vehicle-range-output title="Estimated remaining range from representative full-range rating">↗ ${esc(rangeText)}</span><button type="button" class="vehicle-drive-button" data-vehicle-drive aria-label="Record distance traveled"${driveDisabled ? ' disabled aria-disabled="true"' : ''}>${travelLabel}</button></span>`;
+    }
+    return `<span class="vehicle-status-inline no-print" data-vehicle-status-owner="${esc(key)}"><span class="vehicle-energy-chip electric${levelClass}" title="Battery charge"><span aria-hidden="true">${icon}</span><span class="vehicle-energy-reading">${esc(display)}%</span></span><span class="vehicle-range-chip" data-vehicle-range-output title="Estimated remaining range from representative full-range rating">↗ ${esc(rangeText)}</span><button type="button" class="vehicle-drive-button" data-vehicle-drive aria-label="Record distance traveled"${driveDisabled ? ' disabled aria-disabled="true"' : ''}>${travelLabel}</button></span>`;
   }
 
   function vehicleStatusOwnerFromKey(key) {
@@ -14444,6 +14683,363 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return {type:'', owner:null};
   }
 
+  let pendingVehicleTravel = null;
+
+  function openVehicleTravelDialog(owner, catalog) {
+    if (!owner || !catalog || !['fuel','electric'].includes(catalog.vehicleEnergyType)) return;
+    const remaining = vehicleRemainingRange(owner, catalog);
+    if (!(Number.isFinite(remaining) && remaining > 1e-9)) return;
+    const dialog = document.getElementById('vehicleTravelDialog');
+    const input = document.getElementById('vehicleTravelMiles');
+    if (!dialog || !input) return;
+    const unit = String(catalog.vehicleRangeUnit || 'mi');
+    pendingVehicleTravel = {owner, catalog, unit};
+    const name = String(owner.item || owner.name || catalog.name || 'Vehicle');
+    document.getElementById('vehicleTravelDialogTitle').textContent = `${unit === 'mi' ? 'Drive' : 'Travel'} ${name}`;
+    document.getElementById('vehicleTravelDialogSummary').textContent = `Estimated remaining range: ${Math.max(0, Math.round(remaining))} ${unit}`;
+    const label = document.querySelector('label[for="vehicleTravelMiles"]');
+    if (label) label.textContent = unit === 'mi' ? 'Miles traveled' : 'Distance traveled';
+    const unitSpan = document.querySelector('#vehicleTravelMiles + span');
+    if (unitSpan) unitSpan.textContent = unit;
+    document.getElementById('vehicleTravelError').textContent = '';
+    input.min = '0';
+    input.max = String(remaining);
+    input.step = '0.1';
+    input.value = String(Number(Math.min(10, remaining).toFixed(1)));
+    if (dialog.open) dialog.close();
+    dialog.showModal();
+    requestAnimationFrame(() => { input.focus(); input.select(); });
+  }
+
+  function settleVehicleTravelDialog(commit) {
+    const dialog = document.getElementById('vehicleTravelDialog');
+    const input = document.getElementById('vehicleTravelMiles');
+    if (!pendingVehicleTravel) { if (dialog?.open) dialog.close(); return; }
+    if (!commit) {
+      pendingVehicleTravel = null;
+      if (dialog?.open) dialog.close();
+      return;
+    }
+    const miles = Number(input?.value);
+    const {owner, catalog, unit='mi'} = pendingVehicleTravel;
+    const remaining = vehicleRemainingRange(owner, catalog);
+    if (!Number.isFinite(miles) || miles <= 0 || !Number.isFinite(remaining) || miles > remaining + 1e-9) {
+      document.getElementById('vehicleTravelError').textContent = `Enter a distance greater than 0 and no more than ${Math.max(0, Number(remaining || 0).toFixed(1))} ${unit}.`;
+      input?.focus();
+      return;
+    }
+    const fullRange = Math.max(0, Number(catalog.vehicleRange) || 0);
+    const energy = ensureVehicleEnergyState(owner, catalog);
+    if (!(fullRange > 0 && energy)) return;
+    if (catalog.vehicleEnergyType === 'fuel') {
+      const tank = Math.max(0, Number(catalog.vehicleFuelTankGallons) || 0);
+      if (!(tank > 0)) return;
+      const usedGallons = tank * miles / fullRange;
+      energy.fuelGallons = Math.max(0, Math.round(((Number(energy.fuelGallons) || 0) - usedGallons + Number.EPSILON) * 1000000) / 1000000);
+    } else if (catalog.vehicleEnergyType === 'electric') {
+      const usedPercent = 100 * miles / fullRange;
+      energy.chargePercent = Math.max(0, Math.round(((Number(energy.chargePercent) || 0) - usedPercent + Number.EPSILON) * 1000000) / 1000000);
+    }
+    pendingVehicleTravel = null;
+    if (dialog?.open) dialog.close();
+    renderGear();
+    calculate();
+    queueSave();
+  }
+
+  const VEHICLE_ENERGY_PRICE_DEFAULTS = Object.freeze({
+    gasoline:4.20,
+    diesel:5.69,
+    avgas:7.13,
+    jet:7.25,
+    electric:0.420
+  });
+
+  function vehicleCanFuelUp(owner, catalog) {
+    if (!owner || !catalog || catalog.vehicleEnergyType !== 'fuel') return false;
+    const tank = Math.max(0, Number(catalog.vehicleFuelTankGallons) || 0);
+    const energy = ensureVehicleEnergyState(owner, catalog);
+    return tank > 0 && Number(energy?.fuelGallons) < tank - 1e-9;
+  }
+
+  function vehicleCanRecharge(owner, catalog) {
+    if (!owner || !catalog || catalog.vehicleEnergyType !== 'electric') return false;
+    const energy = ensureVehicleEnergyState(owner, catalog);
+    return Number(energy?.chargePercent) < 100 - 1e-9;
+  }
+
+  function gearCanRecharge(item, catalog=batteryCatalogForItem(item)) {
+    if (!item || !catalog) return false;
+    const energy = ensureGearBatteryState(item, catalog);
+    return Number(energy?.chargePercent) < 100 - 1e-9;
+  }
+
+  function vehicleBatteryCapacityKWh(catalog) {
+    const value = Number(catalog?.vehicleBatteryKWh);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  function vehiclePurchasePriceDefault(catalog) {
+    if (catalog?.vehicleEnergyType === 'electric') return VEHICLE_ENERGY_PRICE_DEFAULTS.electric;
+    const label = String(catalog?.vehicleFuelType || '').toLocaleLowerCase();
+    if (/jet/.test(label)) return VEHICLE_ENERGY_PRICE_DEFAULTS.jet;
+    if (/avgas/.test(label)) return VEHICLE_ENERGY_PRICE_DEFAULTS.avgas;
+    if (/diesel/.test(label) && !/gasoline|petrol/.test(label)) return VEHICLE_ENERGY_PRICE_DEFAULTS.diesel;
+    return VEHICLE_ENERGY_PRICE_DEFAULTS.gasoline;
+  }
+
+  function defaultUsdFundAccount() {
+    ensureFunds();
+    const usd = state.funds.filter(account => fundCurrencyKey(account.currency) === fundCurrencyKey('USD'));
+    return usd.find(account => account.isDefault) || usd[0] || null;
+  }
+
+  function populateEnergyPurchaseAccounts() {
+    const select = document.getElementById('vehicleEnergyAccount');
+    if (!select) return;
+    ensureFunds();
+    const usd = state.funds.filter(account => fundCurrencyKey(account.currency) === fundCurrencyKey('USD'));
+    if (!usd.length) {
+      select.innerHTML = '<option value="">No USD account available</option>';
+      select.value = '';
+      return;
+    }
+    select.innerHTML = usd.map(account => `<option value="${esc(account.id)}">${esc(`${account.name} · $${formatFundNumber(account, account.balance)}`)}</option>`).join('');
+    const preferred = defaultUsdFundAccount();
+    select.value = preferred?.id || usd[0].id;
+  }
+
+  let pendingVehicleEnergyAdjust = null;
+
+  function openVehicleEnergyDialog(owner, catalog) {
+    if (!owner || !catalog || !['fuel','electric'].includes(catalog.vehicleEnergyType)) return;
+    const isElectric = catalog.vehicleEnergyType === 'electric';
+    if (isElectric ? !vehicleCanRecharge(owner, catalog) : !vehicleCanFuelUp(owner, catalog)) return;
+    const dialog = document.getElementById('vehicleEnergyDialog');
+    const slider = document.getElementById('vehicleEnergyTarget');
+    if (!dialog || !slider) return;
+    const energy = ensureVehicleEnergyState(owner, catalog);
+    const current = isElectric ? Math.max(0, Math.min(100, Number(energy?.chargePercent) || 0))
+      : Math.max(0, Math.min(Number(catalog.vehicleFuelTankGallons) || 0, Number(energy?.fuelGallons) || 0));
+    const max = isElectric ? 100 : Math.max(0, Number(catalog.vehicleFuelTankGallons) || 0);
+    if (!(max > current + 1e-9)) return;
+    pendingVehicleEnergyAdjust = {kind:'vehicle', owner, catalog, isElectric, current, max};
+    const name = String(owner.item || owner.name || catalog.name || 'Vehicle');
+    document.getElementById('vehicleEnergyDialogTitle').textContent = `${isElectric ? 'Recharge' : 'Fuel Up'} ${name}`;
+    document.getElementById('vehicleEnergyDialogSummary').textContent = isElectric
+      ? `Current charge: ${Math.round(current)}%`
+      : `Current fuel: ${Number(current.toFixed(2))}/${Number(max.toFixed(2))} gal`;
+    slider.min = String(current);
+    slider.max = String(max);
+    slider.step = isElectric ? '1' : '0.1';
+    slider.value = String(max);
+    const buyWrap = document.getElementById('vehicleEnergyBuyWrap');
+    if (buyWrap) buyWrap.hidden = false;
+    const buy = document.getElementById('vehicleEnergyBuy');
+    if (buy) buy.checked = false;
+    const fields = document.getElementById('vehicleEnergyPurchaseFields');
+    if (fields) fields.hidden = true;
+    const price = document.getElementById('vehicleEnergyUnitPrice');
+    const defaultPrice = vehiclePurchasePriceDefault(catalog);
+    if (price) price.value = defaultPrice.toFixed(isElectric ? 3 : 2);
+    const priceUnit = document.getElementById('vehicleEnergyPriceUnit');
+    if (priceUnit) priceUnit.textContent = isElectric ? '/kWh' : '/gal';
+    populateEnergyPurchaseAccounts();
+    document.getElementById('vehicleEnergyError').textContent = '';
+    updateVehicleEnergyDialogUi();
+    closeGearItemActionMenu();
+    if (dialog.open) dialog.close();
+    dialog.showModal();
+  }
+
+  function openGearRechargeDialog(item, catalog=batteryCatalogForItem(item)) {
+    if (!item || !catalog || !gearCanRecharge(item, catalog)) return;
+    const dialog = document.getElementById('vehicleEnergyDialog');
+    const slider = document.getElementById('vehicleEnergyTarget');
+    if (!dialog || !slider) return;
+    const energy = ensureGearBatteryState(item, catalog);
+    const current = Math.max(0, Math.min(100, Number(energy?.chargePercent) || 0));
+    pendingVehicleEnergyAdjust = {kind:'device', item, catalog, isElectric:true, current, max:100};
+    document.getElementById('vehicleEnergyDialogTitle').textContent = `Recharge ${item.item || catalog.name || 'Device'}`;
+    document.getElementById('vehicleEnergyDialogSummary').textContent = `Current charge: ${Math.round(current)}%`;
+    slider.min = String(current);
+    slider.max = '100';
+    slider.step = '1';
+    slider.value = '100';
+    const buyWrap = document.getElementById('vehicleEnergyBuyWrap');
+    if (buyWrap) buyWrap.hidden = true;
+    const buy = document.getElementById('vehicleEnergyBuy');
+    if (buy) buy.checked = false;
+    const fields = document.getElementById('vehicleEnergyPurchaseFields');
+    if (fields) fields.hidden = true;
+    document.getElementById('vehicleEnergyError').textContent = '';
+    updateVehicleEnergyDialogUi();
+    closeGearItemActionMenu();
+    if (dialog.open) dialog.close();
+    dialog.showModal();
+  }
+
+  function energyAdjustmentDetails(pending=pendingVehicleEnergyAdjust) {
+    const slider = document.getElementById('vehicleEnergyTarget');
+    if (!pending || !slider) return null;
+    const target = Math.max(pending.current, Math.min(pending.max, Number(slider.value) || pending.current));
+    if (pending.kind === 'device') {
+      return {target, added:target - pending.current, unit:'%', purchaseAmount:null};
+    }
+    if (pending.isElectric) {
+      const capacity = vehicleBatteryCapacityKWh(pending.catalog);
+      const kWh = capacity == null ? null : capacity * (target - pending.current) / 100;
+      return {target, added:target - pending.current, unit:'%', purchaseAmount:kWh, purchaseUnit:'kWh'};
+    }
+    const gallons = target - pending.current;
+    return {target, added:gallons, unit:'gal', purchaseAmount:gallons, purchaseUnit:'gal'};
+  }
+
+  function updateVehicleEnergyDialogUi() {
+    const pending = pendingVehicleEnergyAdjust;
+    if (!pending) return;
+    const details = energyAdjustmentDetails(pending);
+    if (!details) return;
+    const output = document.getElementById('vehicleEnergyTargetOutput');
+    if (output) {
+      if (pending.kind === 'device' || pending.isElectric) {
+        const extra = pending.kind === 'vehicle' && Number.isFinite(details.purchaseAmount) ? ` · +${details.purchaseAmount.toFixed(2)} kWh` : '';
+        output.textContent = `Target: ${Math.round(details.target)}%${extra}`;
+      } else {
+        output.textContent = `Target: ${Number(details.target.toFixed(2))}/${Number(pending.max.toFixed(2))} gal · +${Number(details.added.toFixed(2))} gal`;
+      }
+    }
+    const isVehicle = pending.kind === 'vehicle';
+    const buy = document.getElementById('vehicleEnergyBuy');
+    const fields = document.getElementById('vehicleEnergyPurchaseFields');
+    if (fields) fields.hidden = !(isVehicle && buy?.checked);
+    const costOutput = document.getElementById('vehicleEnergyCost');
+    if (costOutput) {
+      if (!isVehicle || !buy?.checked) {
+        costOutput.textContent = '';
+      } else if (!Number.isFinite(details.purchaseAmount)) {
+        costOutput.textContent = 'Purchase cost unavailable: battery capacity is not defined.';
+      } else {
+        const price = Math.max(0, Number(document.getElementById('vehicleEnergyUnitPrice')?.value) || 0);
+        const cost = details.purchaseAmount * price;
+        costOutput.textContent = `${details.purchaseAmount.toFixed(pending.isElectric ? 2 : 2)} ${details.purchaseUnit} × $${price.toFixed(pending.isElectric ? 3 : 2)} = $${cost.toFixed(2)}`;
+      }
+    }
+  }
+
+  function settleVehicleEnergyDialog(commit) {
+    const dialog = document.getElementById('vehicleEnergyDialog');
+    const pending = pendingVehicleEnergyAdjust;
+    if (!pending) { if (dialog?.open) dialog.close(); return; }
+    if (!commit) {
+      pendingVehicleEnergyAdjust = null;
+      if (dialog?.open) dialog.close();
+      return;
+    }
+    const details = energyAdjustmentDetails(pending);
+    const error = document.getElementById('vehicleEnergyError');
+    if (!details || details.target < pending.current - 1e-9 || details.target > pending.max + 1e-9) {
+      if (error) error.textContent = 'Choose a valid target level.';
+      return;
+    }
+    const buy = pending.kind === 'vehicle' && Boolean(document.getElementById('vehicleEnergyBuy')?.checked);
+    let purchaseAccount = null;
+    let purchaseNext = null;
+    if (buy) {
+      if (!Number.isFinite(details.purchaseAmount)) {
+        if (error) error.textContent = 'This vehicle is missing battery-capacity data, so purchased charging cannot be priced.';
+        return;
+      }
+      const price = Math.max(0, Number(document.getElementById('vehicleEnergyUnitPrice')?.value) || 0);
+      const cost = details.purchaseAmount * price;
+      purchaseAccount = fundAccountById(document.getElementById('vehicleEnergyAccount')?.value || '');
+      if (!purchaseAccount || fundCurrencyKey(purchaseAccount.currency) !== fundCurrencyKey('USD')) {
+        if (error) error.textContent = 'Choose a USD funds account for the purchase.';
+        return;
+      }
+      purchaseNext = fundAddValue(purchaseAccount, purchaseAccount.balance, cost, -1);
+      if (purchaseAccount.type === 'cash' && fundValueIsNegative(purchaseAccount, purchaseNext)) {
+        if (error) error.textContent = `Insufficient cash. Available: $${formatFundNumber(purchaseAccount, purchaseAccount.balance)}.`;
+        return;
+      }
+    }
+
+    if (pending.kind === 'device') {
+      const energy = ensureGearBatteryState(pending.item, pending.catalog);
+      if (energy) energy.chargePercent = details.target;
+    } else {
+      const energy = ensureVehicleEnergyState(pending.owner, pending.catalog);
+      if (pending.isElectric) energy.chargePercent = details.target;
+      else energy.fuelGallons = details.target;
+    }
+    if (purchaseAccount && purchaseNext != null) purchaseAccount.balance = purchaseNext;
+
+    pendingVehicleEnergyAdjust = null;
+    if (dialog?.open) dialog.close();
+    renderFunds();
+    renderGear();
+    calculate();
+    queueSave();
+  }
+
+  let pendingDeviceUse = null;
+
+  function openDeviceUseDialog(item, catalog=batteryCatalogForItem(item)) {
+    const fullRuntime = Number(catalog?.batteryRuntimeHours);
+    const remaining = gearBatteryRemainingRuntimeHours(item, catalog);
+    if (!item || !catalog || !(fullRuntime > 0) || !(Number.isFinite(remaining) && remaining > 1e-9)) return;
+    const dialog = document.getElementById('deviceUseDialog');
+    const input = document.getElementById('deviceUseAmount');
+    const unit = document.getElementById('deviceUseUnit');
+    if (!dialog || !input || !unit) return;
+    pendingDeviceUse = {item, catalog, fullRuntime};
+    document.getElementById('deviceUseDialogTitle').textContent = `Use ${item.item || catalog.name || 'Device'}`;
+    document.getElementById('deviceUseDialogSummary').textContent = `Approximate remaining active runtime: ${formatBatteryRuntimeHours(remaining)}`;
+    document.getElementById('deviceUseError').textContent = '';
+    if (remaining < 1) {
+      unit.value = 'min';
+      input.step = '1';
+      input.value = String(Math.max(1, Math.min(15, Math.round(remaining * 60))));
+    } else {
+      unit.value = 'h';
+      input.step = '0.25';
+      input.value = String(Math.min(1, Number(remaining.toFixed(2))));
+    }
+    closeGearItemActionMenu();
+    if (dialog.open) dialog.close();
+    dialog.showModal();
+    requestAnimationFrame(() => { input.focus(); input.select(); });
+  }
+
+  function settleDeviceUseDialog(commit) {
+    const dialog = document.getElementById('deviceUseDialog');
+    const pending = pendingDeviceUse;
+    if (!pending) { if (dialog?.open) dialog.close(); return; }
+    if (!commit) {
+      pendingDeviceUse = null;
+      if (dialog?.open) dialog.close();
+      return;
+    }
+    const input = document.getElementById('deviceUseAmount');
+    const unit = document.getElementById('deviceUseUnit')?.value || 'min';
+    const amount = Number(input?.value);
+    const hours = unit === 'h' ? amount : amount / 60;
+    const remaining = gearBatteryRemainingRuntimeHours(pending.item, pending.catalog);
+    if (!Number.isFinite(hours) || hours <= 0 || !Number.isFinite(remaining) || hours > remaining + 1e-9) {
+      document.getElementById('deviceUseError').textContent = `Enter a use time greater than 0 and no more than ${formatBatteryRuntimeHours(remaining)}.`;
+      input?.focus();
+      return;
+    }
+    const energy = ensureGearBatteryState(pending.item, pending.catalog);
+    const usedPercent = 100 * hours / pending.fullRuntime;
+    energy.chargePercent = Math.max(0, Math.round(((Number(energy.chargePercent) || 0) - usedPercent + Number.EPSILON) * 1000000) / 1000000);
+    pendingDeviceUse = null;
+    if (dialog?.open) dialog.close();
+    renderGear();
+    calculate();
+    queueSave();
+  }
+
   function bindVehicleStatusControls(root) {
     root?.querySelectorAll('[data-vehicle-status-owner]').forEach(status => {
       const key = status.dataset.vehicleStatusOwner;
@@ -14451,34 +15047,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const owner = resolved.owner;
       const catalog = resolved.type === 'item' ? vehicleCatalogForItem(owner) : vehicleCatalogForLocation(owner);
       if (!owner || !catalog) return;
-      const commit = raw => {
-        const energy = ensureVehicleEnergyState(owner, catalog);
-        if (!energy) return;
-        if (catalog.vehicleEnergyType === 'electric') {
-          const value = Math.max(0, Math.min(100, Number(raw) || 0));
-          energy.chargePercent = value;
-        } else {
-          const tank = Math.max(0, Number(catalog.vehicleFuelTankGallons) || 0);
-          const value = Math.max(0, Math.min(tank, Number(raw) || 0));
-          energy.fuelGallons = value;
-        }
-        queueSave();
-        renderGear();
-      };
-      status.querySelectorAll('[data-vehicle-energy-step]').forEach(button => button.addEventListener('click', event => {
+      status.querySelector('[data-vehicle-drive]')?.addEventListener('click', event => {
         event.preventDefault(); event.stopPropagation();
-        const input = status.querySelector('[data-vehicle-energy-input]');
-        commit((Number(input?.value) || 0) + Number(button.dataset.vehicleEnergyStep || 0));
-      }));
-      const input = status.querySelector('[data-vehicle-energy-input]');
-      input?.addEventListener('click', event => event.stopPropagation());
-      input?.addEventListener('input', () => {
-        const chars = Math.max(1, String(input.value || '0').length);
-        input.style.setProperty('--vehicle-energy-chars', String(chars));
-      });
-      input?.addEventListener('change', () => commit(input.value));
-      input?.addEventListener('keydown', event => {
-        if (event.key === 'Enter') { event.preventDefault(); commit(input.value); }
+        openVehicleTravelDialog(owner, catalog);
       });
     });
   }
@@ -14526,8 +15097,6 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const fraction = value / 100;
     const levelClass = fraction <= .1 ? ' critical' : fraction <= .25 ? ' low' : '';
     const display = String(Math.round(value));
-    const atMin = value <= 1e-9;
-    const atMax = value >= 100 - 1e-9;
     const runtime = gearBatteryRemainingRuntimeHours(item, catalog);
     const fullRuntime = Number(catalog.batteryRuntimeHours);
     const basis = String(catalog.batteryRuntimeBasis || '').trim();
@@ -14538,7 +15107,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const runtimeChip = Number.isFinite(runtime)
       ? `<span class="device-runtime-chip" data-device-runtime-output title="${esc(runtimeTitle)}">⏱ ${esc(formatBatteryRuntimeHours(runtime))}</span>`
       : '';
-    return `<span class="device-status-inline no-print" data-device-status-owner="${esc(item.id)}"><span class="device-energy-chip${levelClass}" title="Battery charge"><button type="button" class="vehicle-energy-button" data-device-energy-step="-5" aria-label="Decrease charge"${atMin ? ' disabled aria-disabled="true"' : ''}>−</button><span aria-hidden="true">🔋</span><span class="vehicle-energy-reading"><input class="vehicle-energy-input" type="number" min="0" max="100" step="5" value="${esc(display)}" data-device-energy-input style="--vehicle-energy-chars:${Math.max(1, display.length)}" aria-label="Charge percent"><span>%</span></span><button type="button" class="vehicle-energy-button" data-device-energy-step="5" aria-label="Increase charge"${atMax ? ' disabled aria-disabled="true"' : ''}>+</button></span>${runtimeChip}</span>`;
+    const useButton = Number.isFinite(fullRuntime) && fullRuntime > 0 && value > 1e-9
+      ? '<button type="button" class="vehicle-drive-button" data-device-use aria-label="Record device use">Use…</button>'
+      : '';
+    return `<span class="device-status-inline no-print" data-device-status-owner="${esc(item.id)}"><span class="device-energy-chip${levelClass}" title="Battery charge"><span aria-hidden="true">🔋</span><span class="vehicle-energy-reading">${esc(display)}%</span></span>${runtimeChip}${useButton}</span>`;
   }
 
   function bindGearBatteryControls(root) {
@@ -14546,27 +15118,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const item = state.gear.find(entry => entry?.id === status.dataset.deviceStatusOwner);
       const catalog = batteryCatalogForItem(item);
       if (!item || !catalog) return;
-      const commit = raw => {
-        const energy = ensureGearBatteryState(item, catalog);
-        if (!energy) return;
-        energy.chargePercent = Math.max(0, Math.min(100, Number(raw) || 0));
-        queueSave();
-        renderGear();
-      };
-      status.querySelectorAll('[data-device-energy-step]').forEach(button => button.addEventListener('click', event => {
+      status.querySelector('[data-device-use]')?.addEventListener('click', event => {
         event.preventDefault(); event.stopPropagation();
-        const input = status.querySelector('[data-device-energy-input]');
-        commit((Number(input?.value) || 0) + Number(button.dataset.deviceEnergyStep || 0));
-      }));
-      const input = status.querySelector('[data-device-energy-input]');
-      input?.addEventListener('click', event => event.stopPropagation());
-      input?.addEventListener('input', () => {
-        const chars = Math.max(1, String(input.value || '0').length);
-        input.style.setProperty('--vehicle-energy-chars', String(chars));
-      });
-      input?.addEventListener('change', () => commit(input.value));
-      input?.addEventListener('keydown', event => {
-        if (event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); commit(input.value); }
+        openDeviceUseDialog(item, catalog);
       });
     });
     root?.querySelectorAll('[data-primary-battery-owner]').forEach(status => {
@@ -22065,6 +22619,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const pourOutLiquidAction = liquidInfo
       ? '<button type="button" class="gear-item-action-option danger" data-gear-item-action-pour-out role="menuitem">Pour Out</button>'
       : '';
+    const fillWaterAction = canFillLiquidContainerWithWater(item)
+      ? '<button type="button" class="gear-item-action-option" data-gear-item-action-fill-water role="menuitem">Fill with Water</button>'
+      : '';
+    const itemVehicleCatalog = vehicleCatalogForItem(item);
+    const vehicleEnergyAction = itemVehicleCatalog && (vehicleCanFuelUp(item, itemVehicleCatalog) || vehicleCanRecharge(item, itemVehicleCatalog))
+      ? `<button type="button" class="gear-item-action-option" data-gear-item-action-vehicle-energy role="menuitem">${itemVehicleCatalog.vehicleEnergyType === 'electric' ? 'Recharge' : 'Fuel Up'}</button>`
+      : '';
+    const rechargeableCatalog = batteryCatalogForItem(item);
+    const deviceRechargeAction = rechargeableCatalog && gearCanRecharge(item, rechargeableCatalog)
+      ? '<button type="button" class="gear-item-action-option" data-gear-item-action-device-recharge role="menuitem">Recharge</button>'
+      : '';
     const unloadAction = canUnloadGearItem(item)
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-unload role="menuitem">Unload</button>'
       : '';
@@ -22078,7 +22643,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       <button type="button" class="gear-item-action-option" data-gear-item-action-move role="menuitem"><span>Move</span><span aria-hidden="true">›</span></button>
       <button type="button" class="gear-item-action-option" data-gear-item-action-carry role="menuitem">${carryAction}</button>
       ${transferLiquidAction}
+      ${fillWaterAction}
       ${pourOutLiquidAction}
+      ${vehicleEnergyAction}
+      ${deviceRechargeAction}
       ${unloadAction}
       ${removeBatteriesAction}
       ${testBatteryAction}
@@ -22088,7 +22656,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     menu.querySelector('[data-gear-item-action-move]')?.addEventListener('click', () => renderGearItemMoveMenu(item));
     menu.querySelector('[data-gear-item-action-carry]')?.addEventListener('click', () => setDownOrPickUpGearItem(item));
     menu.querySelector('[data-gear-item-action-transfer-liquid]')?.addEventListener('click', () => renderGearItemLiquidTransferMenu(item));
+    menu.querySelector('[data-gear-item-action-fill-water]')?.addEventListener('click', () => fillLiquidContainerWithWater(item));
     menu.querySelector('[data-gear-item-action-pour-out]')?.addEventListener('click', () => pourOutGearItemLiquid(item));
+    menu.querySelector('[data-gear-item-action-vehicle-energy]')?.addEventListener('click', () => openVehicleEnergyDialog(item, itemVehicleCatalog));
+    menu.querySelector('[data-gear-item-action-device-recharge]')?.addEventListener('click', () => openGearRechargeDialog(item, rechargeableCatalog));
     menu.querySelector('[data-gear-item-action-unload]')?.addEventListener('click', () => unloadGearItem(item));
     menu.querySelector('[data-gear-item-action-remove-batteries]')?.addEventListener('click', () => removeInstalledBatteries(item));
     menu.querySelector('[data-gear-item-action-test-battery]')?.addEventListener('click', () => renderPrimaryBatteryTestMenu(item));
@@ -22110,6 +22681,34 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     });
     menu.querySelectorAll('[data-gear-item-move-location]').forEach(button => button.addEventListener('click', () => moveGearItemToLocation(item, button.dataset.gearItemMoveLocation)));
     requestAnimationFrame(() => positionGearItemActionMenu(activeGearItemActionButton));
+  }
+
+  function renderVehicleLocationActionRoot(location) {
+    const menu = document.getElementById('gearItemActionMenu');
+    const catalog = vehicleCatalogForLocation(location);
+    if (!menu || !location || !catalog) return;
+    const canAdjust = catalog.vehicleEnergyType === 'electric' ? vehicleCanRecharge(location, catalog) : vehicleCanFuelUp(location, catalog);
+    const label = catalog.vehicleEnergyType === 'electric' ? 'Recharge' : 'Fuel Up';
+    menu.innerHTML = canAdjust
+      ? `<button type="button" class="gear-item-action-option" data-vehicle-location-energy role="menuitem">${label}</button>`
+      : `<div class="gear-item-action-empty">${catalog.vehicleEnergyType === 'electric' ? 'Battery is fully charged.' : 'Fuel tank is already full.'}</div>`;
+    menu.querySelector('[data-vehicle-location-energy]')?.addEventListener('click', () => openVehicleEnergyDialog(location, catalog));
+  }
+
+  function openVehicleLocationActionMenu(button, location) {
+    if (!button || !location || isSectionLocked('gear')) return;
+    const menu = document.getElementById('gearItemActionMenu');
+    if (!menu) return;
+    const key = `location:${location.id}`;
+    if (!menu.hidden && activeGearItemActionId === key) { closeGearItemActionMenu(); return; }
+    closeGearItemActionMenu();
+    activeGearItemActionId = key;
+    activeGearItemActionButton = button;
+    button.setAttribute('aria-expanded', 'true');
+    renderVehicleLocationActionRoot(location);
+    menu.hidden = false;
+    positionGearItemActionMenu(button);
+    requestAnimationFrame(() => menu.querySelector('.gear-item-action-option')?.focus({preventScroll:true}));
   }
 
   function openGearItemActionMenu(button, item) {
@@ -22252,7 +22851,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
               <button class="gear-location-drag-handle no-print section-edit-only" data-location-drag type="button" aria-label="Drag ${esc(location.name)} to reorder locations" title="Drag to reorder locations">⋮⋮</button>
               <button class="gear-location-collapse no-print" data-toggle-location type="button" aria-expanded="${location.collapsed ? 'false' : 'true'}" aria-label="${esc(collapseLabel)}" title="${esc(collapseLabel)}">${collapseSymbol}</button>
               <div class="gear-location-name-content${standaloneVehicle ? ' vehicle-location-name-content' : ''}"${vehicleSpecsTitle ? ` title="${esc(vehicleSpecsTitle)}"` : ''}>${nameControl}</div>
-              ${standaloneVehicle ? `<div class="gear-location-vehicle-status">${vehicleStatus}</div>` : ''}
+              ${standaloneVehicle ? `<div class="gear-location-vehicle-status">${vehicleStatus}</div><button type="button" class="gear-item-actions-button gear-location-actions-button no-print section-edit-only" data-vehicle-location-actions aria-label="Actions for ${esc(location.name)}" aria-haspopup="menu" aria-expanded="false" title="Vehicle actions">…</button>` : ''}
             </div>
             ${vehicleColorControl}
             ${vehicleWeightControl}
@@ -22340,6 +22939,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
           calculate();
           queueSave();
         });
+      });
+      group.querySelector('[data-vehicle-location-actions]')?.addEventListener('click', event => {
+        event.preventDefault(); event.stopPropagation();
+        openVehicleLocationActionMenu(event.currentTarget, location);
       });
       group.querySelector('[data-delete-location]')?.addEventListener('click', async () => {
         await deleteGearLocationAndContents(location);
@@ -25244,6 +25847,43 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       restore?.focus({preventScroll:true});
     }
   });
+  document.getElementById('vehicleTravelCancel')?.addEventListener('click', () => settleVehicleTravelDialog(false));
+  document.getElementById('vehicleTravelConfirm')?.addEventListener('click', () => settleVehicleTravelDialog(true));
+  document.getElementById('vehicleTravelMiles')?.addEventListener('keydown', event => {
+    if (event.key === 'Enter') { event.preventDefault(); settleVehicleTravelDialog(true); }
+    if (event.key === 'Escape') { event.preventDefault(); settleVehicleTravelDialog(false); }
+  });
+  document.getElementById('vehicleTravelDialog')?.addEventListener('cancel', event => {
+    event.preventDefault();
+    settleVehicleTravelDialog(false);
+  });
+
+  document.getElementById('vehicleEnergyTarget')?.addEventListener('input', updateVehicleEnergyDialogUi);
+  document.getElementById('vehicleEnergyBuy')?.addEventListener('change', updateVehicleEnergyDialogUi);
+  document.getElementById('vehicleEnergyUnitPrice')?.addEventListener('input', updateVehicleEnergyDialogUi);
+  document.getElementById('vehicleEnergyAccount')?.addEventListener('change', updateVehicleEnergyDialogUi);
+  document.getElementById('vehicleEnergyCancel')?.addEventListener('click', () => settleVehicleEnergyDialog(false));
+  document.getElementById('vehicleEnergyConfirm')?.addEventListener('click', () => settleVehicleEnergyDialog(true));
+  document.getElementById('vehicleEnergyDialog')?.addEventListener('cancel', event => {
+    event.preventDefault();
+    settleVehicleEnergyDialog(false);
+  });
+
+  document.getElementById('deviceUseUnit')?.addEventListener('change', event => {
+    const input = document.getElementById('deviceUseAmount');
+    if (input) input.step = event.target.value === 'h' ? '0.25' : '1';
+  });
+  document.getElementById('deviceUseCancel')?.addEventListener('click', () => settleDeviceUseDialog(false));
+  document.getElementById('deviceUseConfirm')?.addEventListener('click', () => settleDeviceUseDialog(true));
+  document.getElementById('deviceUseAmount')?.addEventListener('keydown', event => {
+    if (event.key === 'Enter') { event.preventDefault(); settleDeviceUseDialog(true); }
+    if (event.key === 'Escape') { event.preventDefault(); settleDeviceUseDialog(false); }
+  });
+  document.getElementById('deviceUseDialog')?.addEventListener('cancel', event => {
+    event.preventDefault();
+    settleDeviceUseDialog(false);
+  });
+
   window.addEventListener('resize', closeGearItemActionMenu);
   window.addEventListener('scroll', closeGearItemActionMenu, true);
 
