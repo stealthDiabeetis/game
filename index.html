@@ -8634,6 +8634,9 @@
     .energy-adjust-range:focus-visible::-webkit-slider-thumb {
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent), 0 1px 4px rgba(0,0,0,.28);
     }
+    @supports (-webkit-touch-callout: none) {
+      .energy-adjust-range::-webkit-slider-thumb { transform: translateY(-5px); }
+    }
     .energy-adjust-readout,
     .energy-adjust-cost { margin-top: 6px; color: var(--muted); font-size: 12px; font-weight: 700; }
     .energy-buy-toggle {
@@ -8644,6 +8647,7 @@
       margin: 12px 0 8px;
       font-weight: 800;
     }
+    .energy-buy-toggle[hidden] { display: none; }
     .energy-buy-toggle input[type="checkbox"] {
       flex: 0 0 18px;
       width: 18px;
@@ -8665,7 +8669,7 @@
 
     .device-use-clock {
       display: grid;
-      grid-template-columns: minmax(42px, 1fr) auto minmax(42px, 1fr) 30px;
+      grid-template-columns: minmax(42px, 1fr) auto minmax(42px, 1fr);
       align-items: stretch;
       min-height: 42px;
       border: 1px solid var(--line);
@@ -8696,33 +8700,35 @@
       font-size: 17px;
       font-weight: 900;
     }
-    .device-use-step-buttons,
-    .vehicle-travel-step-buttons {
+    .step-value-control {
       display: grid;
-      grid-template-rows: 1fr 1fr;
-      border-left: 1px solid var(--line);
+      grid-template-columns: 44px minmax(0, 150px) 44px;
+      justify-content: center;
+      align-items: stretch;
+      gap: 8px;
+      width: 100%;
+      max-width: 254px;
+      margin-inline: auto;
     }
-    .device-use-step-button,
-    .vehicle-travel-step-button {
-      width: 30px;
-      min-width: 30px;
-      min-height: 0;
-      padding: 0;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      color: var(--muted);
-      font-size: 8px;
+    .step-value-button {
+      width: 44px;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 23px;
       font-weight: 900;
       line-height: 1;
+      touch-action: manipulation;
     }
-    .device-use-step-button:first-child,
-    .vehicle-travel-step-button:first-child { border-bottom: 1px solid var(--line); }
-    .device-use-step-button:hover:not(:disabled),
-    .vehicle-travel-step-button:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 8%, transparent); color: var(--text); transform: none; }
-    .device-use-step-button:disabled,
-    .vehicle-travel-step-button:disabled { opacity: .35; cursor: not-allowed; }
-    .vehicle-travel-distance-input { grid-template-columns: minmax(0, 1fr) auto 30px; align-items: stretch; }
+    .step-value-button:hover:not(:disabled) { border-color: var(--strong-line); background: color-mix(in srgb, var(--accent) 8%, var(--panel-2)); transform: none; }
+    .step-value-button:active:not(:disabled) { background: color-mix(in srgb, var(--accent) 14%, var(--panel-2)); }
+    .step-value-button:disabled { opacity: .35; cursor: not-allowed; }
+    .vehicle-travel-distance-input { grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; min-width: 0; }
+    .vehicle-travel-distance-input > input { min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
     .vehicle-travel-distance-input > span { display: grid; place-items: center; padding: 0 9px; white-space: nowrap; }
     .device-use-presets,
     .vehicle-travel-presets {
@@ -9509,7 +9515,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v630</div>
+<div class="footer-note no-print">Character Sheet v631</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -9552,7 +9558,7 @@
 <div class="dialog-inner">
 <h2 id="vehicleTravelDialogTitle">Drive vehicle</h2>
 <p class="hint" id="vehicleTravelDialogSummary"></p>
-<div class="field"><label for="vehicleTravelMiles">Miles traveled</label><div class="fund-dialog-amount vehicle-travel-distance-input"><input id="vehicleTravelMiles" inputmode="decimal" autocomplete="off"/><span>mi</span><div class="vehicle-travel-step-buttons"><button class="vehicle-travel-step-button" type="button" data-vehicle-travel-step="1" aria-label="Increase travel distance">▲</button><button class="vehicle-travel-step-button" type="button" data-vehicle-travel-step="-1" aria-label="Decrease travel distance">▼</button></div></div></div>
+<div class="field"><label for="vehicleTravelMiles">Miles traveled</label><div class="step-value-control"><button class="step-value-button" type="button" data-vehicle-travel-step="-1" aria-label="Decrease travel distance">−</button><div class="fund-dialog-amount vehicle-travel-distance-input"><input id="vehicleTravelMiles" inputmode="decimal" autocomplete="off"/><span>mi</span></div><button class="step-value-button" type="button" data-vehicle-travel-step="1" aria-label="Increase travel distance">+</button></div></div>
 <div class="vehicle-travel-presets" aria-label="Common travel distances"><button class="vehicle-travel-preset" type="button" data-vehicle-travel-preset></button><button class="vehicle-travel-preset" type="button" data-vehicle-travel-preset></button><button class="vehicle-travel-preset" type="button" data-vehicle-travel-preset></button></div>
 <div class="fund-dialog-error" id="vehicleTravelError" aria-live="polite"></div>
 <div class="dialog-actions"><button class="btn" id="vehicleTravelCancel" type="button">Cancel</button><button class="btn primary" id="vehicleTravelConfirm" type="button">Drive</button></div>
@@ -9582,7 +9588,7 @@
 <div class="dialog-inner">
 <h2 id="deviceUseDialogTitle">Use device</h2>
 <p class="hint" id="deviceUseDialogSummary"></p>
-<div class="field"><label id="deviceUseClockLabel">Time used (HH:MM)</label><div class="device-use-clock" role="group" aria-labelledby="deviceUseClockLabel"><input id="deviceUseHours" inputmode="numeric" autocomplete="off" maxlength="3" aria-label="Hours" value="00"/><span class="device-use-clock-separator" aria-hidden="true">:</span><input id="deviceUseMinutes" inputmode="numeric" autocomplete="off" maxlength="2" aria-label="Minutes" value="05"/><div class="device-use-step-buttons"><button class="device-use-step-button" type="button" data-device-use-step="1" aria-label="Increase use time">▲</button><button class="device-use-step-button" type="button" data-device-use-step="-1" aria-label="Decrease use time">▼</button></div></div><div class="device-use-presets" aria-label="Common use times"><button class="device-use-preset" type="button" data-device-use-preset="15">00:15</button><button class="device-use-preset" type="button" data-device-use-preset="30">00:30</button><button class="device-use-preset" type="button" data-device-use-preset="60">01:00</button></div></div>
+<div class="field"><label id="deviceUseClockLabel">Time used (HH:MM)</label><div class="step-value-control"><button class="step-value-button" type="button" data-device-use-step="-1" aria-label="Decrease use time">−</button><div class="device-use-clock" role="group" aria-labelledby="deviceUseClockLabel"><input id="deviceUseHours" inputmode="numeric" autocomplete="off" maxlength="3" aria-label="Hours" value="00"/><span class="device-use-clock-separator" aria-hidden="true">:</span><input id="deviceUseMinutes" inputmode="numeric" autocomplete="off" maxlength="2" aria-label="Minutes" value="05"/></div><button class="step-value-button" type="button" data-device-use-step="1" aria-label="Increase use time">+</button></div><div class="device-use-presets" aria-label="Common use times"><button class="device-use-preset" type="button" data-device-use-preset="15">00:15</button><button class="device-use-preset" type="button" data-device-use-preset="30">00:30</button><button class="device-use-preset" type="button" data-device-use-preset="60">01:00</button></div></div>
 <div class="fund-dialog-error" id="deviceUseError" aria-live="polite"></div>
 <div class="dialog-actions"><button class="btn" id="deviceUseCancel" type="button">Cancel</button><button class="btn primary" id="deviceUseConfirm" type="button">Use</button></div>
 </div>
@@ -10473,7 +10479,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
   );
 
+  for (const waistPackId of ['gc0125', 'gc0126']) {
+    const waistPack = GEAR_CATALOG.find(item => item.id === waistPackId);
+    if (waistPack) waistPack.aliases = Array.from(new Set([...(waistPack.aliases || []), 'fanny pack', 'hip pack', 'belt bag', 'bum bag']));
+  }
+
   // v621: urine catalog pass — synthetic/paraphernalia, pooled human laboratory urine, and common hunting/trapping urine scents.
+  // v631: Drive/Travel and device Use dialogs use compact centered minus/value/plus controls that preserve mobile input focus; personal electric vehicle recharging is free-only while Passenger Vehicles retain optional paid charging; iOS energy-slider thumbs are vertically centered; Waist Packs gain fanny-pack and related aliases.
   // v630: rechargeable-device Use steps by one minute below 00:05, five minutes from 00:05 through 00:59, and fifteen minutes from 01:00 onward; vehicle travel gains arrows with consistent one-unit steps below 5 mi/nmi, five-unit steps from 5 through 49, and ten-unit steps from 50 onward.
   // v629: rechargeable-device Use now uses HH:MM clock fields with 00:05 default, 5-minute steps below one hour, 15-minute steps from one hour onward, and clock-formatted presets; vehicle travel gains nonredundant type-scaled defaults and three distance presets.
   // v628: rechargeable-device Use defaults to 5 minutes with visible ±1-minute arrows and 15m/30m/1hr presets; energy sliders visually meet their rail endpoints; fuel/recharge purchasing is compact on phones and USD account labels no longer duplicate the dollar sign.
@@ -15096,6 +15108,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   let pendingVehicleEnergyAdjust = null;
 
+  function vehicleEnergyPurchaseAllowed(catalog) {
+    if (catalog?.vehicleEnergyType === 'fuel') return true;
+    return catalog?.vehicleEnergyType === 'electric' && String(catalog?.subcategory || '') === 'Passenger Vehicles';
+  }
+
   function openVehicleEnergyDialog(owner, catalog) {
     if (!owner || !catalog || !['fuel','electric'].includes(catalog.vehicleEnergyType)) return;
     const isElectric = catalog.vehicleEnergyType === 'electric';
@@ -15108,7 +15125,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       : Math.max(0, Math.min(Number(catalog.vehicleFuelTankGallons) || 0, Number(energy?.fuelGallons) || 0));
     const max = isElectric ? 100 : Math.max(0, Number(catalog.vehicleFuelTankGallons) || 0);
     if (!(max > current + 1e-9)) return;
-    pendingVehicleEnergyAdjust = {kind:'vehicle', owner, catalog, isElectric, current, max};
+    const allowPurchase = vehicleEnergyPurchaseAllowed(catalog);
+    pendingVehicleEnergyAdjust = {kind:'vehicle', owner, catalog, isElectric, current, max, allowPurchase};
     const name = String(owner.item || owner.name || catalog.name || 'Vehicle');
     document.getElementById('vehicleEnergyDialogTitle').textContent = `${isElectric ? 'Recharge' : 'Fuel Up'} ${name}`;
     document.getElementById('vehicleEnergyDialogSummary').textContent = isElectric
@@ -15119,7 +15137,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     slider.step = isElectric ? '1' : '0.1';
     slider.value = String(max);
     const buyWrap = document.getElementById('vehicleEnergyBuyWrap');
-    if (buyWrap) buyWrap.hidden = false;
+    if (buyWrap) buyWrap.hidden = !allowPurchase;
     const buy = document.getElementById('vehicleEnergyBuy');
     if (buy) buy.checked = false;
     const fields = document.getElementById('vehicleEnergyPurchaseFields');
@@ -15129,7 +15147,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (price) price.value = defaultPrice.toFixed(isElectric ? 3 : 2);
     const priceUnit = document.getElementById('vehicleEnergyPriceUnit');
     if (priceUnit) priceUnit.textContent = isElectric ? '/kWh' : '/gal';
-    populateEnergyPurchaseAccounts();
+    if (allowPurchase) populateEnergyPurchaseAccounts();
     document.getElementById('vehicleEnergyError').textContent = '';
     updateVehicleEnergyDialogUi();
     closeGearItemActionMenu();
@@ -15209,10 +15227,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const isVehicle = pending.kind === 'vehicle';
     const buy = document.getElementById('vehicleEnergyBuy');
     const fields = document.getElementById('vehicleEnergyPurchaseFields');
-    if (fields) fields.hidden = !(isVehicle && buy?.checked);
+    if (fields) fields.hidden = !(isVehicle && pending.allowPurchase && buy?.checked);
     const costOutput = document.getElementById('vehicleEnergyCost');
     if (costOutput) {
-      if (!isVehicle || !buy?.checked) {
+      if (!isVehicle || !pending.allowPurchase || !buy?.checked) {
         costOutput.textContent = '';
       } else if (!Number.isFinite(details.purchaseAmount)) {
         costOutput.textContent = 'Purchase cost unavailable: battery capacity is not defined.';
@@ -15239,7 +15257,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (error) error.textContent = 'Choose a valid target level.';
       return;
     }
-    const buy = pending.kind === 'vehicle' && Boolean(document.getElementById('vehicleEnergyBuy')?.checked);
+    const buy = pending.kind === 'vehicle' && pending.allowPurchase && Boolean(document.getElementById('vehicleEnergyBuy')?.checked);
     let purchaseAccount = null;
     let purchaseNext = null;
     if (buy) {
@@ -26227,11 +26245,20 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   });
   document.getElementById('vehicleTravelCancel')?.addEventListener('click', () => settleVehicleTravelDialog(false));
   document.getElementById('vehicleTravelConfirm')?.addEventListener('click', () => settleVehicleTravelDialog(true));
+  function bindFocusPreservingStepButton(button, action) {
+    if (!button) return;
+    const preserveFocus = event => {
+      if (!button.disabled) event.preventDefault();
+    };
+    button.addEventListener('pointerdown', preserveFocus);
+    button.addEventListener('mousedown', preserveFocus);
+    button.addEventListener('click', action);
+  }
   document.querySelectorAll('[data-vehicle-travel-preset]').forEach(button => {
     button.addEventListener('click', () => setVehicleTravelPresetDistance(button.dataset.vehicleTravelPreset));
   });
   document.querySelectorAll('[data-vehicle-travel-step]').forEach(button => {
-    button.addEventListener('click', () => adjustVehicleTravelDistance(button.dataset.vehicleTravelStep));
+    bindFocusPreservingStepButton(button, () => adjustVehicleTravelDistance(button.dataset.vehicleTravelStep));
   });
   document.getElementById('vehicleTravelMiles')?.addEventListener('input', updateVehicleTravelDistanceUi);
   document.getElementById('vehicleTravelMiles')?.addEventListener('keydown', event => {
@@ -26255,7 +26282,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   });
 
   document.querySelectorAll('[data-device-use-step]').forEach(button => {
-    button.addEventListener('click', () => adjustDeviceUseMinutes(button.dataset.deviceUseStep));
+    bindFocusPreservingStepButton(button, () => adjustDeviceUseMinutes(button.dataset.deviceUseStep));
   });
   document.querySelectorAll('[data-device-use-preset]').forEach(button => {
     button.addEventListener('click', () => setDeviceUsePresetMinutes(button.dataset.deviceUsePreset));
