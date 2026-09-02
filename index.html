@@ -9515,7 +9515,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v632</div>
+<div class="footer-note no-print">Character Sheet v637</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -9591,6 +9591,15 @@
 <div class="field"><label id="deviceUseClockLabel">Time used (HH:MM)</label><div class="step-value-control"><button class="step-value-button" type="button" data-device-use-step="-1" aria-label="Decrease use time">−</button><div class="device-use-clock" role="group" aria-labelledby="deviceUseClockLabel"><input id="deviceUseHours" inputmode="numeric" autocomplete="off" maxlength="3" aria-label="Hours" value="00"/><span class="device-use-clock-separator" aria-hidden="true">:</span><input id="deviceUseMinutes" inputmode="numeric" autocomplete="off" maxlength="2" aria-label="Minutes" value="05"/></div><button class="step-value-button" type="button" data-device-use-step="1" aria-label="Increase use time">+</button></div><div class="device-use-presets" aria-label="Common use times"><button class="device-use-preset" type="button" data-device-use-preset="15">00:15</button><button class="device-use-preset" type="button" data-device-use-preset="30">00:30</button><button class="device-use-preset" type="button" data-device-use-preset="60">01:00</button></div></div>
 <div class="fund-dialog-error" id="deviceUseError" aria-live="polite"></div>
 <div class="dialog-actions"><button class="btn" id="deviceUseCancel" type="button">Cancel</button><button class="btn primary" id="deviceUseConfirm" type="button">Use</button></div>
+</div>
+</dialog>
+<dialog id="resourceConsumeDialog">
+<div class="dialog-inner">
+<h2 id="resourceConsumeDialogTitle">Consume</h2>
+<p class="hint" id="resourceConsumeDialogSummary"></p>
+<div class="field"><label for="resourceConsumeAmount" id="resourceConsumeAmountLabel">Amount</label><div class="step-value-control"><button class="step-value-button" type="button" data-resource-consume-step="-1" aria-label="Decrease amount">−</button><div class="fund-dialog-amount"><input id="resourceConsumeAmount" inputmode="decimal" autocomplete="off"/><span id="resourceConsumeUnitLabel"></span></div><button class="step-value-button" type="button" data-resource-consume-step="1" aria-label="Increase amount">+</button></div></div>
+<div class="fund-dialog-error" id="resourceConsumeError" aria-live="polite"></div>
+<div class="dialog-actions"><button class="btn" id="resourceConsumeCancel" type="button">Cancel</button><button class="btn primary" id="resourceConsumeConfirm" type="button">Consume</button></div>
 </div>
 </dialog>
 <div class="fund-currency-menu" id="fundCurrencyMenu" role="listbox" hidden></div>
@@ -10485,6 +10494,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   // v621: urine catalog pass — synthetic/paraphernalia, pooled human laboratory urine, and common hunting/trapping urine scents.
+  // v637: sealed-service cleanup — AED/PLB/EPIRB proprietary service batteries remain descriptive parts of their devices and no longer expose a battery-state chip or manual controls; removable/common batteries and removable power-tool packs are unchanged.
+  // v636: battery dependency audit — expands live replaceable-primary-battery support to lithium/button cells and many previously unpowered digital/electronic devices; adds CR2 and LR44 cells; wires obvious portable specialist instruments to representative replaceable or rechargeable power; makes the existing 18–20 V power-tool pack removable/loadable in bare cordless tools; gives sealed-service batteries (AED/PLB/EPIRB) a non-rechargeable coarse state; removes a stale dual-power radio conflict.
+  // v635: liquid-container stacking pass — identical empty/prefilled liquid containers may remain stacked; per-container liquid state is shown on stacks; mutating one container auto-splits exactly one unit while preserving the remainder; manual Split proportionally divides embedded liquid contents.
+  // v634: physical-liquid/container pass — retail liquids are packaged containers with embedded liquid contents; raw water/fuel/chemical resources become internal-only transfer media; gas cans stay empty and use Fuel Up; fixes +1 L container overfill; adds Eat/Drink depletion dialogs; phone numeric fields focus for typing on the first tap.
+  // v633: add a focused set of multipurpose household and food-adjacent supplies, including preservation salts and distinct 70% household / 99% electronics-cleaning isopropyl alcohol packages.
   // v632: step buttons and device-use presets preserve focus and select the active numeric text for immediate overwrite; recharge/refuel sliders use continuous targets so their exact maximum is reachable; newly added Gear-style vehicles default from On Person to Set Down without relocating existing saves or explicitly placed items.
   // v631: Drive/Travel and device Use dialogs use compact centered minus/value/plus controls that preserve mobile input focus; personal electric vehicle recharging is free-only while Passenger Vehicles retain optional paid charging; iOS energy-slider thumbs are vertically centered; Waist Packs gain fanny-pack and related aliases.
   // v630: rechargeable-device Use steps by one minute below 00:05, five minutes from 00:05 through 00:59, and fifteen minutes from 01:00 onward; vehicle travel gains arrows with consistent one-unit steps below 5 mi/nmi, five-unit steps from 5 through 49, and ten-unit steps from 50 onward.
@@ -10562,8 +10576,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const name = String(item.name || '');
     if (!(Number(item.liquidCapacityLiters) > 0)) continue;
 
-    if (/\b(?:Gas Can|Fuel Bottle)\b/i.test(name)) {
-      item.liquidAllowedFamilies = Array.from(new Set([...item.liquidAllowedFamilies || [], 'gasoline','diesel','water','water-nonpotable']));
+    if (/\bGas Can\b/i.test(name)) {
+      item.liquidAllowedFamilies = ['gasoline','diesel'];
+      item.liquidUsedProfile = 'fuel';
+      item.liquidFuelUp = true;
+      continue;
+    }
+    if (/\bFuel Bottle\b/i.test(name)) {
+      item.liquidAllowedFamilies = ['gasoline','diesel'];
       item.liquidUsedProfile = 'fuel';
       continue;
     }
@@ -10767,59 +10787,269 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
   }
 
-  // v608: structured replaceable alkaline-cell model. The primary battery
-  // Gear rows remain the source of truth; devices only describe what cells they
-  // accept and a representative full-fresh runtime used to derive broad ranges.
-  const PRIMARY_ALKALINE_BATTERY_PATCHES = Object.freeze({
-    gc0236:{primaryBatteryType:'AA'},
-    gc0237:{primaryBatteryType:'AAA'},
-    gc2173:{primaryBatteryType:'C'},
-    gc2174:{primaryBatteryType:'D'},
-    gc2175:{primaryBatteryType:'9V'}
+  // v636: broaden the v608 replaceable-cell model from alkaline-only to
+  // common primary cells generally. Device requirements are representative for
+  // the generic catalog class; exact specialty models can differ.
+  GEAR_CATALOG.push(
+    {id:'gc2855', name:'CR2 Battery, Lithium', category:'Electronics & Communications', subcategory:'Power', weight:0.024, price:3.0, availability:'Specialty', colors:['Multicolor'], specs:'CR2 3 V lithium primary cell', aliases:['CR2 battery','CR2 lithium battery'], defaultQuantity:2},
+    {id:'gc2856', name:'LR44 Battery, Alkaline', category:'Electronics & Communications', subcategory:'Power', weight:0.0044, price:0.75, availability:'Common', colors:['Silver'], specs:'LR44 / AG13 1.5 V alkaline button cell', aliases:['LR44 battery','AG13 battery','A76 battery','button cell battery'], defaultQuantity:4}
+  );
+
+  const PRIMARY_BATTERY_PATCHES = Object.freeze({
+    gc0236:{primaryBatteryType:'AA', chemistry:'alkaline'},
+    gc0237:{primaryBatteryType:'AAA', chemistry:'alkaline'},
+    gc2173:{primaryBatteryType:'C', chemistry:'alkaline'},
+    gc2174:{primaryBatteryType:'D', chemistry:'alkaline'},
+    gc2175:{primaryBatteryType:'9V', chemistry:'alkaline'},
+    gc0238:{primaryBatteryType:'CR123A', chemistry:'lithium'},
+    gc2176:{primaryBatteryType:'CR2032', chemistry:'lithium'},
+    gc2855:{primaryBatteryType:'CR2', chemistry:'lithium'},
+    gc2856:{primaryBatteryType:'LR44', chemistry:'alkaline'}
   });
-  const REPLACEABLE_ALKALINE_DEVICE_PATCHES = Object.freeze({
-    gc0762:{type:'D', count:2, runtime:20, basis:'representative continuous household LED flashlight use'},
-    gc2054:{type:'AA', count:4, runtime:4, basis:'continuous inflatable-costume fan operation'},
-    gc1611:{type:'C', count:8, runtime:8, basis:'representative intermittent handheld megaphone use'},
-    gc2237:{type:'AA', count:4, runtime:1440, basis:'representative field standby with moderate motion-trigger activity'},
-    gc0787:{type:'AAA', count:1, runtime:2, basis:'cumulative powered brushing time'},
-    gc1206:{type:'AA', count:1, runtime:8760, basis:'representative quartz wall-clock operation'},
-    gc1420:{type:'AA', count:2, runtime:8760, basis:'representative carbon-monoxide-alarm standby service'},
-    gc1421:{type:'9V', count:1, runtime:8760, basis:'representative smoke-alarm standby service'},
-    gc2077:{type:'AA', count:3, runtime:6, basis:'continuous light-and-sound toy operation'},
-    gc1138:{type:'AA', count:4, runtime:4, basis:'continuous small battery-powered toy operation'},
-    gc1137:{type:'AA', count:2, runtime:6, basis:'continuous small battery-powered toy operation'},
-    gc2379:{type:'9V', count:1, runtime:80, basis:'representative continuous handheld security-detector operation'},
-    gc2750:{type:'AA', count:9, runtime:10, basis:'representative receive-heavy handheld CB duty cycle'},
-    gc0216:{type:'AA', count:2, runtime:30, basis:'representative continuous pocket-radio listening'},
-    gc0215:{type:'AA', count:3, runtime:8, basis:'representative continuous handheld scanner reception'},
-    gc0213:{type:'AA', count:3, runtime:18, basis:'representative light-duty handheld two-way-radio use'},
-    gc1205:{type:'AAA', count:2, runtime:4380, basis:'representative battery-powered digital alarm-clock operation'},
-    gc1010:{type:'AAA', count:3, runtime:5, basis:'representative continuous ultraviolet flashlight use'},
-    gc0167:{type:'AA', count:1, runtime:4, basis:'representative continuous compact pocket-flashlight use'},
-    gc0710:{type:'9V', count:1, runtime:200, basis:'representative intermittent basic digital-multimeter use'},
-    gc2247:{type:'9V', count:1, runtime:400, basis:'representative intermittent professional digital-multimeter use'},
-    gc0911:{type:'AAA', count:2, runtime:120, basis:'representative intermittent digital clamp-meter use'},
-    gc2756:{type:'AAA', count:2, runtime:100, basis:'representative intermittent household battery-testing use'}
+  const REPLACEABLE_PRIMARY_DEVICE_PATCHES = Object.freeze({
+    gc0762:{type:'D', count:2, chemistry:'alkaline', runtime:20, basis:'representative continuous household LED flashlight use'},
+    gc2054:{type:'AA', count:4, chemistry:'alkaline', runtime:4, basis:'continuous inflatable-costume fan operation'},
+    gc1611:{type:'C', count:8, chemistry:'alkaline', runtime:8, basis:'representative intermittent handheld megaphone use'},
+    gc2237:{type:'AA', count:4, chemistry:'alkaline', runtime:1440, basis:'representative field standby with moderate motion-trigger activity'},
+    gc0787:{type:'AAA', count:1, chemistry:'alkaline', runtime:2, basis:'cumulative powered brushing time'},
+    gc1206:{type:'AA', count:1, chemistry:'alkaline', runtime:8760, basis:'representative quartz wall-clock operation'},
+    gc1420:{type:'AA', count:2, chemistry:'alkaline', runtime:8760, basis:'representative carbon-monoxide-alarm standby service'},
+    gc1421:{type:'9V', count:1, chemistry:'alkaline', runtime:8760, basis:'representative smoke-alarm standby service'},
+    gc2077:{type:'AA', count:3, chemistry:'alkaline', runtime:6, basis:'continuous light-and-sound toy operation'},
+    gc1138:{type:'AA', count:4, chemistry:'alkaline', runtime:4, basis:'continuous small battery-powered toy operation'},
+    gc1137:{type:'AA', count:2, chemistry:'alkaline', runtime:6, basis:'continuous small battery-powered toy operation'},
+    gc2379:{type:'9V', count:1, chemistry:'alkaline', runtime:80, basis:'representative continuous handheld security-detector operation'},
+    gc2750:{type:'AA', count:9, chemistry:'alkaline', runtime:10, basis:'representative receive-heavy handheld CB duty cycle'},
+    gc0216:{type:'AA', count:2, chemistry:'alkaline', runtime:30, basis:'representative continuous pocket-radio listening'},
+    gc0215:{type:'AA', count:3, chemistry:'alkaline', runtime:8, basis:'representative continuous handheld scanner reception'},
+    gc1205:{type:'AAA', count:2, chemistry:'alkaline', runtime:4380, basis:'representative battery-powered digital alarm-clock operation'},
+    gc1010:{type:'AAA', count:3, chemistry:'alkaline', runtime:5, basis:'representative continuous ultraviolet flashlight use'},
+    gc0167:{type:'AA', count:1, chemistry:'alkaline', runtime:4, basis:'representative continuous compact pocket-flashlight use'},
+    gc0710:{type:'9V', count:1, chemistry:'alkaline', runtime:200, basis:'representative intermittent basic digital-multimeter use'},
+    gc2247:{type:'9V', count:1, chemistry:'alkaline', runtime:400, basis:'representative intermittent professional digital-multimeter use'},
+    gc0911:{type:'AAA', count:2, chemistry:'alkaline', runtime:120, basis:'representative intermittent digital clamp-meter use'},
+    gc2756:{type:'AAA', count:2, chemistry:'alkaline', runtime:100, basis:'representative intermittent household battery-testing use'},
+    gc1308:{type:'AA', count:2, chemistry:'alkaline', runtime:30, basis:'representative wireless game-controller play'},
+    gc1309:{type:'AA', count:1, chemistry:'alkaline', runtime:3000, basis:'representative mixed-use wireless mouse operation'},
+    gc1307:{type:'AAA', count:2, chemistry:'alkaline', runtime:8760, basis:'representative intermittent streaming-remote service'},
+    gc1306:{type:'AAA', count:2, chemistry:'alkaline', runtime:8760, basis:'representative intermittent television-remote service'},
+    gc1319:{type:'AA', count:2, chemistry:'alkaline', runtime:20, basis:'representative portable cassette playback'},
+    gc1318:{type:'AA', count:2, chemistry:'alkaline', runtime:25, basis:'representative portable CD playback'},
+    gc0211:{type:'AA', count:2, chemistry:'alkaline', runtime:25, basis:'representative continuous handheld GPS navigation'},
+    gc0166:{type:'CR2032', count:2, chemistry:'lithium', runtime:6, basis:'representative continuous miniature keychain-light output'},
+    gc2168:{type:'AAA', count:2, chemistry:'alkaline', runtime:5, basis:'representative continuous visible-laser-pointer operation'},
+    gc0208:{type:'CR2', count:1, chemistry:'lithium', runtime:20, basis:'representative intermittent laser-rangefinder measurement use'},
+    gc1819:{type:'AA', count:6, chemistry:'alkaline', runtime:6, basis:'representative continuous digital night-vision operation with IR as needed'},
+    gc0210:{type:'AA', count:4, chemistry:'alkaline', runtime:5, basis:'representative continuous digital night-vision operation with IR as needed'},
+    gc1821:{type:'AA', count:2, chemistry:'alkaline', runtime:20, basis:'representative image-intensifier night-vision-goggle operation'},
+    gc1820:{type:'AA', count:1, chemistry:'alkaline', runtime:40, basis:'representative image-intensifier monocular operation'},
+    gc1825:{type:'CR123A', count:1, chemistry:'lithium', runtime:2, basis:'representative continuous handheld infrared-illuminator operation'},
+    gc1828:{type:'CR2032', count:1, chemistry:'lithium', runtime:8760, basis:'representative Bluetooth/UWB tracker service'},
+    gc1830:{type:'AA', count:4, chemistry:'alkaline', runtime:12, basis:'representative continuous professional field-recording use'},
+    gc1831:{type:'CR2032', count:1, chemistry:'lithium', runtime:8, basis:'representative continuous miniature short-range transmitter operation'},
+    gc1839:{type:'AAA', count:2, chemistry:'alkaline', runtime:8, basis:'representative intermittent hidden-camera lens-detector use'},
+    gc1838:{type:'9V', count:1, chemistry:'alkaline', runtime:8, basis:'representative intermittent handheld RF bug-detector use'},
+    gc2102:{type:'CR2032', count:1, chemistry:'lithium', runtime:400, basis:'representative chest-strap heart-rate sensor operation'},
+    gc0149:{type:'CR2032', count:1, chemistry:'lithium', runtime:17520, basis:'representative digital-watch service'},
+    gc0731:{type:'CR2032', count:1, chemistry:'lithium', runtime:8760, basis:'representative calculator battery-backup/service life'},
+    gc0732:{type:'AAA', count:1, chemistry:'alkaline', runtime:2000, basis:'representative scientific-calculator operation'},
+    gc2566:{type:'AAA', count:6, chemistry:'alkaline', runtime:4, basis:'representative handheld label-printing operation'},
+    gc2454:{type:'AA', count:4, chemistry:'alkaline', runtime:8760, basis:'representative electronic-safe keypad standby/service'},
+    gc0645:{type:'AAA', count:2, chemistry:'alkaline', runtime:350, basis:'representative electronic-hearing-protection operation'},
+    gc2094:{type:'AAA', count:2, chemistry:'alkaline', runtime:500, basis:'representative tactical electronic-hearing/headset operation'},
+    gc2698:{type:'CR2032', count:1, chemistry:'lithium', runtime:17520, basis:'representative automotive key-fob service'},
+    gc0431:{type:'AAA', count:2, chemistry:'alkaline', runtime:8, basis:'representative continuous medical penlight use'},
+    gc0428:{type:'AAA', count:2, chemistry:'alkaline', runtime:30, basis:'representative fingertip pulse-oximeter operation'},
+    gc0427:{type:'LR44', count:1, chemistry:'alkaline', runtime:200, basis:'representative intermittent digital-thermometer service'},
+    gc2261:{type:'AAA', count:3, chemistry:'alkaline', runtime:8760, basis:'representative intermittent digital body-scale service'},
+    gc2291:{type:'CR2032', count:1, chemistry:'lithium', runtime:1000, basis:'representative intermittent blood-glucose meter service'},
+    gc2292:{type:'CR2032', count:1, chemistry:'lithium', runtime:200, basis:'representative intermittent personal ECG recording'},
+    gc0880:{type:'AAA', count:2, chemistry:'alkaline', runtime:100, basis:'representative intermittent kitchen-scale operation'},
+    gc0888:{type:'CR2032', count:1, chemistry:'lithium', runtime:100, basis:'representative intermittent instant-read thermometer service'},
+    gc1504:{type:'AA', count:4, chemistry:'alkaline', runtime:3, basis:'representative portable electric breast-pump operation'},
+    gc1033:{type:'AA', count:4, chemistry:'alkaline', runtime:20, basis:'representative lighted makeup-mirror illumination'},
+    gc0680:{type:'CR2032', count:1, chemistry:'lithium', runtime:500, basis:'representative intermittent digital tire-pressure measurements'},
+    gc0925:{type:'AAA', count:2, chemistry:'alkaline', runtime:100, basis:'representative intermittent pocket jewelry-scale operation'},
+    gc1856:{type:'9V', count:1, chemistry:'alkaline', runtime:50, basis:'representative intermittent electronic safe-dial amplification'},
+    gc0292:{type:'LR44', count:1, chemistry:'alkaline', runtime:1000, basis:'representative intermittent digital-caliper service'},
+    gc0743:{type:'9V', count:1, chemistry:'alkaline', runtime:40, basis:'representative handheld anemometer operation'},
+    gc0741:{type:'AAA', count:2, chemistry:'alkaline', runtime:12, basis:'representative intermittent infrared-thermometer use'},
+    gc0740:{type:'AAA', count:2, chemistry:'alkaline', runtime:20, basis:'representative intermittent laser-distance measurements'},
+    gc0744:{type:'9V', count:1, chemistry:'alkaline', runtime:40, basis:'representative handheld light-meter operation'},
+    gc0745:{type:'9V', count:1, chemistry:'alkaline', runtime:30, basis:'representative handheld sound-level-meter operation'},
+    gc2246:{type:'9V', count:1, chemistry:'alkaline', runtime:20, basis:'representative handheld EMF-meter operation'},
+    gc2257:{type:'CR2032', count:1, chemistry:'lithium', runtime:2000, basis:'representative intermittent digital-micrometer service'},
+    gc2260:{type:'AA', count:2, chemistry:'alkaline', runtime:15, basis:'representative continuous self-leveling laser operation'},
+    gc2262:{type:'AAA', count:2, chemistry:'alkaline', runtime:100, basis:'representative intermittent hanging-scale operation'},
+    gc2263:{type:'AAA', count:4, chemistry:'alkaline', runtime:20, basis:'representative handheld digital force-gauge operation'},
+    gc2265:{type:'9V', count:1, chemistry:'alkaline', runtime:30, basis:'representative intermittent laser-tachometer operation'},
+    gc2267:{type:'9V', count:1, chemistry:'alkaline', runtime:30, basis:'representative handheld vibration-meter operation'},
+    gc2268:{type:'9V', count:1, chemistry:'alkaline', runtime:200, basis:'representative handheld thermocouple-meter operation'},
+    gc2269:{type:'AA', count:4, chemistry:'alkaline', runtime:8760, basis:'representative wireless rain-gauge sensor/display service'},
+    gc2271:{type:'9V', count:1, chemistry:'alkaline', runtime:40, basis:'representative handheld differential-manometer operation'},
+    gc2272:{type:'AA', count:3, chemistry:'alkaline', runtime:30, basis:'representative handheld digital-vacuum-gauge operation'},
+    gc2274:{type:'9V', count:1, chemistry:'alkaline', runtime:30, basis:'representative handheld LCR-meter operation'},
+    gc2275:{type:'AA', count:6, chemistry:'alkaline', runtime:50, basis:'representative intermittent insulation-resistance testing'},
+    gc2278:{type:'9V', count:1, chemistry:'alkaline', runtime:20, basis:'representative handheld UV-meter operation'},
+    gc2280:{type:'AAA', count:2, chemistry:'alkaline', runtime:1000, basis:'representative electronic personal-dosimeter service'},
+    gc2283:{type:'AAA', count:4, chemistry:'alkaline', runtime:200, basis:'representative handheld dissolved-oxygen-meter operation'},
+    gc2284:{type:'AA', count:4, chemistry:'alkaline', runtime:15, basis:'representative portable turbidimeter operation'},
+    gc2285:{type:'9V', count:1, chemistry:'alkaline', runtime:200, basis:'representative intermittent digital-refractometer operation'},
+    gc2287:{type:'9V', count:1, chemistry:'alkaline', runtime:50, basis:'representative intermittent building-moisture-meter operation'},
+    gc0742:{type:'AA', count:1, chemistry:'alkaline', runtime:400, basis:'representative handheld weather-meter operation'},
+    gc1871:{type:'AA', count:4, chemistry:'alkaline', runtime:5, basis:'representative handheld multi-sensor wall-scanner operation'},
+    gc1880:{type:'AA', count:4, chemistry:'alkaline', runtime:25, basis:'representative ground-search metal-detector operation'},
+    gc0760:{type:'9V', count:1, chemistry:'alkaline', runtime:30, basis:'representative handheld metal-detector pinpointer operation'},
+    gc1882:{type:'AA', count:8, chemistry:'alkaline', runtime:40, basis:'representative underwater metal-detector operation'},
+    gc0757:{type:'AAA', count:4, chemistry:'alkaline', runtime:200, basis:'representative handheld conductivity-meter operation'},
+    gc0756:{type:'LR44', count:4, chemistry:'alkaline', runtime:200, basis:'representative handheld pH-meter service'},
+    gc1873:{type:'AAA', count:2, chemistry:'alkaline', runtime:20, basis:'representative digital cave-survey instrument operation'},
+    gc0368:{type:'AA', count:2, chemistry:'alkaline', runtime:12, basis:'representative emergency strobe operation'},
+    gc1369:{type:'CR123A', count:2, chemistry:'lithium', runtime:20, basis:'representative infrared strobe-beacon operation'},
+    gc1410:{type:'AA', count:2, chemistry:'alkaline', runtime:20, basis:'representative marine signal-light operation'},
+    gc2169:{type:'CR123A', count:1, chemistry:'lithium', runtime:5, basis:'representative visible weapon-laser operation'},
+    gc0598:{type:'CR123A', count:1, chemistry:'lithium', runtime:1.5, basis:'representative continuous handgun weapon-light operation'},
+    gc0599:{type:'CR123A', count:2, chemistry:'lithium', runtime:2, basis:'representative continuous rifle weapon-light operation'},
+    gc2239:{type:'AA', count:8, chemistry:'alkaline', runtime:2160, basis:'representative field standby with intermittent cellular transmission'},
+    gc1876:{type:'AAA', count:3, chemistry:'alkaline', runtime:17520, basis:'representative continuous portable radon-monitor service'},
+    gc1016:{type:'9V', count:1, chemistry:'alkaline', runtime:50, basis:'representative intermittent basic network-cable testing'},
+    gc2252:{type:'AAA', count:2, chemistry:'alkaline', runtime:40, basis:'representative intermittent fiber visual-fault-locator operation'},
+    gc2254:{type:'9V', count:2, chemistry:'alkaline', runtime:60, basis:'representative combined toner-and-probe field service; one battery per unit'},
+    gc1822:{type:'AA', count:4, chemistry:'alkaline', runtime:8, basis:'representative fused image-intensifier/thermal goggle field operation'},
+    gc1823:{type:'AA', count:4, chemistry:'alkaline', runtime:8, basis:'representative panoramic image-intensifier goggle field operation'},
+    gc1139:{type:'AA', count:6, chemistry:'alkaline', runtime:2, basis:'representative small RC-car plus controller operation'},
+    gc2266:{type:'C', count:2, chemistry:'alkaline', runtime:20, basis:'representative intermittent handheld radar-speed-gun use'},
+    gc2264:{type:'CR2032', count:1, chemistry:'lithium', runtime:17520, basis:'representative digital-stopwatch service'},
+    gc0600:{type:'CR2032', count:1, chemistry:'lithium', runtime:20000, basis:'representative low-setting micro red-dot sight operation'},
+    gc0601:{type:'CR2032', count:1, chemistry:'lithium', runtime:10000, basis:'representative low-to-medium-setting full-size red-dot sight operation'},
+    gc0889:{type:'AA', count:2, chemistry:'alkaline', runtime:8, basis:'representative handheld otoscope illumination use'},
+    gc0890:{type:'AA', count:2, chemistry:'alkaline', runtime:8, basis:'representative handheld ophthalmoscope illumination use'},
+    gc2686:{type:'AAA', count:3, chemistry:'alkaline', runtime:6, basis:'representative portable borescope illuminator use'},
+    gc2289:{type:'AA', count:2, chemistry:'alkaline', runtime:100, basis:'representative intermittent ultrasonic thickness-gauge operation'},
+    gc2290:{type:'AAA', count:2, chemistry:'alkaline', runtime:100, basis:'representative intermittent coating-thickness-gauge operation'}
   });
-  for (const [id, batteryPatch] of Object.entries(PRIMARY_ALKALINE_BATTERY_PATCHES)) {
+  const RECHARGEABLE_DEVICE_AUDIT_PATCHES = Object.freeze({
+    gc1317:{runtime:5, basis:'representative continuous portable DVD playback'},
+    gc1824:{runtime:6, basis:'representative handheld thermal-binocular operation'},
+    gc0209:{runtime:6, basis:'representative handheld thermal-monocular operation'},
+    gc1932:{runtime:1, basis:'representative continuous portable signal-jammer operation'},
+    gc1829:{runtime:20, basis:'representative continuous miniature audio-recording use'},
+    gc1835:{runtime:10, basis:'representative body-camera recording use'},
+    gc2238:{runtime:8, basis:'representative mixed local/cellular covert-camera operation'},
+    gc1833:{runtime:4, basis:'representative miniature Wi-Fi camera recording/monitoring'},
+    gc1834:{runtime:3, basis:'representative body-worn covert-camera recording'},
+    gc2256:{runtime:4, basis:'representative Wi-Fi inspection-camera use'},
+    gc1832:{runtime:12, basis:'representative cellular covert-audio transmitter operation'},
+    gc1840:{runtime:4, basis:'representative handheld RF spectrum-analysis use'},
+    gc1841:{runtime:3, basis:'representative nonlinear-junction-detector field use'},
+    gc1842:{runtime:6, basis:'representative portable radio-direction-finding use'},
+    gc1845:{runtime:10, basis:'representative continuous portable white-noise generation'},
+    gc0898:{runtime:1, basis:'representative active portable suction operation'},
+    gc1513:{runtime:8, basis:'representative portable baby-monitor parent-unit use'},
+    gc1024:{runtime:4, basis:'representative portable oscilloscope operation'},
+    gc0759:{runtime:5, basis:'representative construction inspection-camera use'},
+    gc1874:{runtime:8, basis:'representative handheld CO2-monitor operation'},
+    gc0939:{runtime:12, basis:'representative portable 4-gas detector service'},
+    gc1877:{runtime:12, basis:'representative portable photoionization VOC-detector service'},
+    gc2273:{runtime:10, basis:'representative portable ultrasonic clamp-on flow-meter operation'},
+    gc2279:{runtime:8, basis:'representative handheld color-meter operation'},
+    gc2281:{runtime:8, basis:'representative portable particulate-monitor operation'},
+    gc2282:{runtime:8, basis:'representative handheld ozone-monitor operation'},
+    gc2288:{runtime:8, basis:'representative portable hardness-tester operation'},
+    gc1868:{runtime:5, basis:'representative borehole-camera field operation'},
+    gc1872:{runtime:4, basis:'representative portable concrete-scanner/GPR operation'},
+    gc1863:{runtime:8, basis:'representative electromagnetic-conductivity survey operation'},
+    gc1866:{runtime:4, basis:'representative handheld LiDAR/SLAM scanning'},
+    gc1867:{runtime:4, basis:'representative terrestrial laser-scanner field operation'},
+    gc1861:{runtime:8, basis:'representative archaeological gradiometer field operation'},
+    gc1865:{runtime:8, basis:'representative microgravity survey-meter field operation'},
+    gc1870:{runtime:8, basis:'representative electromagnetic utility-locator field operation'},
+    gc0758:{runtime:4, basis:'representative portable digital-microscope operation'},
+    gc1881:{runtime:12, basis:'representative professional multi-frequency metal-detector operation'},
+    gc1907:{runtime:6, basis:'representative portable wireless-network testing use'},
+    gc1847:{runtime:6, basis:'representative telescoping pole-camera inspection use'},
+    gc1846:{runtime:4, basis:'representative tactical under-door camera system use'},
+    gc1837:{runtime:4, basis:'representative portable laser-microphone system field operation'},
+    gc1934:{runtime:1, basis:'representative directional drone-jammer operation'},
+    gc1141:{runtime:0.5, basis:'representative small remote-control boat run time'},
+    gc1140:{runtime:0.5, basis:'representative hobby remote-control car run time'},
+    gc2525:{runtime:4, basis:'representative portable alternate-light forensic-lamp field use'},
+    gc2248:{runtime:5, basis:'representative professional network/PoE tester field operation'},
+    gc2249:{runtime:8, basis:'representative copper cable-certification field operation'},
+    gc2250:{runtime:8, basis:'representative professional OTDR field operation'},
+    gc2251:{runtime:10, basis:'representative fiber optical-loss test-set field operation'},
+    gc2253:{runtime:8, basis:'representative professional fiber-inspection microscope field operation'},
+    gc0755:{runtime:8, basis:'representative survey-grade GNSS receiver field operation'},
+    gc1860:{runtime:5, basis:'representative handheld ground-penetrating-radar scanning'},
+    gc1859:{runtime:8, basis:'representative compact-cart ground-penetrating-radar field operation'},
+    gc1869:{runtime:6, basis:'representative portable borehole-sonar field operation'},
+    gc1878:{runtime:8, basis:'representative through-earth cave-radio field operation'},
+    gc1848:{runtime:8, basis:'representative portable RFID/NFC reader-writer use'},
+    gc1930:{runtime:4, basis:'representative portable cellular-infrastructure simulator field operation'},
+    gc1931:{runtime:4, basis:'representative portable GNSS signal-simulation/spoofing field operation'}
+  });
+
+  function primaryChemistryLabel(value) {
+    const raw = String(value || '').toLowerCase();
+    if (raw === 'lithium') return 'lithium';
+    if (raw === 'alkaline') return 'alkaline';
+    return raw || 'primary';
+  }
+  for (const [id, batteryPatch] of Object.entries(PRIMARY_BATTERY_PATCHES)) {
     const item = GEAR_CATALOG.find(entry => entry.id === id);
     if (!item) continue;
     item.primaryBatteryType = batteryPatch.primaryBatteryType;
-    item.primaryBatteryChemistry = 'alkaline';
+    item.primaryBatteryChemistry = batteryPatch.chemistry || 'primary';
   }
-  for (const [id, devicePatch] of Object.entries(REPLACEABLE_ALKALINE_DEVICE_PATCHES)) {
+  // v636: removable rechargeable 18–20 V cordless-tool packs use the same
+  // embedded-Gear relationship as other loaded resources. The generic catalog
+  // assumes the declared (specific) battery platform matches the generic tool;
+  // real-world cross-brand/platform compatibility is not implied.
+  const RECHARGEABLE_BATTERY_PACK_PATCHES = Object.freeze({
+    gc2505:{family:'power-tool-18-20v', chemistry:'lithium-ion'}
+  });
+  const REPLACEABLE_BATTERY_PACK_DEVICE_IDS = Object.freeze([
+    'gc0298','gc0296','gc0294','gc0295','gc0297','gc2447','gc2448'
+  ]);
+  for (const [id, packPatch] of Object.entries(RECHARGEABLE_BATTERY_PACK_PATCHES)) {
+    const item = GEAR_CATALOG.find(entry => entry.id === id);
+    if (!item) continue;
+    item.batteryPackFamily = packPatch.family;
+    item.batteryPackChemistry = packPatch.chemistry || 'rechargeable';
+  }
+  for (const id of REPLACEABLE_BATTERY_PACK_DEVICE_IDS) {
+    const item = GEAR_CATALOG.find(entry => entry.id === id);
+    if (!item) continue;
+    item.replaceableBatteryPackFamily = 'power-tool-18-20v';
+    item.replaceableBatteryPackCount = 1;
+    if (!/matching 18–20 V rechargeable power-tool battery pack/i.test(String(item.specs || ''))) {
+      item.specs = `${String(item.specs || '').trim()}${item.specs ? ' · ' : ''}Power: 1 matching 18–20 V rechargeable power-tool battery pack; exact declared (specific) platform must match`;
+    }
+  }
+
+  for (const [id, devicePatch] of Object.entries(REPLACEABLE_PRIMARY_DEVICE_PATCHES)) {
     const item = GEAR_CATALOG.find(entry => entry.id === id);
     if (!item) continue;
     item.replaceableBatteryType = devicePatch.type;
     item.replaceableBatteryCount = devicePatch.count;
-    item.replaceableBatteryChemistry = 'alkaline';
+    item.replaceableBatteryChemistry = devicePatch.chemistry || 'primary';
     item.batteryRuntimeHours = devicePatch.runtime;
     item.batteryRuntimeBasis = devicePatch.basis;
-    const powerSpec = `Power: ${devicePatch.count}×${devicePatch.type} alkaline ${devicePatch.count === 1 ? 'battery' : 'batteries'}`;
+    const chemistry = primaryChemistryLabel(item.replaceableBatteryChemistry);
+    const powerSpec = `Power: ${devicePatch.count}×${devicePatch.type} ${chemistry} ${devicePatch.count === 1 ? 'battery' : 'batteries'}`;
     if (!String(item.specs || '').includes(powerSpec)) item.specs = `${String(item.specs || '').trim()}${item.specs ? ' · ' : ''}${powerSpec}`;
   }
-
+  for (const [id, batteryPatch] of Object.entries(RECHARGEABLE_DEVICE_AUDIT_PATCHES)) {
+    const item = GEAR_CATALOG.find(entry => entry.id === id);
+    if (!item || item.rechargeable === true || item.replaceableBatteryType) continue;
+    item.rechargeable = true;
+    item.batteryRuntimeHours = batteryPatch.runtime;
+    item.batteryRuntimeBasis = batteryPatch.basis;
+    item.batteryRuntimeReference = 'representative integrated rechargeable battery for this generic device class';
+    if (!/Power:\s*integrated rechargeable battery/i.test(String(item.specs || ''))) {
+      item.specs = `${String(item.specs || '').trim()}${item.specs ? ' · ' : ''}Power: integrated rechargeable battery`;
+    }
+  }
 
   // v626: queued fireworks / mine-support catalog pass plus EV battery-capacity completion.
   {
@@ -10931,6 +11161,309 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         aliases:['M57','M57 firing device','clacker','demolition firing device','military firing device']
       }
     );
+  }
+
+  // v633: multipurpose household, kitchen, preservation and electronics-cleaning supplies.
+  // These are intentionally package-level Gear entries rather than metered bulk liquids.
+  GEAR_CATALOG.push(
+    {
+      id:'gc2783', name:'Baby Powder, Cornstarch, 9 oz', category:'Everyday Carry & Personal', subcategory:'Baby & Child Care > Bathing & Care',
+      weight:0.65, price:5.5, availability:'Common', colors:['White'], unit:'bottle',
+      specs:'9 oz bottle of talc-free cornstarch-based baby powder for moisture and friction control; avoid inhaling airborne powder',
+      aliases:['baby powder','cornstarch baby powder','talc-free baby powder','talc free baby powder','diaper powder']
+    },
+    {
+      id:'gc2784', name:'Salt, Table, 26 oz', category:'Food, Water & Cooking', subcategory:'Ingredients & Multipurpose Staples',
+      weight:1.70, price:2.0, availability:'Ubiquitous', colors:['White'], unit:'canister',
+      specs:'Common 26 oz canister of fine table salt / sodium chloride; representative package may be plain or iodized',
+      aliases:['salt','table salt','Morton salt','salt canister','sodium chloride','iodized salt']
+    },
+    {
+      id:'gc2785', name:'Baking Soda, 1 lb', category:'Food, Water & Cooking', subcategory:'Ingredients & Multipurpose Staples',
+      weight:1.05, price:1.5, availability:'Ubiquitous', colors:['White'], unit:'box',
+      specs:'1 lb box of sodium bicarbonate for baking, deodorizing, gentle household cleaning and simple acid-base reactions',
+      aliases:['baking soda','bicarbonate of soda','sodium bicarbonate','Arm & Hammer baking soda']
+    },
+    {
+      id:'gc2786', name:'Vinegar, Distilled White, 5%, 1 gal', category:'Food, Water & Cooking', subcategory:'Ingredients & Multipurpose Staples',
+      weight:8.65, price:4.5, availability:'Ubiquitous', colors:['Clear'], unit:'jug',
+      specs:'One-gallon jug of distilled white vinegar at 5% acidity for cooking, pickling and household cleaning; package weight included',
+      aliases:['vinegar','white vinegar','distilled vinegar','distilled white vinegar','5% vinegar','cleaning vinegar 5%','gallon vinegar']
+    },
+    {
+      id:'gc2787', name:'Cornstarch, 16 oz', category:'Food, Water & Cooking', subcategory:'Ingredients & Multipurpose Staples',
+      weight:1.05, price:2.5, availability:'Common', colors:['White'], unit:'box',
+      specs:'16 oz box of food-grade cornstarch for thickening, moisture absorption and common household uses',
+      aliases:['corn starch','corn flour','starch powder','Argo cornstarch']
+    },
+    {
+      id:'gc2788', name:'Aluminum Foil, 75 sq ft', category:'Food, Water & Cooking', subcategory:'Utensils & Storage',
+      weight:1.15, price:6.0, availability:'Ubiquitous', colors:['Silver'], unit:'roll',
+      specs:'Boxed roll of standard household aluminum foil with approximately 75 sq ft of material',
+      aliases:['aluminum foil','aluminium foil','tin foil','kitchen foil','foil roll','Reynolds Wrap']
+    },
+    {
+      id:'gc2789', name:'Coffee Filters, 100-Count', category:'Food, Water & Cooking', subcategory:'Kitchen Tools',
+      weight:0.40, price:3.5, availability:'Ubiquitous', colors:['White','Brown'], unit:'pack',
+      specs:'Pack of 100 disposable paper drip-coffee filters; representative common basket or cone format',
+      aliases:['coffee filter','coffee filters','paper coffee filters','drip coffee filters','basket filters','cone filters','filter paper']
+    },
+    {
+      id:'gc2790', name:'Vegetable Oil, 48 fl oz', category:'Food, Water & Cooking', subcategory:'Ingredients & Multipurpose Staples',
+      weight:3.0, price:5.5, availability:'Ubiquitous', colors:['Clear','Yellow'], unit:'bottle',
+      specs:'48 fl oz bottle of common neutral vegetable cooking oil; also usable for limited light lubrication or surface protection where food oil is suitable',
+      aliases:['vegetable oil','cooking oil','neutral oil','canola oil','48 oz oil']
+    },
+    {
+      id:'gc2791', name:'Citric Acid, 1 lb', category:'Food, Water & Cooking', subcategory:'Ingredients & Multipurpose Staples',
+      weight:1.05, price:9.0, availability:'Specialty', colors:['White'], unit:'bag',
+      specs:'1 lb package of food-grade citric-acid crystals for preserving, acidifying, descaling and simple pH experiments',
+      aliases:['citric acid','citric acid powder','sour salt','food-grade citric acid','food grade citric acid','descaling acid']
+    },
+    {
+      id:'gc2792', name:'Borax, 65 oz', category:'Household & General', subcategory:'Cleaning',
+      weight:4.20, price:6.5, availability:'Common', colors:['White'], unit:'box',
+      specs:'65 oz box of sodium-borate mineral powder used as a laundry booster and multipurpose household cleaner; not boric acid and not for food use',
+      aliases:['borax','20 Mule Team Borax','sodium borate','sodium tetraborate','laundry booster','borax powder']
+    },
+    {
+      id:'gc2793', name:'Isopropyl Alcohol, 70%, 32 fl oz', category:'Household & General', subcategory:'Cleaning',
+      weight:1.90, price:4.5, availability:'Common', colors:['Clear'], unit:'bottle',
+      specs:'32 fl oz bottle of 70% isopropyl alcohol / rubbing alcohol for general household cleaning and surface disinfection; flammable—use according to label directions',
+      aliases:['isopropyl alcohol','70% isopropyl alcohol','isopropanol 70%','IPA 70','70 IPA','rubbing alcohol','70% rubbing alcohol']
+    },
+    {
+      id:'gc2794', name:'Salt, Canning & Pickling, 4 lb', category:'Food, Water & Cooking', subcategory:'Ingredients & Multipurpose Staples',
+      weight:4.15, price:5.5, availability:'Common', colors:['White'], unit:'box',
+      specs:'4 lb box of fine, additive-free sodium chloride for canning, pickling and brines; contains no iodine or anticaking agents and is not curing salt',
+      aliases:['canning salt','pickling salt','canning and pickling salt','preserving salt','Morton canning salt','Morton pickling salt','additive-free salt']
+    },
+    {
+      id:'gc2795', name:'Curing Salt No. 1, 1 lb', category:'Food, Water & Cooking', subcategory:'Ingredients & Multipurpose Staples',
+      weight:1.05, price:12.0, availability:'Specialty', colors:['Pink'], unit:'bag',
+      specs:'1 lb package of standardized curing salt containing 6.25% sodium nitrite in salt for short or cooked cures; concentrated curing mix—measure only per a verified recipe or manufacturer directions and never use as table salt',
+      aliases:['curing salt number 1','curing salt #1','pink curing salt #1','Prague powder #1','Prague powder number 1','Insta Cure #1','sodium nitrite curing salt']
+    },
+    {
+      id:'gc2796', name:'Curing Salt No. 2, 1 lb', category:'Food, Water & Cooking', subcategory:'Ingredients & Multipurpose Staples',
+      weight:1.05, price:13.0, availability:'Specialty', colors:['Pink'], unit:'bag',
+      specs:'1 lb package of curing salt with sodium nitrite and sodium nitrate for long dry-cured meats; not interchangeable with No. 1—measure only per a verified recipe or manufacturer directions and never use as table salt',
+      aliases:['curing salt number 2','curing salt #2','pink curing salt #2','Prague powder #2','Prague powder number 2','Insta Cure #2','sodium nitrate curing salt']
+    },
+    {
+      id:'gc2797', name:'Epsom Salt, 3 lb', category:'Everyday Carry & Personal', subcategory:'Hygiene & Sanitation > Bathing & Grooming',
+      weight:3.10, price:5.0, availability:'Common', colors:['White'], unit:'bag',
+      specs:'3 lb bag of magnesium-sulfate crystals for bath soaks, gardening and common household/science uses; not table salt',
+      aliases:['Epsom salt','magnesium sulfate','bath salts','Epsom salt crystals','Dr Teal’s Epsom salt','Dr Teals Epsom salt']
+    },
+    {
+      id:'gc2798', name:'Isopropyl Alcohol, 99%, 32 fl oz', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Electronics',
+      weight:1.75, price:11.0, availability:'Specialty', colors:['Clear'], unit:'bottle',
+      specs:'32 fl oz bottle of 99% isopropyl alcohol / isopropanol for electronics cleaning and rapid evaporation; power equipment off first, use ventilation and keep away from heat, sparks and flame',
+      aliases:['99% isopropyl alcohol','isopropanol 99%','IPA 99','99 IPA','99% rubbing alcohol','electronics cleaning alcohol','electronic cleaner alcohol','high purity isopropyl alcohol']
+    }
+  );
+
+  // v634: raw transferable liquids are internal resources; retail liquids are physical packages
+  // that persist as empty containers after their contents are transferred, used, or poured out.
+  const V634_INTERNAL_LIQUIDS = [
+    {id:'gc2799', name:'Liquid: Distilled White Vinegar', family:'vinegar', weight:2.22, unit:'L', display:'L'},
+    {id:'gc2800', name:'Liquid: Vegetable Oil', family:'vegetable-oil', weight:2.03, unit:'L', display:'L'},
+    {id:'gc2801', name:'Liquid: Isopropyl Alcohol 70%', family:'isopropyl-70', weight:1.91, unit:'L', display:'fl oz'},
+    {id:'gc2802', name:'Liquid: Isopropyl Alcohol 99%', family:'isopropyl-99', weight:1.73, unit:'L', display:'fl oz'},
+    {id:'gc2803', name:'Liquid: Hydrogen Peroxide 3%', family:'hydrogen-peroxide-3', weight:2.23, unit:'L', display:'fl oz'},
+    {id:'gc2804', name:'Liquid: Shampoo / Body Wash', family:'shampoo', weight:2.20, unit:'L', display:'fl oz'},
+    {id:'gc2805', name:'Liquid: Mouthwash', family:'mouthwash', weight:2.15, unit:'L', display:'fl oz'},
+    {id:'gc2806', name:'Liquid: Hand Sanitizer', family:'hand-sanitizer', weight:1.93, unit:'L', display:'fl oz'},
+    {id:'gc2807', name:'Liquid: Dish Soap', family:'dish-soap', weight:2.30, unit:'L', display:'fl oz'},
+    {id:'gc2808', name:'Liquid: Laundry Detergent', family:'laundry-detergent', weight:2.25, unit:'L', display:'fl oz'},
+    {id:'gc2809', name:'Liquid: Brake Fluid', family:'brake-fluid', weight:2.30, unit:'L', display:'fl oz'},
+    {id:'gc2810', name:'Liquid: Engine Coolant', family:'coolant', weight:2.35, unit:'L', display:'gal'},
+    {id:'gc2811', name:'Liquid: Motor Oil', family:'motor-oil', weight:1.90, unit:'L', display:'L'},
+    {id:'gc2812', name:'Liquid: Windshield Washer Fluid', family:'washer-fluid', weight:2.16, unit:'L', display:'gal'}
+  ];
+  V634_INTERNAL_LIQUIDS.forEach(raw => GEAR_CATALOG.push({
+    id:raw.id, name:raw.name, category:'Internal', subcategory:'Liquid Contents', weight:raw.weight, price:0, availability:'Ubiquitous', colors:['Clear'],
+    specs:'Internal liquid-content resource; not directly purchasable as Gear', aliases:[], unit:raw.unit, internalOnly:true,
+    liquidFamily:raw.family, liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:raw.display
+  }));
+
+  const V634_ADDITIONAL_INTERNAL_LIQUIDS = [
+    {id:'gc2823', name:'Liquid: Energy Drink', family:'energy-drink', weight:2.22, display:'fl oz'},
+    {id:'gc2824', name:'Liquid: Juice', family:'juice', weight:2.28, display:'fl oz'},
+    {id:'gc2825', name:'Liquid: Milk', family:'milk', weight:2.27, display:'fl oz'},
+    {id:'gc2826', name:'Liquid: Soda', family:'soda', weight:2.20, display:'fl oz'},
+    {id:'gc2827', name:'Liquid: Ready-to-Drink Coffee', family:'coffee-drink', weight:2.20, display:'fl oz'},
+    {id:'gc2828', name:'Liquid: Iced Tea', family:'iced-tea', weight:2.20, display:'fl oz'},
+    {id:'gc2829', name:'Liquid: Beer', family:'beer', weight:2.18, display:'fl oz'},
+    {id:'gc2830', name:'Liquid: Wine', family:'wine', weight:2.19, display:'L'},
+    {id:'gc2831', name:'Liquid: Distilled Spirits', family:'spirits', weight:2.08, display:'L'},
+    {id:'gc2832', name:'Liquid: All-Purpose Cleaner', family:'all-purpose-cleaner', weight:2.20, display:'fl oz'},
+    {id:'gc2833', name:'Liquid: Glass Cleaner', family:'glass-cleaner', weight:2.20, display:'fl oz'},
+    {id:'gc2834', name:'Liquid: Hand Soap', family:'hand-soap', weight:2.30, display:'fl oz'},
+    {id:'gc2835', name:'Liquid: Stain Remover', family:'stain-remover', weight:2.20, display:'fl oz'},
+    {id:'gc2836', name:'Liquid: Hair Conditioner', family:'conditioner', weight:2.25, display:'fl oz'},
+    {id:'gc2837', name:'Liquid: Body Lotion', family:'body-lotion', weight:2.20, display:'fl oz'},
+    {id:'gc2838', name:'Liquid: Self-Tanner Lotion', family:'self-tanner', weight:2.20, display:'fl oz'},
+    {id:'gc2839', name:'Liquid: Fragrance', family:'fragrance', weight:1.90, display:'fl oz'},
+    {id:'gc2840', name:'Liquid: Makeup Setting Spray', family:'setting-spray', weight:2.10, display:'fl oz'},
+    {id:'gc2841', name:'Liquid: Facial Serum', family:'facial-serum', weight:2.10, display:'fl oz'},
+    {id:'gc2842', name:'Liquid: Personal Lubricant', family:'personal-lubricant', weight:2.20, display:'fl oz'},
+    {id:'gc2843', name:'Liquid: Two-Stroke Oil', family:'two-stroke-oil', weight:1.90, display:'fl oz'},
+    {id:'gc2844', name:'Liquid: Bar and Chain Oil', family:'bar-chain-oil', weight:1.90, display:'L'},
+    {id:'gc2845', name:'Liquid: Gear Oil', family:'gear-oil', weight:1.90, display:'L'},
+    {id:'gc2846', name:'Liquid: Hydraulic Fluid', family:'hydraulic-fluid', weight:1.85, display:'gal'},
+    {id:'gc2847', name:'Liquid: Power-Steering Fluid', family:'power-steering-fluid', weight:1.88, display:'L'},
+    {id:'gc2848', name:'Liquid: Transmission Fluid', family:'transmission-fluid', weight:1.85, display:'L'},
+    {id:'gc2849', name:'Liquid: School Glue', family:'school-glue', weight:2.30, display:'fl oz'},
+    {id:'gc2850', name:'Liquid: Wood Glue', family:'wood-glue', weight:2.35, display:'fl oz'},
+    {id:'gc2851', name:'Liquid: Interior Latex Paint', family:'latex-paint', weight:2.75, display:'gal'},
+    {id:'gc2852', name:'Liquid: Paint Thinner', family:'paint-thinner', weight:1.65, display:'L'},
+    {id:'gc2853', name:'Liquid: Bubble Solution', family:'bubble-solution', weight:2.20, display:'fl oz'},
+    {id:'gc2854', name:'Liquid: Crystalloid IV Fluid', family:'iv-fluid', weight:2.20, display:'L'}
+  ];
+  V634_ADDITIONAL_INTERNAL_LIQUIDS.forEach(raw => GEAR_CATALOG.push({
+    id:raw.id, name:raw.name, category:'Internal', subcategory:'Liquid Contents', weight:raw.weight, price:0, availability:'Ubiquitous', colors:['Clear'],
+    specs:'Internal liquid-content resource; not directly purchasable as Gear', aliases:[], unit:'L', internalOnly:true,
+    liquidFamily:raw.family, liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:raw.display
+  }));
+
+  // Existing raw liquid SKUs remain usable for legacy saves and transfers, but are no longer
+  // offered as freestanding purchasable Gear. New retail package records reference them.
+  for (const id of ['gc1975','gc2155','gc2156','gc2745','gc1221','gc2758','gc2759','gc2764','gc2765','gc2766','gc2767','gc2768','gc2769']) {
+    const raw = GEAR_CATALOG.find(item => item.id === id);
+    if (raw) raw.internalOnly = true;
+  }
+  const rawBleach = GEAR_CATALOG.find(item => item.id === 'gc1221');
+  if (rawBleach) rawBleach.weight = 4.45; // liquid only; package dry weight is on the retail bottle below
+
+  const v634Package = (id, patch) => {
+    const item = GEAR_CATALOG.find(entry => entry.id === id);
+    if (!item) return;
+    Object.assign(item, patch);
+    item.liquidAllowedFamilies = [patch.prefilledLiquidFamily];
+    item.liquidUsedProfile = 'retail';
+  };
+
+  // Common existing package-level products become real refillable/transferable containers.
+  v634Package('gc2786', {weight:0.20, liquidCapacityLiters:3.785411784, liquidPreferredUnit:'gal', prefilledLiquidCatalogId:'gc2799', prefilledLiquidFamily:'vinegar', prefilledLiquidLiters:3.785411784});
+  v634Package('gc2790', {weight:0.12, liquidCapacityLiters:1.419529419, liquidPreferredUnit:'L', prefilledLiquidCatalogId:'gc2800', prefilledLiquidFamily:'vegetable-oil', prefilledLiquidLiters:1.419529419});
+  v634Package('gc2793', {weight:0.08, liquidCapacityLiters:0.946352946, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2801', prefilledLiquidFamily:'isopropyl-70', prefilledLiquidLiters:0.946352946});
+  v634Package('gc2798', {weight:0.11, liquidCapacityLiters:0.946352946, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2802', prefilledLiquidFamily:'isopropyl-99', prefilledLiquidLiters:0.946352946});
+  v634Package('gc2737', {weight:0.09, liquidCapacityLiters:0.946352946, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2803', prefilledLiquidFamily:'hydrogen-peroxide-3', prefilledLiquidLiters:0.946352946});
+  v634Package('gc1505', {weight:0.12, liquidCapacityLiters:0.354882355, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2804', prefilledLiquidFamily:'shampoo', prefilledLiquidLiters:0.354882355});
+  v634Package('gc0795', {weight:0.12, liquidCapacityLiters:0.354882355, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2804', prefilledLiquidFamily:'shampoo', prefilledLiquidLiters:0.354882355});
+  v634Package('gc0794', {weight:0.05, liquidCapacityLiters:0.088720589, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2804', prefilledLiquidFamily:'shampoo', prefilledLiquidLiters:0.088720589});
+  v634Package('gc0791', {weight:0.10, liquidCapacityLiters:0.088720589, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2805', prefilledLiquidFamily:'mouthwash', prefilledLiquidLiters:0.088720589});
+  v634Package('gc0806', {weight:0.08, liquidCapacityLiters:0.059147059, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2806', prefilledLiquidFamily:'hand-sanitizer', prefilledLiquidLiters:0.059147059});
+  v634Package('gc0778', {weight:0.06, liquidCapacityLiters:0.236588237, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2807', prefilledLiquidFamily:'dish-soap', prefilledLiquidLiters:0.236588237});
+  v634Package('gc1220', {weight:0.27, liquidCapacityLiters:1.478676478, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2808', prefilledLiquidFamily:'laundry-detergent', prefilledLiquidLiters:1.478676478});
+  v634Package('gc2158', {weight:0.08, liquidCapacityLiters:0.354882355, liquidPreferredUnit:'fl oz', prefilledLiquidCatalogId:'gc2809', prefilledLiquidFamily:'brake-fluid', prefilledLiquidLiters:0.354882355});
+  v634Package('gc0705', {weight:0.10, liquidCapacityLiters:3.785411784, liquidPreferredUnit:'gal', prefilledLiquidCatalogId:'gc2810', prefilledLiquidFamily:'coolant', prefilledLiquidLiters:3.785411784});
+  v634Package('gc0704', {weight:0.10, liquidCapacityLiters:0.946352946, liquidPreferredUnit:'L', prefilledLiquidCatalogId:'gc2811', prefilledLiquidFamily:'motor-oil', prefilledLiquidLiters:0.946352946});
+  v634Package('gc0706', {weight:0.32, liquidCapacityLiters:3.785411784, liquidPreferredUnit:'gal', prefilledLiquidCatalogId:'gc2812', prefilledLiquidFamily:'washer-fluid', prefilledLiquidLiters:3.785411784});
+
+  // Convert existing retail bottles/cans/jugs into a dry package plus embedded contents.
+  // Preserve their prior representative gross weight wherever possible so this architecture
+  // change does not silently alter carried loads.
+  const v634PackagePreserveGross = (id, liquidCatalogId, family, liters, preferredUnit='L', minimumDryWeight=0.02) => {
+    const item = GEAR_CATALOG.find(entry => entry.id === id);
+    const liquid = GEAR_CATALOG.find(entry => entry.id === liquidCatalogId);
+    if (!item || !liquid || !(Number(liters) > 0)) return;
+    const previousGross = Number(item.weight);
+    const contentsWeight = Math.max(0, Number(liquid.weight) || 0) * Number(liters);
+    const dryWeight = Number.isFinite(previousGross)
+      ? Math.max(Number(minimumDryWeight) || 0.02, previousGross - contentsWeight)
+      : Math.max(Number(minimumDryWeight) || 0.02, 0.02);
+    v634Package(id, {
+      weight:Number(dryWeight.toFixed(4)), liquidCapacityLiters:Number(liters), liquidPreferredUnit:preferredUnit,
+      prefilledLiquidCatalogId:liquidCatalogId, prefilledLiquidFamily:family, prefilledLiquidLiters:Number(liters)
+    });
+  };
+
+  // Beverages. Cans/bottles/cartons remain as physical packages after the contents are gone.
+  v634Package('gc1280', {weight:0.05, liquidCapacityLiters:0.5, liquidPreferredUnit:'L', prefilledLiquidCatalogId:'gc1975', prefilledLiquidFamily:'water', prefilledLiquidLiters:0.5});
+  v634Package('gc1281', {weight:0.20, liquidCapacityLiters:3.785411784, liquidPreferredUnit:'gal', prefilledLiquidCatalogId:'gc1975', prefilledLiquidFamily:'water', prefilledLiquidLiters:3.785411784});
+  v634PackagePreserveGross('gc1277','gc2823','energy-drink',0.473176473,'fl oz',0.03);
+  v634PackagePreserveGross('gc1278','gc2824','juice',1.892705892,'fl oz',0.12);
+  v634PackagePreserveGross('gc1279','gc2825','milk',0.946352946,'fl oz',0.08);
+  v634PackagePreserveGross('gc1276','gc2826','soda',0.591470591,'fl oz',0.07);
+  v634PackagePreserveGross('gc1275','gc2826','soda',0.354882355,'fl oz',0.03);
+  v634PackagePreserveGross('gc2743','gc2827','coffee-drink',0.414029414,'fl oz',0.05);
+  v634PackagePreserveGross('gc2744','gc2828','iced-tea',0.591470591,'fl oz',0.06);
+  v634PackagePreserveGross('gc1556','gc2829','beer',0.354882355,'fl oz',0.03);
+  v634PackagePreserveGross('gc1557','gc2829','beer',0.354882355,'fl oz',0.40);
+  v634PackagePreserveGross('gc1558','gc2830','wine',0.75,'L',0.90);
+  v634PackagePreserveGross('gc1559','gc2831','spirits',0.75,'L',1.00);
+  v634PackagePreserveGross('gc1560','gc2831','spirits',0.05,'L',0.04);
+
+  // Pourable household and personal-care liquids. Aerosols, creams/gels and sealed
+  // dose applicators intentionally stay ordinary Gear rather than pretending to be jugs.
+  v634PackagePreserveGross('gc1242','gc2832','all-purpose-cleaner',0.70976471,'fl oz',0.10);
+  v634PackagePreserveGross('gc1241','gc2833','glass-cleaner',0.70976471,'fl oz',0.10);
+  v634PackagePreserveGross('gc0780','gc2834','hand-soap',0.236588237,'fl oz',0.06);
+  v634PackagePreserveGross('gc1222','gc2835','stain-remover',0.65061765,'fl oz',0.10);
+  v634PackagePreserveGross('gc1667','gc2836','conditioner',0.354882355,'fl oz',0.08);
+  v634PackagePreserveGross('gc2221','gc2836','conditioner',0.088720589,'fl oz',0.04);
+  v634PackagePreserveGross('gc1664','gc2837','body-lotion',0.473176473,'fl oz',0.08);
+  v634PackagePreserveGross('gc2222','gc2837','body-lotion',0.088720589,'fl oz',0.03);
+  v634PackagePreserveGross('gc1666','gc2838','self-tanner',0.177441178,'fl oz',0.05);
+  v634PackagePreserveGross('gc1686','gc2839','fragrance',0.100552,'fl oz',0.25);
+  v634PackagePreserveGross('gc1640','gc2840','setting-spray',0.088720589,'fl oz',0.05);
+  v634PackagePreserveGross('gc1661','gc2841','facial-serum',0.02957353,'fl oz',0.04);
+  v634PackagePreserveGross('gc2232','gc2842','personal-lubricant',0.118294118,'fl oz',0.05);
+
+  // Pourable automotive/shop liquids and common craft liquids. Aerosol lubricants and
+  // spray paint remain sealed aerosol products and are deliberately not transferable.
+  v634PackagePreserveGross('gc2162','gc2843','two-stroke-oil',0.473176473,'fl oz',0.08);
+  v634PackagePreserveGross('gc2163','gc2844','bar-chain-oil',0.946352946,'L',0.10);
+  v634PackagePreserveGross('gc2160','gc2845','gear-oil',0.946352946,'L',0.10);
+  v634PackagePreserveGross('gc2161','gc2846','hydraulic-fluid',3.785411784,'gal',0.20);
+  v634PackagePreserveGross('gc2159','gc2847','power-steering-fluid',0.946352946,'L',0.10);
+  v634PackagePreserveGross('gc2157','gc2848','transmission-fluid',0.946352946,'L',0.10);
+  v634PackagePreserveGross('gc1293','gc2849','school-glue',0.118294118,'fl oz',0.04);
+  v634PackagePreserveGross('gc1457','gc2850','wood-glue',0.236588237,'fl oz',0.06);
+  v634PackagePreserveGross('gc1617','gc2851','latex-paint',3.785411784,'gal',0.90);
+  v634PackagePreserveGross('gc1620','gc2852','paint-thinner',0.946352946,'L',0.25);
+  v634PackagePreserveGross('gc1159','gc2853','bubble-solution',0.236588237,'fl oz',0.05);
+  v634PackagePreserveGross('gc0896','gc2854','iv-fluid',1.0,'L',0.10);
+
+  // New physical packages for liquids that were formerly modeled only as loose resources.
+  GEAR_CATALOG.push(
+    {id:'gc2813', name:'Water, Bottled, 1 L', category:'Food, Water & Cooking', subcategory:'Beverages', weight:0.06, price:1.0, availability:'Ubiquitous', colors:['Clear'], unit:'bottle', specs:'Disposable 1 L bottle containing potable water', aliases:['water','bottled water','drinking water','potable water','1 liter water'], liquidCapacityLiters:1.0, liquidAllowedFamilies:['water'], liquidPreferredUnit:'L', liquidUsedProfile:'retail', prefilledLiquidCatalogId:'gc1975', prefilledLiquidFamily:'water', prefilledLiquidLiters:1.0},
+    {id:'gc2814', name:'Bleach, 64 oz', category:'Household & General', subcategory:'Cleaning', weight:0.15, price:5.0, availability:'Common', colors:['White'], unit:'bottle', specs:'64 fl oz household bleach bottle including its original container', aliases:['bleach','household bleach','chlorine bleach'], liquidCapacityLiters:1.892705892, liquidAllowedFamilies:['bleach'], liquidPreferredUnit:'fl oz', liquidUsedProfile:'retail', prefilledLiquidCatalogId:'gc1221', prefilledLiquidFamily:'bleach', prefilledLiquidLiters:1.892705892},
+    {id:'gc2815', name:'Herbicide Solution, Ready-to-Use, 1 L', category:'Tools & Hardware', subcategory:'Pest Control', weight:0.12, price:8.0, availability:'Common', colors:['Clear'], unit:'bottle', specs:'1 L retail bottle of ready-to-use liquid herbicide / weed-killer solution', aliases:['herbicide','weed killer','weedkiller','weed control spray'], liquidCapacityLiters:1.0, liquidAllowedFamilies:['herbicide'], liquidPreferredUnit:'L', liquidUsedProfile:'retail', prefilledLiquidCatalogId:'gc2758', prefilledLiquidFamily:'herbicide', prefilledLiquidLiters:1.0},
+    {id:'gc2816', name:'Insecticide Solution, Ready-to-Use, 1 L', category:'Tools & Hardware', subcategory:'Pest Control', weight:0.12, price:9.0, availability:'Common', colors:['Clear'], unit:'bottle', specs:'1 L retail bottle of ready-to-use liquid insecticide solution', aliases:['insecticide','bug killer','pesticide spray'], liquidCapacityLiters:1.0, liquidAllowedFamilies:['insecticide'], liquidPreferredUnit:'L', liquidUsedProfile:'retail', prefilledLiquidCatalogId:'gc2759', prefilledLiquidFamily:'insecticide', prefilledLiquidLiters:1.0},
+    {id:'gc2817', name:'Synthetic Urine, 3 oz Bottle', category:'Everyday Carry & Personal', subcategory:'Recreational Drugs > Paraphernalia', weight:0.04, price:20.0, availability:'Specialty', colors:['Yellow','Clear'], unit:'bottle', specs:'3 fl oz retail bottle containing commercial simulated urine solution', aliases:['synthetic urine','fake urine','artificial urine','urine substitute'], liquidCapacityLiters:0.088720589, liquidAllowedFamilies:['urine-synthetic'], liquidPreferredUnit:'fl oz', liquidUsedProfile:'retail', prefilledLiquidCatalogId:'gc2764', prefilledLiquidFamily:'urine-synthetic', prefilledLiquidLiters:0.088720589},
+    {id:'gc2818', name:'Human Urine, Pooled, 1 L Bottle', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Laboratory', weight:0.10, price:250.0, availability:'Limited', colors:['Yellow','Clear'], unit:'bottle', specs:'1 L laboratory bottle containing pooled human urine specimen material', aliases:['pooled human urine','human urine specimen'], liquidCapacityLiters:1.0, liquidAllowedFamilies:['urine-human'], liquidPreferredUnit:'L', liquidUsedProfile:'retail', prefilledLiquidCatalogId:'gc2765', prefilledLiquidFamily:'urine-human', prefilledLiquidLiters:1.0},
+    {id:'gc2819', name:'Deer Urine, 4 oz Bottle', category:'Outdoor & Survival', subcategory:'Hunting', weight:0.04, price:10.0, availability:'Specialty', colors:['Yellow','Brown'], unit:'bottle', specs:'4 fl oz retail scent bottle containing natural deer urine', aliases:['deer urine','deer pee','deer scent'], liquidCapacityLiters:0.118294118, liquidAllowedFamilies:['urine-deer'], liquidPreferredUnit:'fl oz', liquidUsedProfile:'retail', prefilledLiquidCatalogId:'gc2766', prefilledLiquidFamily:'urine-deer', prefilledLiquidLiters:0.118294118},
+    {id:'gc2820', name:'Elk Urine, 4 oz Bottle', category:'Outdoor & Survival', subcategory:'Hunting', weight:0.04, price:10.0, availability:'Specialty', colors:['Yellow','Brown'], unit:'bottle', specs:'4 fl oz retail scent bottle containing natural elk urine', aliases:['elk urine','elk pee','elk scent'], liquidCapacityLiters:0.118294118, liquidAllowedFamilies:['urine-elk'], liquidPreferredUnit:'fl oz', liquidUsedProfile:'retail', prefilledLiquidCatalogId:'gc2767', prefilledLiquidFamily:'urine-elk', prefilledLiquidLiters:0.118294118},
+    {id:'gc2821', name:'Coyote Urine, 4 oz Bottle', category:'Outdoor & Survival', subcategory:'Hunting', weight:0.04, price:9.0, availability:'Specialty', colors:['Yellow','Brown'], unit:'bottle', specs:'4 fl oz retail scent bottle containing natural coyote urine', aliases:['coyote urine','coyote pee','predator scent'], liquidCapacityLiters:0.118294118, liquidAllowedFamilies:['urine-coyote'], liquidPreferredUnit:'fl oz', liquidUsedProfile:'retail', prefilledLiquidCatalogId:'gc2768', prefilledLiquidFamily:'urine-coyote', prefilledLiquidLiters:0.118294118},
+    {id:'gc2822', name:'Fox Urine, 4 oz Bottle', category:'Outdoor & Survival', subcategory:'Hunting', weight:0.04, price:8.0, availability:'Specialty', colors:['Yellow','Brown'], unit:'bottle', specs:'4 fl oz retail scent bottle containing natural fox urine', aliases:['fox urine','fox pee','fox scent','predator scent'], liquidCapacityLiters:0.118294118, liquidAllowedFamilies:['urine-fox'], liquidPreferredUnit:'fl oz', liquidUsedProfile:'retail', prefilledLiquidCatalogId:'gc2769', prefilledLiquidFamily:'urine-fox', prefilledLiquidLiters:0.118294118}
+  );
+
+  // General-purpose open containers can receive the newly structured ordinary liquids.
+  const V634_GENERAL_TRANSFER_FAMILIES = Object.freeze([
+    'vinegar','vegetable-oil','isopropyl-70','isopropyl-99','hydrogen-peroxide-3','shampoo','mouthwash','hand-sanitizer','dish-soap','laundry-detergent',
+    'brake-fluid','coolant','motor-oil','washer-fluid','energy-drink','juice','milk','soda','coffee-drink','iced-tea','beer','wine','spirits',
+    'all-purpose-cleaner','glass-cleaner','hand-soap','stain-remover','conditioner','body-lotion','self-tanner','fragrance','setting-spray','facial-serum','personal-lubricant',
+    'two-stroke-oil','bar-chain-oil','gear-oil','hydraulic-fluid','power-steering-fluid','transmission-fluid','school-glue','wood-glue','latex-paint','paint-thinner','bubble-solution','iv-fluid'
+  ]);
+  for (const item of GEAR_CATALOG) {
+    if (!(Number(item.liquidCapacityLiters) > 0)) continue;
+    if (/\b(?:Bucket|Canning Jar|Specimen Jar|Sample Bottle)\b/i.test(String(item.name || ''))) {
+      item.liquidAllowedFamilies = Array.from(new Set([...(item.liquidAllowedFamilies || []), ...V634_GENERAL_TRANSFER_FAMILIES]));
+    }
+  }
+
+  const V634_SPRAYABLE_FAMILIES = Object.freeze([
+    'vinegar','isopropyl-70','isopropyl-99','hydrogen-peroxide-3','all-purpose-cleaner','glass-cleaner','stain-remover','setting-spray'
+  ]);
+  for (const item of GEAR_CATALOG) {
+    if (!(Number(item.liquidCapacityLiters) > 0)) continue;
+    if (/\b(?:Backpack Sprayer|Pump Sprayer|Spray Bottle|Spray Mister)\b/i.test(String(item.name || ''))) {
+      item.liquidAllowedFamilies = Array.from(new Set([...(item.liquidAllowedFamilies || []), ...V634_SPRAYABLE_FAMILIES]));
+    }
   }
 
   const GEAR_CATALOG_BY_ID = new Map(GEAR_CATALOG.map(item => [item.id, item]));
@@ -12967,9 +13500,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         if (item.catalogId === 'gc0434' && String(item.item || '').trim() === 'Trauma Kit, Individual') item.item = itemCatalog.name;
       }
       if (itemCatalog && Array.isArray(itemCatalog.colors) && itemCatalog.colors.length === 1) item.color = itemCatalog.colors[0];
+      if (itemCatalog?.prefilledLiquidCatalogId) initializePrefilledLiquidPackage(item, itemCatalog);
       delete item.carried;
       delete item.location;
     }
+    state.gear.filter(item => catalogIsLiquidContainer(catalogForGearInstance(item))).forEach(clampLiquidContainerContents);
     migrateVehicleStorageModel(defaultLocation, setDownLocation);
     return defaultLocation;
   }
@@ -13080,7 +13615,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function normalizeLiquidQuantity(value) {
     const numeric = Number(value);
-    if (!Number.isFinite(numeric) || numeric <= 0) return 1;
+    if (!Number.isFinite(numeric)) return 1;
+    if (numeric <= 0) return 0;
     return Math.max(
       0.0001,
       Math.min(9999.9999, Math.round((numeric + Number.EPSILON) * 10000) / 10000)
@@ -13681,6 +14217,52 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (family === 'gasoline') return 'Gasoline';
     if (family === 'diesel') return 'Diesel';
     if (family === 'bleach') return 'Household Bleach';
+    if (family === 'vinegar') return 'White Vinegar';
+    if (family === 'vegetable-oil') return 'Vegetable Oil';
+    if (family === 'isopropyl-70') return 'Isopropyl Alcohol 70%';
+    if (family === 'isopropyl-99') return 'Isopropyl Alcohol 99%';
+    if (family === 'hydrogen-peroxide-3') return 'Hydrogen Peroxide 3%';
+    if (family === 'shampoo') return 'Shampoo / Wash';
+    if (family === 'mouthwash') return 'Mouthwash';
+    if (family === 'hand-sanitizer') return 'Hand Sanitizer';
+    if (family === 'dish-soap') return 'Dish Soap';
+    if (family === 'laundry-detergent') return 'Laundry Detergent';
+    if (family === 'brake-fluid') return 'Brake Fluid';
+    if (family === 'coolant') return 'Engine Coolant';
+    if (family === 'motor-oil') return 'Motor Oil';
+    if (family === 'washer-fluid') return 'Washer Fluid';
+    if (family === 'energy-drink') return 'Energy Drink';
+    if (family === 'juice') return 'Juice';
+    if (family === 'milk') return 'Milk';
+    if (family === 'soda') return 'Soda';
+    if (family === 'coffee-drink') return 'Coffee Drink';
+    if (family === 'iced-tea') return 'Iced Tea';
+    if (family === 'beer') return 'Beer';
+    if (family === 'wine') return 'Wine';
+    if (family === 'spirits') return 'Distilled Spirits';
+    if (family === 'all-purpose-cleaner') return 'All-Purpose Cleaner';
+    if (family === 'glass-cleaner') return 'Glass Cleaner';
+    if (family === 'hand-soap') return 'Hand Soap';
+    if (family === 'stain-remover') return 'Stain Remover';
+    if (family === 'conditioner') return 'Conditioner';
+    if (family === 'body-lotion') return 'Body Lotion';
+    if (family === 'self-tanner') return 'Self-Tanner Lotion';
+    if (family === 'fragrance') return 'Fragrance';
+    if (family === 'setting-spray') return 'Setting Spray';
+    if (family === 'facial-serum') return 'Facial Serum';
+    if (family === 'personal-lubricant') return 'Personal Lubricant';
+    if (family === 'two-stroke-oil') return 'Two-Stroke Oil';
+    if (family === 'bar-chain-oil') return 'Bar & Chain Oil';
+    if (family === 'gear-oil') return 'Gear Oil';
+    if (family === 'hydraulic-fluid') return 'Hydraulic Fluid';
+    if (family === 'power-steering-fluid') return 'Power-Steering Fluid';
+    if (family === 'transmission-fluid') return 'Transmission Fluid';
+    if (family === 'school-glue') return 'School Glue';
+    if (family === 'wood-glue') return 'Wood Glue';
+    if (family === 'latex-paint') return 'Interior Latex Paint';
+    if (family === 'paint-thinner') return 'Paint Thinner';
+    if (family === 'bubble-solution') return 'Bubble Solution';
+    if (family === 'iv-fluid') return 'IV Fluid';
     if (family === 'herbicide') return 'Herbicide';
     if (family === 'insecticide') return 'Insecticide';
     if (family === 'urine-human') return 'Human Urine';
@@ -13711,6 +14293,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const firstLiquid = embeddedLiquidItems(item)[0] || null;
     const liquidCatalog = catalogForGearInstance(firstLiquid);
     const sourceUnit = String(liquidCatalog?.liquidDisplayUnit || '');
+    if (catalog?.liquidPreferredUnit === 'fl oz') return 'fl oz';
     if (sourceUnit === 'fl oz' || sourceUnit === 'L' || sourceUnit === 'gal') return sourceUnit;
     if (family === 'gasoline' || family === 'diesel' || family === 'avgas' || family === 'jet-a' || family === 'jet-fuel') return 'gal';
     return String(catalog?.liquidPreferredUnit || 'L');
@@ -13808,6 +14391,88 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return embeddedLiquidItems(container).reduce((sum, item) => sum + liquidVolumeLiters(item), 0);
   }
 
+  function liquidContainerStackCount(container) {
+    return Math.max(1, Math.round(gearItemQuantity(container) || 1));
+  }
+
+  function liquidContainerPerUnitLiters(container) {
+    return embeddedLiquidLiters(container) / liquidContainerStackCount(container);
+  }
+
+  function liquidContainerTotalCapacityLiters(container, catalog=catalogForGearInstance(container)) {
+    return Math.max(0, Number(catalog?.liquidCapacityLiters) || 0) * liquidContainerStackCount(container);
+  }
+
+  function splitLiquidContainerStack(container, rawAmount=1) {
+    if (!container) return null;
+    const catalog = catalogForGearInstance(container);
+    if (!catalogIsLiquidContainer(catalog)) return container;
+    const total = liquidContainerStackCount(container);
+    if (total <= 1) return container;
+    let amount = Math.round(Number(rawAmount) || 1);
+    amount = Math.max(1, Math.min(total - 1, amount));
+    const remaining = total - amount;
+    const index = state.gear.findIndex(entry => entry.id === container.id);
+    if (index < 0) return container;
+
+    const splitItem = JSON.parse(JSON.stringify(container));
+    splitItem.id = uid();
+    splitItem.quantity = amount;
+    container.quantity = remaining;
+
+    const ratio = amount / total;
+    const newChildren = [];
+    for (const child of [...embeddedLiquidItems(container)]) {
+      const childCatalog = catalogForGearInstance(child);
+      if (!catalogIsBulkLiquid(childCatalog)) continue;
+      const quantity = gearItemQuantity(child);
+      const splitQuantity = quantity * ratio;
+      const remainQuantity = quantity - splitQuantity;
+      if (!(splitQuantity > 1e-9)) continue;
+      const splitChild = JSON.parse(JSON.stringify(child));
+      splitChild.id = uid();
+      splitChild.quantity = normalizeLiquidQuantity(splitQuantity);
+      splitChild.embeddedInGearId = splitItem.id;
+      splitChild.locationId = splitItem.locationId;
+      newChildren.push(splitChild);
+      if (remainQuantity <= 1e-9) state.gear = state.gear.filter(entry => entry.id !== child.id);
+      else child.quantity = normalizeLiquidQuantity(remainQuantity);
+    }
+
+    state.gear.splice(index + 1, 0, splitItem, ...newChildren);
+    return splitItem;
+  }
+
+  function isolateLiquidContainerUnit(container) {
+    return liquidContainerStackCount(container) > 1 ? splitLiquidContainerStack(container, 1) : container;
+  }
+
+  function setLiquidContainerStackQuantity(container, rawQuantity) {
+    if (!container) return false;
+    const catalog = catalogForGearInstance(container);
+    if (!catalogIsLiquidContainer(catalog)) return false;
+    const oldCount = liquidContainerStackCount(container);
+    const newCount = Math.max(1, Math.min(9999, Math.round(Number(rawQuantity) || 1)));
+    if (newCount === oldCount) { container.quantity = newCount; return true; }
+    const scale = newCount / oldCount;
+    for (const child of embeddedLiquidItems(container)) {
+      child.quantity = normalizeLiquidQuantity(gearItemQuantity(child) * scale);
+    }
+    container.quantity = newCount;
+    clampLiquidContainerContents(container);
+    return true;
+  }
+
+  function setGearQuantityFromDisplayValue(item, rawValue, catalog=catalogForGearInstance(item)) {
+    const stored = liquidQuantityStoredValue(rawValue, item, catalog);
+    if (catalogIsLiquidContainer(catalog)) {
+      setLiquidContainerStackQuantity(item, stored);
+      return gearItemQuantity(item);
+    }
+    item.quantity = stored;
+    return item.quantity;
+  }
+
   function formatLiquidVolume(liters, unit='L') {
     const value = unit === 'gal'
       ? Number(liters) / LITERS_PER_US_GALLON
@@ -13827,6 +14492,41 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return '';
   }
 
+  function initializePrefilledLiquidPackage(item, catalog=catalogForGearInstance(item)) {
+    if (!item || !catalog?.prefilledLiquidCatalogId || item.prefilledLiquidInitialized) return false;
+    item.prefilledLiquidInitialized = true;
+    if (embeddedLiquidItems(item).length) return false;
+    const liquidCatalog = GEAR_CATALOG_BY_ID.get(catalog.prefilledLiquidCatalogId);
+    if (!liquidCatalog || !catalogIsBulkLiquid(liquidCatalog)) return false;
+    const requestedLiters = Math.max(0, Math.min(Number(catalog.liquidCapacityLiters) || 0, Number(catalog.prefilledLiquidLiters) || 0));
+    const perUnit = Number(liquidCatalog.liquidVolumeLitersPerUnit) || 0;
+    if (!(requestedLiters > 0 && perUnit > 0)) return false;
+    createGeneratedEmbeddedConsumable(item, liquidCatalog, requestedLiters * liquidContainerStackCount(item) / perUnit);
+    return true;
+  }
+
+  function clampLiquidContainerContents(container) {
+    const catalog = catalogForGearInstance(container);
+    if (!container || !catalogIsLiquidContainer(catalog)) return false;
+    const capacity = liquidContainerTotalCapacityLiters(container, catalog);
+    let excess = embeddedLiquidLiters(container) - capacity;
+    if (!(excess > 1e-8)) return false;
+    const liquids = [...embeddedLiquidItems(container)].reverse();
+    for (const liquidItem of liquids) {
+      if (excess <= 1e-8) break;
+      const liquidCatalog = catalogForGearInstance(liquidItem);
+      const perUnit = Number(liquidCatalog?.liquidVolumeLitersPerUnit) || 0;
+      if (!(perUnit > 0)) continue;
+      const available = liquidVolumeLiters(liquidItem, liquidCatalog);
+      const removeLiters = Math.min(excess, available);
+      const nextQuantity = Math.max(0, gearItemQuantity(liquidItem) - removeLiters / perUnit);
+      if (nextQuantity <= 1e-8) state.gear = state.gear.filter(entry => entry.id !== liquidItem.id);
+      else liquidItem.quantity = normalizeLiquidQuantity(nextQuantity);
+      excess -= removeLiters;
+    }
+    return true;
+  }
+
   function liquidSourceInfo(source) {
     if (!source) return null;
     const catalog = catalogForGearInstance(source);
@@ -13839,11 +14539,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const first = items[0];
       const firstCatalog = catalogForGearInstance(first);
       const family = String(firstCatalog?.liquidFamily || '');
-      const liters = items.reduce((sum, item) => {
+      const totalLiters = items.reduce((sum, item) => {
         const itemCatalog = catalogForGearInstance(item);
         return String(itemCatalog?.liquidFamily || '') === family ? sum + liquidVolumeLiters(item, itemCatalog) : sum;
       }, 0);
-      return family && liters > 1e-9 ? {family, liters, items, sourceKind:'container'} : null;
+      const containerCount = liquidContainerStackCount(source);
+      const liters = totalLiters / containerCount;
+      return family && liters > 1e-9 ? {family, liters, totalLiters, containerCount, items, sourceKind:'container'} : null;
     }
     return null;
   }
@@ -13884,20 +14586,24 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!source || !target || source.id === target.id) return null;
     const sourceInfo = liquidSourceInfo(source);
     const targetCatalog = catalogForGearInstance(target);
-    if (!sourceInfo || !catalogIsLiquidContainer(targetCatalog) || gearItemQuantity(target) !== 1) return null;
+    if (!sourceInfo || !catalogIsLiquidContainer(targetCatalog)) return null;
     if (!targetCatalog.liquidAllowedFamilies.includes(sourceInfo.family)) return null;
     const existingFamily = embeddedLiquidFamily(target);
     if (existingFamily && existingFamily !== sourceInfo.family) return null;
-    const roomLiters = Math.max(0, Number(targetCatalog.liquidCapacityLiters) - embeddedLiquidLiters(target));
+    const roomLiters = Math.max(0, Number(targetCatalog.liquidCapacityLiters) - liquidContainerPerUnitLiters(target));
     const liters = Math.min(sourceInfo.liters, roomLiters);
     return liters > 1e-9 ? {kind:'liquid-transfer', family:sourceInfo.family, liters, roomLiters, availableLiters:sourceInfo.liters} : null;
   }
 
   function transferLiquidIntoContainer(source, target, requestedLiters, compatibility=liquidContainerTransferCompatibility(source, target)) {
     if (!compatibility || compatibility.kind !== 'liquid-transfer') return false;
+    const workingSource = catalogIsLiquidContainer(catalogForGearInstance(source)) ? isolateLiquidContainerUnit(source) : source;
+    const workingTarget = isolateLiquidContainerUnit(target);
+    compatibility = liquidContainerTransferCompatibility(workingSource, workingTarget);
+    if (!compatibility || compatibility.kind !== 'liquid-transfer') return false;
     let remainingLiters = Math.min(compatibility.liters, Math.max(0, Number(requestedLiters) || 0));
     if (remainingLiters <= 1e-9) return false;
-    const sourceInfo = liquidSourceInfo(source);
+    const sourceInfo = liquidSourceInfo(workingSource);
     if (!sourceInfo || sourceInfo.family !== compatibility.family) return false;
     for (const liquidItem of [...sourceInfo.items]) {
       if (remainingLiters <= 1e-9) break;
@@ -13908,9 +14614,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const availableLiters = liquidVolumeLiters(liquidItem, liquidCatalog);
       const takeLiters = Math.min(remainingLiters, availableLiters);
       const takeQuantity = takeLiters / perUnit;
-      splitOrMoveIntoEmbeddedParent(liquidItem, target, takeQuantity);
+      splitOrMoveIntoEmbeddedParent(liquidItem, workingTarget, takeQuantity);
       remainingLiters -= takeLiters;
     }
+    clampLiquidContainerContents(workingTarget);
     clearGearSortState();
     renderGear();
     calculate();
@@ -13919,6 +14626,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function consumeLiquidSourceLiters(source, requestedLiters, family=null) {
+    if (catalogIsLiquidContainer(catalogForGearInstance(source)) && liquidContainerStackCount(source) > 1) {
+      source = isolateLiquidContainerUnit(source);
+    }
     const sourceInfo = liquidSourceInfo(source);
     if (!sourceInfo || (family && sourceInfo.family !== family)) return 0;
     let remainingLiters = Math.min(sourceInfo.liters, Math.max(0, Number(requestedLiters) || 0));
@@ -13946,8 +14656,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function adjustLiquidContainerVolume(container, direction) {
     if (!container || !(direction < 0)) return false;
+    const originalCatalog = catalogForGearInstance(container);
+    if (!catalogIsLiquidContainer(originalCatalog)) return false;
+    container = isolateLiquidContainerUnit(container);
     const catalog = catalogForGearInstance(container);
-    if (!catalogIsLiquidContainer(catalog) || gearItemQuantity(container) !== 1) return false;
     const liquids = embeddedLiquidItems(container);
     const first = liquids[0] || null;
     const liquidCatalog = catalogForGearInstance(first);
@@ -13967,16 +14679,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function canFillLiquidContainerWithWater(container) {
     const catalog = catalogForGearInstance(container);
-    if (!container || !catalogIsLiquidContainer(catalog) || gearItemQuantity(container) !== 1) return false;
+    if (!container || !catalogIsLiquidContainer(catalog)) return false;
     if (!Array.isArray(catalog.liquidAllowedFamilies) || !catalog.liquidAllowedFamilies.includes('water')) return false;
     const family = embeddedLiquidFamily(container);
     if (family && family !== 'water') return false;
     const capacity = Math.max(0, Number(catalog.liquidCapacityLiters) || 0);
-    return capacity - embeddedLiquidLiters(container) > 1e-9;
+    return capacity - liquidContainerPerUnitLiters(container) > 1e-9;
   }
 
   function fillLiquidContainerWithWater(container) {
     if (!canFillLiquidContainerWithWater(container)) return false;
+    container = isolateLiquidContainerUnit(container);
     const catalog = catalogForGearInstance(container);
     const capacity = Math.max(0, Number(catalog.liquidCapacityLiters) || 0);
     const current = embeddedLiquidLiters(container);
@@ -13996,6 +14709,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
     const perUnit = Number(catalogForGearInstance(waterItem)?.liquidVolumeLitersPerUnit) || 1;
     waterItem.quantity = normalizeLiquidQuantity(gearItemQuantity(waterItem) + addLiters / perUnit);
+    clampLiquidContainerContents(container);
     closeGearItemActionMenu();
     clearGearSortState();
     renderGear();
@@ -14131,21 +14845,34 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       return {applicable:true, valid:Boolean(compatibility), compatibility, text:'Insert Magazine'};
     }
 
-    if (sourceCatalog.primaryBatteryType && sourceCatalog.primaryBatteryChemistry === 'alkaline' && targetCatalog.replaceableBatteryType) {
+    if (sourceCatalog.batteryPackFamily && sourceCatalog.rechargeable === true && targetCatalog.replaceableBatteryPackFamily) {
+      if (String(sourceCatalog.batteryPackFamily) !== String(targetCatalog.replaceableBatteryPackFamily)) return null;
+      if (installedBatteryPackItems(target, targetCatalog).length >= Math.max(1, Math.floor(Number(targetCatalog.replaceableBatteryPackCount) || 1))) return null;
+      return gearItemQuantity(source) >= 1 ? {kind:'battery-pack', quantity:1, batteryPackFamily:sourceCatalog.batteryPackFamily} : null;
+    }
+
+    if (sourceCatalog.batteryPackFamily && sourceCatalog.rechargeable === true && targetCatalog.replaceableBatteryPackFamily) {
+      if (gearItemQuantity(target) !== 1) return {applicable:true, valid:false, text:'Split tool to install battery pack'};
+      if (String(sourceCatalog.batteryPackFamily) !== String(targetCatalog.replaceableBatteryPackFamily)) return {applicable:true, valid:false, text:'Requires compatible rechargeable battery pack'};
+      if (installedBatteryPackItems(target, targetCatalog).length >= Math.max(1, Math.floor(Number(targetCatalog.replaceableBatteryPackCount) || 1))) return {applicable:true, valid:false, text:'Battery pack already installed'};
+      const compatibility = canEmbedGearItem(source, target);
+      return {applicable:true, valid:Boolean(compatibility), compatibility, text:'Install Battery Pack'};
+    }
+
+    if (sourceCatalog.primaryBatteryType && sourceCatalog.primaryBatteryChemistry && targetCatalog.replaceableBatteryType) {
       if (gearItemQuantity(target) !== 1) return {applicable:true, valid:false, text:'Split device to install batteries'};
       const required = Math.max(1, Math.floor(Number(targetCatalog.replaceableBatteryCount) || 1));
       const type = String(targetCatalog.replaceableBatteryType || '');
-      if (sourceCatalog.primaryBatteryType !== type) return {applicable:true, valid:false, text:`Requires ${required}× ${type} alkaline ${required === 1 ? 'battery' : 'batteries'}`};
+      if (sourceCatalog.primaryBatteryType !== type) { const chemistry = primaryChemistryLabel(targetCatalog.replaceableBatteryChemistry); return {applicable:true, valid:false, text:`Requires ${required}× ${type} ${chemistry} ${required === 1 ? 'battery' : 'batteries'}`}; }
       const remaining = Math.max(0, required - installedPrimaryBatteryCount(target, targetCatalog));
       if (remaining < 1) return {applicable:true, valid:false, text:'Battery compartment full'};
       const compatibility = canEmbedGearItem(source, target);
       const moving = compatibility ? Math.min(Math.floor(gearItemQuantity(source)), Math.floor(compatibility.quantity)) : 0;
       const stillNeeded = Math.max(0, remaining - moving);
-      return {applicable:true, valid:Boolean(compatibility), compatibility, text:moving ? `Install ${moving}× ${type}${stillNeeded ? ` (${stillNeeded} still needed)` : ''}` : `Requires ${type} alkaline battery`};
+      return {applicable:true, valid:Boolean(compatibility), compatibility, text:moving ? `Install ${moving}× ${type}${stillNeeded ? ` (${stillNeeded} still needed)` : ''}` : `Requires ${type} ${primaryChemistryLabel(targetCatalog.replaceableBatteryChemistry)} battery`};
     }
 
     if (catalogIsBulkLiquid(sourceCatalog) && catalogIsLiquidContainer(targetCatalog)) {
-      if (gearItemQuantity(target) !== 1) return {applicable:true, valid:false, text:'Split container to fill'};
       const sourceFamily = String(sourceCatalog.liquidFamily || '');
       const existingFamily = embeddedLiquidFamily(target);
       if (!targetCatalog.liquidAllowedFamilies.includes(sourceFamily)) {
@@ -14155,7 +14882,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (existingFamily && existingFamily !== sourceFamily) {
         return {applicable:true, valid:false, text:`Contains ${liquidFamilyLabel(existingFamily)} — cannot mix`};
       }
-      const roomLiters = Math.max(0, Number(targetCatalog.liquidCapacityLiters) - embeddedLiquidLiters(target));
+      const roomLiters = Math.max(0, Number(targetCatalog.liquidCapacityLiters) - liquidContainerPerUnitLiters(target));
       if (roomLiters <= 1e-9) return {applicable:true, valid:false, text:'Container Full'};
       const compatibility = canEmbedGearItem(source, target);
       return {applicable:true, valid:Boolean(compatibility), compatibility, text:`Transfer ${liquidFamilyLabel(sourceFamily)}`};
@@ -14272,13 +14999,36 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return null;
   }
 
+  function batteryPackCatalogForItem(item) {
+    const catalog = catalogForGearInstance(item);
+    return catalog?.batteryPackFamily && catalog.rechargeable === true ? catalog : null;
+  }
+
+  function batteryPackDeviceCatalogForItem(item) {
+    const catalog = catalogForGearInstance(item);
+    return catalog?.replaceableBatteryPackFamily ? catalog : null;
+  }
+
+  function installedBatteryPackItems(device, catalog=batteryPackDeviceCatalogForItem(device)) {
+    if (!device || !catalog) return [];
+    const family = String(catalog.replaceableBatteryPackFamily || '');
+    return gearEmbeddedChildren(device.id).filter(child => {
+      const childCatalog = batteryPackCatalogForItem(child);
+      return childCatalog && String(childCatalog.batteryPackFamily || '') === family;
+    });
+  }
+
+  function installedBatteryPack(device, catalog=batteryPackDeviceCatalogForItem(device)) {
+    return installedBatteryPackItems(device, catalog)[0] || null;
+  }
+
   function canEmbedGearItem(source, target) {
     if (!source || !target || source.id === target.id || source.embeddedInGearId === target.id) return null;
     if (gearItemContainsEmbeddedId(source.id, target.id)) return null;
-    if (gearItemQuantity(target) !== 1) return null;
     const sourceCatalog = catalogForGearInstance(source);
     const targetCatalog = catalogForGearInstance(target);
     if (!sourceCatalog || !targetCatalog) return null;
+    if (gearItemQuantity(target) !== 1 && !catalogIsLiquidContainer(targetCatalog)) return null;
 
     if (catalogIsAmmunition(sourceCatalog)) {
       if (catalogIsMagazine(targetCatalog)) {
@@ -14301,7 +15051,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       return {kind:'magazine', quantity:1};
     }
 
-    if (sourceCatalog.primaryBatteryType && sourceCatalog.primaryBatteryChemistry === 'alkaline' && targetCatalog.replaceableBatteryType) {
+    if (sourceCatalog.primaryBatteryType && sourceCatalog.primaryBatteryChemistry && targetCatalog.replaceableBatteryType) {
       if (sourceCatalog.primaryBatteryType !== targetCatalog.replaceableBatteryType) return null;
       const required = Math.max(1, Math.floor(Number(targetCatalog.replaceableBatteryCount) || 1));
       const remaining = Math.max(0, required - installedPrimaryBatteryCount(target, targetCatalog));
@@ -14348,7 +15098,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     } else if (compatibility.kind === 'ammo') {
       splitOrMoveIntoEmbeddedParent(source, target, Math.min(gearItemQuantity(source), Math.floor(compatibility.quantity)));
     } else if (compatibility.kind === 'liquid') {
+      target = isolateLiquidContainerUnit(target);
+      compatibility = canEmbedGearItem(source, target);
+      if (!compatibility || compatibility.kind !== 'liquid') return false;
       splitOrMoveIntoEmbeddedParent(source, target, Math.min(gearItemQuantity(source), compatibility.quantity));
+    } else if (compatibility.kind === 'battery-pack') {
+      const packCatalog = batteryPackCatalogForItem(source);
+      ensureGearBatteryState(source, packCatalog);
+      splitOrMoveIntoEmbeddedParent(source, target, 1);
     } else if (compatibility.kind === 'battery') {
       ensurePrimaryBatteryState(source, primaryBatteryCatalogForItem(source));
       splitOrMoveIntoEmbeddedParent(source, target, Math.min(Math.floor(gearItemQuantity(source)), Math.floor(compatibility.quantity)));
@@ -14401,16 +15158,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function liquidContainerStatusMarkup(item, catalog) {
     if (!item || !catalogIsLiquidContainer(catalog)) return '';
-    if (gearItemQuantity(item) !== 1) return `<span class="liquid-status-inline no-print"><span class="liquid-volume-chip empty" title="Split stacked containers into individual Gear rows before filling">💧 Split to fill</span></span>`;
     const family = embeddedLiquidFamily(item);
-    const liters = embeddedLiquidLiters(item);
+    const liters = liquidContainerPerUnitLiters(item);
     const capacity = Number(catalog.liquidCapacityLiters) || 0;
+    const stackCount = liquidContainerStackCount(item);
     const allowed = Array.isArray(catalog.liquidAllowedFamilies) ? catalog.liquidAllowedFamilies : [];
     const waterContainer = liquidFamilyIsWater(family) || (!family && allowed.length > 0 && allowed.every(liquidFamilyIsWater));
     const unit = liquidContainerDisplayUnit(item, catalog, family);
     const fuelFamily = family === 'gasoline' || family === 'diesel' || family === 'avgas' || family === 'jet-a' || family === 'jet-fuel';
     const icon = fuelFamily ? '⛽' : '💧';
     const reading = `${formatLiquidVolume(liters, unit)}/${formatLiquidVolume(capacity, unit)}`;
+    const stackSuffix = stackCount > 1 ? ` ×${stackCount}` : '';
     const familyLabel = liquidFamilyLabel(family);
     const unitMarkup = waterContainer
       ? `<button type="button" class="gear-liquid-unit-toggle" data-liquid-container-unit-toggle="${esc(item.id)}" aria-label="Switch water volume between liters and US gallons" title="Switch between liters and US gallons">${esc(unit)}</button>`
@@ -14426,7 +15184,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       ? `<button type="button" class="vehicle-energy-button no-print" data-liquid-container-step="-1" aria-label="${decreaseLabel}" title="${decreaseLabel}">−</button>`
       : '';
     const chipClass = waterContainer ? 'water' : fuelFamily ? 'fuel' : family ? 'filled' : 'empty';
-    return `<span class="liquid-status-inline no-print" data-liquid-container-owner="${esc(item.id)}"><span class="liquid-volume-chip ${chipClass}" title="${esc(`${familyLabel}; ${reading} ${unit}`)}"><span aria-hidden="true">${icon}</span><span class="liquid-family-name">${esc(familyLabel)}</span><span class="liquid-volume-reading">${esc(reading)}</span>${unitMarkup}${stepperMarkup}</span></span>`;
+    return `<span class="liquid-status-inline no-print" data-liquid-container-owner="${esc(item.id)}"><span class="liquid-volume-chip ${chipClass}" title="${esc(`${familyLabel}; ${reading} ${unit}${stackCount > 1 ? ` per container; ${stackCount} identical containers` : ''}`)}"><span aria-hidden="true">${icon}</span><span class="liquid-family-name">${esc(familyLabel)}</span><span class="liquid-volume-reading">${esc(reading)}${esc(stackSuffix)}</span>${unitMarkup}${stepperMarkup}</span></span>`;
   }
 
   function bindLoadedGearControls(root) {
@@ -15065,6 +15823,20 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return tank > 0 && Number(energy?.fuelGallons) < tank - 1e-9;
   }
 
+  function fuelContainerFamily(item, catalog=catalogForGearInstance(item)) {
+    const existing = embeddedLiquidFamily(item);
+    if (existing === 'gasoline' || existing === 'diesel') return existing;
+    if (!catalog?.liquidFuelUp) return '';
+    return String(item?.color || '').toLowerCase() === 'yellow' ? 'diesel' : 'gasoline';
+  }
+
+  function canFuelUpLiquidContainer(item, catalog=catalogForGearInstance(item)) {
+    if (!item || !catalog?.liquidFuelUp || !catalogIsLiquidContainer(catalog)) return false;
+    const family = embeddedLiquidFamily(item);
+    if (family && family !== 'gasoline' && family !== 'diesel') return false;
+    return Number(catalog.liquidCapacityLiters) - liquidContainerPerUnitLiters(item) > 1e-9;
+  }
+
   function vehicleCanRecharge(owner, catalog) {
     if (!owner || !catalog || catalog.vehicleEnergyType !== 'electric') return false;
     const energy = ensureVehicleEnergyState(owner, catalog);
@@ -15161,6 +15933,39 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     dialog.showModal();
   }
 
+  function openLiquidContainerFuelDialog(item, catalog=catalogForGearInstance(item)) {
+    if (!canFuelUpLiquidContainer(item, catalog)) return;
+    const dialog = document.getElementById('vehicleEnergyDialog');
+    const slider = document.getElementById('vehicleEnergyTarget');
+    if (!dialog || !slider) return;
+    const family = fuelContainerFamily(item, catalog);
+    const current = liquidContainerPerUnitLiters(item) / LITERS_PER_US_GALLON;
+    const max = Math.max(0, Number(catalog.liquidCapacityLiters) || 0) / LITERS_PER_US_GALLON;
+    pendingVehicleEnergyAdjust = {kind:'liquid-container-fuel', item, catalog, isElectric:false, current, max, allowPurchase:true, fuelFamily:family};
+    document.getElementById('vehicleEnergyDialogTitle').textContent = `Fuel Up ${item.item || catalog.name || 'Gas Can'}`;
+    document.getElementById('vehicleEnergyDialogSummary').textContent = `Current ${liquidFamilyLabel(family).toLowerCase()}: ${Number(current.toFixed(2))}/${Number(max.toFixed(2))} gal`;
+    slider.min = String(current);
+    slider.max = String(max);
+    slider.step = 'any';
+    slider.value = String(max);
+    const buyWrap = document.getElementById('vehicleEnergyBuyWrap');
+    if (buyWrap) buyWrap.hidden = false;
+    const buy = document.getElementById('vehicleEnergyBuy');
+    if (buy) buy.checked = false;
+    const fields = document.getElementById('vehicleEnergyPurchaseFields');
+    if (fields) fields.hidden = true;
+    const price = document.getElementById('vehicleEnergyUnitPrice');
+    if (price) price.value = (family === 'diesel' ? VEHICLE_ENERGY_PRICE_DEFAULTS.diesel : VEHICLE_ENERGY_PRICE_DEFAULTS.gasoline).toFixed(2);
+    const priceUnit = document.getElementById('vehicleEnergyPriceUnit');
+    if (priceUnit) priceUnit.textContent = '/gal';
+    populateEnergyPurchaseAccounts();
+    document.getElementById('vehicleEnergyError').textContent = '';
+    updateVehicleEnergyDialogUi();
+    closeGearItemActionMenu();
+    if (dialog.open) dialog.close();
+    dialog.showModal();
+  }
+
   function openGearRechargeDialog(item, catalog=batteryCatalogForItem(item)) {
     if (!item || !catalog || !gearCanRecharge(item, catalog)) return;
     const dialog = document.getElementById('vehicleEnergyDialog');
@@ -15231,12 +16036,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       }
     }
     const isVehicle = pending.kind === 'vehicle';
+    const isPurchasableEnergy = isVehicle || pending.kind === 'liquid-container-fuel';
     const buy = document.getElementById('vehicleEnergyBuy');
     const fields = document.getElementById('vehicleEnergyPurchaseFields');
-    if (fields) fields.hidden = !(isVehicle && pending.allowPurchase && buy?.checked);
+    if (fields) fields.hidden = !(isPurchasableEnergy && pending.allowPurchase && buy?.checked);
     const costOutput = document.getElementById('vehicleEnergyCost');
     if (costOutput) {
-      if (!isVehicle || !pending.allowPurchase || !buy?.checked) {
+      if (!isPurchasableEnergy || !pending.allowPurchase || !buy?.checked) {
         costOutput.textContent = '';
       } else if (!Number.isFinite(details.purchaseAmount)) {
         costOutput.textContent = 'Purchase cost unavailable: battery capacity is not defined.';
@@ -15263,7 +16069,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (error) error.textContent = 'Choose a valid target level.';
       return;
     }
-    const buy = pending.kind === 'vehicle' && pending.allowPurchase && Boolean(document.getElementById('vehicleEnergyBuy')?.checked);
+    const buy = (pending.kind === 'vehicle' || pending.kind === 'liquid-container-fuel') && pending.allowPurchase && Boolean(document.getElementById('vehicleEnergyBuy')?.checked);
     let purchaseAccount = null;
     let purchaseNext = null;
     if (buy) {
@@ -15288,6 +16094,20 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (pending.kind === 'device') {
       const energy = ensureGearBatteryState(pending.item, pending.catalog);
       if (energy) energy.chargePercent = details.target;
+    } else if (pending.kind === 'liquid-container-fuel') {
+      pending.item = isolateLiquidContainerUnit(pending.item);
+      const rawCatalog = GEAR_CATALOG_BY_ID.get(pending.fuelFamily === 'diesel' ? 'gc2156' : 'gc2155');
+      const addLiters = Math.max(0, details.added) * LITERS_PER_US_GALLON;
+      if (rawCatalog && addLiters > 1e-9) {
+        let liquidItem = embeddedLiquidItems(pending.item).find(child => catalogForGearInstance(child)?.liquidFamily === pending.fuelFamily) || null;
+        if (!liquidItem) liquidItem = createGeneratedEmbeddedConsumable(pending.item, rawCatalog, addLiters / Math.max(1e-9, Number(rawCatalog.liquidVolumeLitersPerUnit) || 0));
+        const perUnit = Number(rawCatalog.liquidVolumeLitersPerUnit) || 0;
+        if (liquidItem && perUnit > 0) {
+          const alreadyIncluded = Math.abs(liquidVolumeLiters(liquidItem, rawCatalog) - addLiters) < 1e-7;
+          if (!alreadyIncluded) liquidItem.quantity = normalizeLiquidQuantity((liquidVolumeLiters(liquidItem, rawCatalog) + addLiters) / perUnit);
+          clampLiquidContainerContents(pending.item);
+        }
+      }
     } else {
       const energy = ensureVehicleEnergyState(pending.owner, pending.catalog);
       if (pending.isElectric) energy.chargePercent = details.target;
@@ -15298,6 +16118,128 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     pendingVehicleEnergyAdjust = null;
     if (dialog?.open) dialog.close();
     renderFunds();
+    renderGear();
+    calculate();
+    queueSave();
+  }
+
+  function catalogIsRationFood(catalog) {
+    return String(catalog?.subcategory || '').includes('Meals & Rations');
+  }
+
+  function canDrinkGearWater(item) {
+    const info = liquidSourceInfo(item);
+    return Boolean(info && info.family === 'water' && info.liters > 1e-9);
+  }
+
+  function moderateHourlyConsumptionDefault() {
+    const value = Number(state?.sustenance?.hydration?.moderate);
+    return Number.isFinite(value) && value > 0 ? value : 0.25;
+  }
+
+  let pendingResourceConsume = null;
+
+  function roundConsumptionQuarter(value) {
+    return Math.max(0, Math.round((Number(value) || 0) * 4) / 4);
+  }
+
+  function resourceConsumeMax(pending=pendingResourceConsume) {
+    if (!pending) return 0;
+    if (pending.kind === 'drink') return liquidSourceInfo(pending.item)?.liters || 0;
+    return gearItemQuantity(pending.item);
+  }
+
+  function setResourceConsumeAmount(rawValue) {
+    const input = document.getElementById('resourceConsumeAmount');
+    if (!input || !pendingResourceConsume) return;
+    const max = resourceConsumeMax();
+    let value = Math.max(0, Number(rawValue) || 0);
+    if (max >= 0.25) value = roundConsumptionQuarter(value);
+    value = Math.min(max, value);
+    if (value <= 0 && max > 0) value = Math.min(max, 0.25);
+    input.value = formatQuarter(value);
+    updateResourceConsumeUi();
+  }
+
+  function updateResourceConsumeUi() {
+    const pending = pendingResourceConsume;
+    const input = document.getElementById('resourceConsumeAmount');
+    if (!pending || !input) return;
+    const value = Number(input.value);
+    const max = resourceConsumeMax(pending);
+    const down = document.querySelector('[data-resource-consume-step="-1"]');
+    const up = document.querySelector('[data-resource-consume-step="1"]');
+    if (down) down.disabled = !Number.isFinite(value) || value <= Math.min(0.25, max) + 1e-9;
+    if (up) up.disabled = !Number.isFinite(value) || value >= max - 1e-9;
+  }
+
+  function adjustResourceConsumeAmount(direction) {
+    if (!pendingResourceConsume) return;
+    const input = document.getElementById('resourceConsumeAmount');
+    const max = resourceConsumeMax();
+    if (!input || !(max > 0)) return;
+    const current = Number(input.value);
+    const start = Number.isFinite(current) && current > 0 ? current : Math.min(max, moderateHourlyConsumptionDefault());
+    const next = Number(direction) < 0 ? Math.max(Math.min(0.25, max), start - 0.25) : Math.min(max, start + 0.25);
+    setResourceConsumeAmount(next);
+  }
+
+  function openResourceConsumeDialog(item, kind) {
+    const catalog = catalogForGearInstance(item);
+    if (!item || !['drink','eat'].includes(kind)) return;
+    if (kind === 'drink' && !canDrinkGearWater(item)) return;
+    if (kind === 'eat' && !catalogIsRationFood(catalog)) return;
+    const dialog = document.getElementById('resourceConsumeDialog');
+    const input = document.getElementById('resourceConsumeAmount');
+    if (!dialog || !input) return;
+    pendingResourceConsume = {item, catalog, kind};
+    const max = resourceConsumeMax();
+    const defaultValue = Math.min(max, moderateHourlyConsumptionDefault());
+    const title = kind === 'drink' ? `Drink ${item.item || 'Water'}` : `Eat ${item.item || 'Ration'}`;
+    document.getElementById('resourceConsumeDialogTitle').textContent = title;
+    document.getElementById('resourceConsumeDialogSummary').textContent = `Default: ${formatQuarter(moderateHourlyConsumptionDefault())} ${kind === 'drink' ? 'L' : 'rations'} (character Moderate hydration need per hour). Available: ${formatQuarter(max)} ${kind === 'drink' ? 'L' : 'rations'}.`;
+    document.getElementById('resourceConsumeAmountLabel').textContent = kind === 'drink' ? 'Water to drink' : 'Rations to eat';
+    document.getElementById('resourceConsumeUnitLabel').textContent = kind === 'drink' ? 'L' : 'rations';
+    document.getElementById('resourceConsumeConfirm').textContent = kind === 'drink' ? 'Drink' : 'Eat';
+    document.getElementById('resourceConsumeError').textContent = '';
+    input.min = '0';
+    input.max = String(max);
+    input.step = '0.25';
+    input.value = formatQuarter(defaultValue > 0 ? defaultValue : max);
+    updateResourceConsumeUi();
+    closeGearItemActionMenu();
+    if (dialog.open) dialog.close();
+    dialog.showModal();
+    requestAnimationFrame(() => { input.focus(); input.select(); });
+  }
+
+  function settleResourceConsumeDialog(commit) {
+    const dialog = document.getElementById('resourceConsumeDialog');
+    const pending = pendingResourceConsume;
+    if (!pending) { if (dialog?.open) dialog.close(); return; }
+    if (!commit) { pendingResourceConsume = null; if (dialog?.open) dialog.close(); return; }
+    const input = document.getElementById('resourceConsumeAmount');
+    const rawAmount = Number(input?.value);
+    const max = resourceConsumeMax(pending);
+    if (!Number.isFinite(rawAmount) || rawAmount <= 0 || rawAmount > max + 0.005) {
+      document.getElementById('resourceConsumeError').textContent = `Enter an amount greater than 0 and no more than ${formatQuarter(max)}.`;
+      input?.focus();
+      return;
+    }
+    const amount = max >= 0.25
+      ? Math.min(max, Math.max(0.25, roundConsumptionQuarter(rawAmount)))
+      : Math.min(max, rawAmount);
+    if (input) input.value = formatQuarter(amount);
+    if (pending.kind === 'drink') {
+      consumeLiquidSourceLiters(pending.item, amount, 'water');
+    } else {
+      const current = gearItemQuantity(pending.item);
+      if (amount >= current - 1e-9) state.gear = state.gear.filter(entry => entry.id !== pending.item.id);
+      else pending.item.quantity = normalizeGearQuantity(current - amount);
+    }
+    pendingResourceConsume = null;
+    if (dialog?.open) dialog.close();
+    clearGearSortState();
     renderGear();
     calculate();
     queueSave();
@@ -15533,7 +16475,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     });
   }
 
-  // v612 replaceable alkaline battery helpers.
+  // v636 replaceable primary-battery helpers (expanded from v612 alkaline-only model).
   // Untested is epistemic rather than a charge band: no runtime estimate is shown
   // until the player records a coarse Dead / Low / Medium / Fresh result.
   const PRIMARY_BATTERY_CONDITION_ORDER = Object.freeze(['dead','low','medium','fresh']);
@@ -15548,7 +16490,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function primaryBatteryCatalogForItem(item) {
     const catalog = catalogForGearInstance(item);
-    return catalog?.primaryBatteryType && catalog?.primaryBatteryChemistry === 'alkaline' ? catalog : null;
+    return catalog?.primaryBatteryType && catalog?.primaryBatteryChemistry ? catalog : null;
   }
 
   function replaceableBatteryDeviceCatalogForItem(item) {
@@ -15691,15 +16633,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const index = primaryBatteryConditionIndex(condition);
     const quantity = Math.floor(Math.max(1, gearItemQuantity(item)));
     const type = String(catalog.primaryBatteryType || 'battery');
+    const chemistry = primaryChemistryLabel(catalog.primaryBatteryChemistry);
     const stateNote = condition === 'untested'
       ? 'Remaining charge has not been tested; no percentage is inferred. Use the … menu and choose Test to reveal the coarse physical state.'
       : condition === 'dead'
         ? 'Battery is known dead; no usable runtime is expected. Alkaline charge is never shown as a percentage.'
-        : 'Alkaline charge is tracked only as a coarse state, never as a percentage.';
+        : 'Primary-cell charge is tracked only as a coarse state, never as a percentage.';
     const persistenceNote = quantity > 1
       ? 'All cells in this stack share this state; split the stack to track different states.'
       : 'State is preserved if installed in and later removed from a compatible device.';
-    const title = `${label} ${type} alkaline ${quantity === 1 ? 'battery' : `battery stack (${quantity} cells)`}. ${stateNote} ${persistenceNote}`;
+    const title = `${label} ${type} ${chemistry} ${quantity === 1 ? 'battery' : `battery stack (${quantity} cells)`}. ${stateNote} ${persistenceNote}`;
     const atMin = condition === 'untested' || index <= 0;
     const atMax = condition === 'untested' || index >= PRIMARY_BATTERY_CONDITION_ORDER.length - 1;
     return `<span class="device-status-inline no-print" data-primary-battery-owner="${esc(item.id)}"><span class="device-energy-chip primary-battery-chip ${esc(condition)}" title="${esc(title)}"><button type="button" class="vehicle-energy-button" data-primary-battery-step="-1" aria-label="Lower or record battery state"${atMin ? ' disabled aria-disabled="true"' : ''}>−</button><span aria-hidden="true">🔋</span><span class="primary-battery-state-label">${esc(label)}</span><button type="button" class="vehicle-energy-button" data-primary-battery-step="1" aria-label="Raise or record battery state"${atMax ? ' disabled aria-disabled="true"' : ''}>+</button></span></span>`;
@@ -15709,6 +16652,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!item || !catalog?.replaceableBatteryType) return '';
     if (gearItemQuantity(item) !== 1) return `<span class="device-status-inline no-print"><span class="device-energy-chip replaceable-battery-chip empty" title="Split stacked devices into individual Gear rows before installing batteries">🔋 Split to load</span></span>`;
     const type = String(catalog.replaceableBatteryType || '');
+    const chemistry = primaryChemistryLabel(catalog.replaceableBatteryChemistry);
     const required = Math.max(1, Math.floor(Number(catalog.replaceableBatteryCount) || 1));
     const installed = Math.min(required, installedPrimaryBatteryCount(item, catalog));
     const items = installedPrimaryBatteryItems(item, catalog);
@@ -15720,19 +16664,19 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const conditionClass = full ? condition : installed ? 'partial' : 'empty';
     const batteryTitle = full
       ? condition === 'untested'
-        ? `${required}×${type} alkaline ${required === 1 ? 'battery' : 'batteries'} installed; installed states: ${stateSummary || 'Untested'}. At least one cell is untested, so remaining runtime is unknown until a coarse battery state is recorded.`
-        : `${required}×${type} alkaline ${required === 1 ? 'battery' : 'batteries'} installed. Effective set condition: ${primaryBatteryConditionLabel(condition)}${stateSummary ? `; installed states: ${stateSummary}` : ''}. The weakest cell determines the displayed set state.`
-      : `${installed}/${required} compatible ${type} alkaline ${required === 1 ? 'battery' : 'batteries'} installed; ${required - installed} still needed.`;
+        ? `${required}×${type} ${chemistry} ${required === 1 ? 'battery' : 'batteries'} installed; installed states: ${stateSummary || 'Untested'}. At least one cell is untested, so remaining runtime is unknown until a coarse battery state is recorded.`
+        : `${required}×${type} ${chemistry} ${required === 1 ? 'battery' : 'batteries'} installed. Effective set condition: ${primaryBatteryConditionLabel(condition)}${stateSummary ? `; installed states: ${stateSummary}` : ''}. The weakest cell determines the displayed set state.`
+      : `${installed}/${required} compatible ${type} ${chemistry} ${required === 1 ? 'battery' : 'batteries'} installed; ${required - installed} still needed.`;
     const runtime = full ? primaryBatteryRuntimeRange(item, catalog) : null;
     const basis = String(catalog.batteryRuntimeBasis || '').trim();
     const runtimeText = runtime ? formatPrimaryBatteryRuntimeRange(runtime) : '';
     const runtimeTitle = runtime
       ? condition === 'dead'
         ? `Installed battery set is known Dead; no usable runtime is expected. The weakest cell determines the set state.`
-        : `Approximate remaining runtime range: ${runtimeText}. Derived from a representative ${formatBatteryRuntimeHours(Number(catalog.batteryRuntimeHours))} fresh-set rating${basis ? `; basis: ${basis}` : ''}. Actual alkaline life varies with load, temperature, cell brand/age, and use pattern.`
+        : `Approximate remaining runtime range: ${runtimeText}. Derived from a representative ${formatBatteryRuntimeHours(Number(catalog.batteryRuntimeHours))} fresh-set rating${basis ? `; basis: ${basis}` : ''}. Actual primary-cell life varies with load, temperature, cell brand/age, and use pattern.`
       : full && condition === 'untested'
-        ? `Remaining runtime is unknown because at least one installed ${type} alkaline battery is untested. Record a coarse Dead / Low / Medium / Fresh state after testing; no percentage is inferred.`
-        : `Install all ${required} compatible ${type} alkaline ${required === 1 ? 'battery' : 'batteries'} to estimate remaining runtime.`;
+        ? `Remaining runtime is unknown because at least one installed ${type} ${chemistry} battery is untested. Record a coarse Dead / Low / Medium / Fresh state after testing; no percentage is inferred.`
+        : `Install all ${required} compatible ${type} ${chemistry} ${required === 1 ? 'battery' : 'batteries'} to estimate remaining runtime.`;
     const runtimeChip = runtime
       ? `<span class="device-runtime-chip" title="${esc(runtimeTitle)}">⏱ ${esc(condition === 'dead' ? '0 usable' : runtimeText)}</span>`
       : full && condition === 'untested'
@@ -15742,6 +16686,44 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       ? `<button type="button" class="vehicle-energy-button" data-primary-device-step="-1" aria-label="Lower installed battery state"${condition === 'untested' || (condition === 'dead' && counts.dead === installed) ? ' disabled aria-disabled="true"' : ''}>−</button><span aria-hidden="true">🔋</span><span class="primary-battery-state-label">${esc(label)}</span><button type="button" class="vehicle-energy-button" data-primary-device-step="1" aria-label="Raise installed battery state"${condition === 'untested' || (condition === 'fresh' && counts.fresh === installed) ? ' disabled aria-disabled="true"' : ''}>+</button>`
       : `<span aria-hidden="true">🔋</span><span class="primary-battery-state-label">${esc(label)}</span>`;
     return `<span class="device-status-inline no-print" data-primary-device-owner="${esc(item.id)}"><span class="device-energy-chip replaceable-battery-chip ${esc(conditionClass)}" title="${esc(batteryTitle)}">${controls}</span>${runtimeChip}</span>`;
+  }
+
+  function batteryPackDeviceStatusMarkup(item, catalog=batteryPackDeviceCatalogForItem(item)) {
+    if (!item || !catalog) return '';
+    if (gearItemQuantity(item) !== 1) return `<span class="device-status-inline no-print"><span class="device-energy-chip empty" title="Split stacked tools into individual Gear rows before installing a battery pack">🔋 Split to load</span></span>`;
+    const pack = installedBatteryPack(item, catalog);
+    if (!pack) return `<span class="device-status-inline no-print"><span class="device-energy-chip empty" title="Requires one matching rechargeable power-tool battery pack"><span aria-hidden="true">🔋</span><span>No battery</span></span></span>`;
+    const packCatalog = batteryPackCatalogForItem(pack);
+    const energy = ensureGearBatteryState(pack, packCatalog);
+    const value = Math.max(0, Math.min(100, Number(energy?.chargePercent) || 0));
+    const fraction = value / 100;
+    const levelClass = fraction <= .1 ? ' critical' : fraction <= .25 ? ' low' : '';
+    const label = String(pack.item || packCatalog?.name || 'Battery pack');
+    const title = `${label} installed · ${Math.round(value)}% charge · exact declared (specific) platform should match the tool`;
+    return `<span class="device-status-inline no-print" data-battery-pack-device-owner="${esc(item.id)}"><span class="device-energy-chip${levelClass}" title="${esc(title)}"><span aria-hidden="true">🔋</span><span class="vehicle-energy-reading">${esc(String(Math.round(value)))}%</span></span></span>`;
+  }
+
+  function removeInstalledBatteryPack(item) {
+    if (!item) return false;
+    const catalog = batteryPackDeviceCatalogForItem(item);
+    const packs = installedBatteryPackItems(item, catalog);
+    if (!packs.length) return false;
+    packs.forEach(pack => {
+      delete pack.embeddedInGearId;
+      pack.locationId = item.locationId;
+      syncEmbeddedDescendantLocations(pack.id, item.locationId);
+    });
+    closeGearItemActionMenu();
+    clearGearSortState();
+    renderGear();
+    calculate();
+    queueSave();
+    return true;
+  }
+
+  function canRemoveInstalledBatteryPack(item) {
+    const catalog = batteryPackDeviceCatalogForItem(item);
+    return Boolean(catalog && installedBatteryPackItems(item, catalog).length);
   }
 
   function adjustInstalledPrimaryBatteryCondition(device, delta) {
@@ -16913,7 +17895,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function editableAutoSelectInput(target) {
     const input = target instanceof Element ? target.closest('input') : null;
-    const isSupportedField = input?.type === 'number' || input?.dataset.path === 'identity.sex';
+    const isSupportedField = input?.type === 'number' || Boolean(input?.closest('.numeric-stepper')) || input?.dataset.path === 'identity.sex';
     return input && isSupportedField && !input.disabled && !input.readOnly ? input : null;
   }
 
@@ -16934,24 +17916,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         return;
       }
 
-      if (event.pointerType !== 'touch') {
-        // Prevent the browser from briefly placing a caret before selection.
-        event.preventDefault();
-        synchronousPointerFocus = input;
-        input.focus({preventScroll:true});
-        selectAutoSelectInputValue(input);
-        synchronousPointerFocus = null;
-        return;
+      // Focus synchronously for both mouse/pen and touch. On iOS this keeps the first
+      // tap as an editing gesture instead of merely revealing the custom stepper arrows.
+      event.preventDefault();
+      synchronousPointerFocus = input;
+      input.focus({preventScroll:true});
+      selectAutoSelectInputValue(input);
+      synchronousPointerFocus = null;
+      if (event.pointerType === 'touch') {
+        touchEntry = {input, pointerId:event.pointerId, x:event.clientX, y:event.clientY, moved:false};
       }
-
-      // Preserve native touch focusing/keyboard behavior, then select after a tap.
-      touchEntry = {
-        input,
-        pointerId:event.pointerId,
-        x:event.clientX,
-        y:event.clientY,
-        moved:false
-      };
+      return;
     }, true);
 
     document.addEventListener('pointermove', event => {
@@ -18887,6 +19862,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const q = String(query || '').trim();
     if (!q) return [];
     const matches = GEAR_CATALOG
+      .filter(item => !item?.internalOnly)
       .map(item => ({item, score:catalogSearchScore(item, q), strength:catalogAutocompleteStrength(item, q)}))
       .filter(entry => entry.score > 0)
       .sort((a,b) =>
@@ -19098,6 +20074,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     item.item = catalogGearName(catalog);
     item.catalogId = catalog.id;
     item.quantity = catalogPackageQuantity(catalog);
+    delete item.prefilledLiquidInitialized;
     if (catalog.rechargeable === true && catalog.category !== 'Vehicles') {
       if (previousCatalogId !== catalog.id) item.batteryEnergy = {chargePercent:100};
       else ensureGearBatteryState(item, catalog);
@@ -19143,6 +20120,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         if (!existingCatalogLocation) createCatalogGearLocation(catalog, item);
       }
     } else if (!existingCatalogLocation) createCatalogGearLocation(catalog, item);
+    if (!convertedVehicleLocation) initializePrefilledLiquidPackage(item, catalog);
     const itemId = item.id;
     const locationId = convertedVehicleLocation?.id || '';
     closeGearItemAutocomplete();
@@ -20258,7 +21236,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function randomUsedPrimaryBatteryCondition() {
-    // A loose alkaline cell found in used gear has not been tested by the character yet.
+    // A loose primary cell found in used gear has not been tested by the character yet.
     // The visible state is always Untested; a separate hidden physical state is generated once.
     return 'untested';
   }
@@ -20323,7 +21301,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function primaryBatteryCatalogForType(type) {
-    return GEAR_CATALOG.find(candidate => candidate.primaryBatteryChemistry === 'alkaline' && candidate.primaryBatteryType === type) || null;
+    return GEAR_CATALOG.find(candidate => candidate.primaryBatteryChemistry && candidate.primaryBatteryType === type) || null;
   }
 
   function randomUsedReplaceableBatteryLoadPlan(catalog) {
@@ -20403,7 +21381,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function applyUsedGeneratedResourceState(catalog, generated) {
     if (!catalog || !generated) return generated;
-    if (catalog.primaryBatteryType && catalog.primaryBatteryChemistry === 'alkaline') {
+    if (catalog.primaryBatteryType && catalog.primaryBatteryChemistry) {
       generated.primaryBatteryCondition = randomUsedPrimaryBatteryCondition();
       generated.primaryBatteryActualCondition = randomUsedPrimaryBatteryActualCondition();
     }
@@ -20531,6 +21509,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const q = query.trim();
     const filters = currentBulkGearFilters();
     return GEAR_CATALOG.filter(item => {
+      if (item?.internalOnly) return false;
       if (q && catalogSearchScore(item, q) <= 0) return false;
       if (!filters.availability.has(item.availability)) return false;
       const initialPrice = catalogTotals(item, Math.max(1, Number(item.defaultQuantity) || 1)).price;
@@ -20885,7 +21864,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function applyBulkGeneratedResourceState(catalog, item, selectedState) {
     if (!catalog || !item || !selectedState) return;
-    if (selectedState.primaryBatteryCondition && catalog.primaryBatteryType && catalog.primaryBatteryChemistry === 'alkaline') {
+    if (selectedState.primaryBatteryCondition && catalog.primaryBatteryType && catalog.primaryBatteryChemistry) {
       const condition = PRIMARY_BATTERY_CONDITION_STATES.includes(selectedState.primaryBatteryCondition) ? selectedState.primaryBatteryCondition : 'untested';
       const hidden = PRIMARY_BATTERY_CONDITION_ORDER.includes(selectedState.primaryBatteryActualCondition)
         ? selectedState.primaryBatteryActualCondition
@@ -20937,7 +21916,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const batteryLoad = selectedState.generatedBatteryLoad;
     if (batteryLoad?.kind === 'batteries' && catalog.replaceableBatteryType && Number(batteryLoad.count) > 0) {
       const batteryCatalog = GEAR_CATALOG_BY_ID.get(batteryLoad.catalogId);
-      if (batteryCatalog && batteryCatalog.primaryBatteryChemistry === 'alkaline' && batteryCatalog.primaryBatteryType === catalog.replaceableBatteryType) {
+      if (batteryCatalog && batteryCatalog.primaryBatteryChemistry && batteryCatalog.primaryBatteryType === catalog.replaceableBatteryType) {
         const count = Math.min(Math.floor(Number(batteryLoad.count) || 0), Math.floor(Number(catalog.replaceableBatteryCount) || 0));
         for (let index = 0; index < count; index += 1) {
           const actualCondition = PRIMARY_BATTERY_CONDITION_ORDER.includes(batteryLoad.actualConditions?.[index])
@@ -20951,6 +21930,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function addCatalogGearFromBulk(catalog, quantity, locationId, selectedState=defaultBulkGearState(), bundleEntriesOverride=null) {
     if (!catalog) return {item:null, location:null};
+    if (catalogIsLiquidContainer(catalog) && catalog.createsLocation) {
+      const requestedCount = Math.max(1, Math.round(Number(quantity) || 1));
+      if (requestedCount > 1) {
+        let firstResult = {item:null, location:null};
+        for (let index = 0; index < requestedCount; index += 1) {
+          const result = addCatalogGearFromBulk(catalog, 1, locationId, selectedState, bundleEntriesOverride);
+          if (!firstResult.item && !firstResult.location) firstResult = result;
+        }
+        return firstResult;
+      }
+    }
     if (catalog.category === 'Vehicles' && vehicleBehaviorForCatalog(catalog) === 'location') {
       const generatedVehicleEnergy = Number.isFinite(Number(selectedState.generatedChargePercent)) && catalog.vehicleEnergyType === 'electric'
         ? {chargePercent:Math.max(0, Math.min(100, Math.round(Number(selectedState.generatedChargePercent))))}
@@ -20977,6 +21967,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     item.catalogId = catalog.id;
     if (catalog.category === 'Vehicles') ensureVehicleEnergyState(item, catalog);
     state.gear.push(item);
+    initializePrefilledLiquidPackage(item, catalog);
     applyBulkGeneratedResourceState(catalog, item, selectedState);
     const location = createCatalogGearLocation(catalog, item, bundleEntriesOverride);
     return {item, location};
@@ -22878,11 +23869,18 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!(amount > 0) || !(remaining > 0)) return;
     const index = state.gear.findIndex(entry => entry.id === item.id);
     if (index < 0) return;
-    const splitItem = JSON.parse(JSON.stringify(item));
-    splitItem.id = uid();
-    splitItem.quantity = amount;
-    item.quantity = remaining;
-    state.gear.splice(index + 1, 0, splitItem);
+    const catalog = catalogForGearInstance(item);
+    let splitItem;
+    if (catalogIsLiquidContainer(catalog)) {
+      splitItem = splitLiquidContainerStack(item, amount);
+      if (!splitItem) return;
+    } else {
+      splitItem = JSON.parse(JSON.stringify(item));
+      splitItem.id = uid();
+      splitItem.quantity = amount;
+      item.quantity = remaining;
+      state.gear.splice(index + 1, 0, splitItem);
+    }
     closeGearItemActionMenu();
     clearGearSortState();
     renderGear();
@@ -23028,6 +24026,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const fillWaterAction = canFillLiquidContainerWithWater(item)
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-fill-water role="menuitem">Fill with Water</button>'
       : '';
+    const fuelContainerCatalog = catalogForGearInstance(item);
+    const fuelContainerAction = canFuelUpLiquidContainer(item, fuelContainerCatalog)
+      ? '<button type="button" class="gear-item-action-option" data-gear-item-action-fuel-container role="menuitem">Fuel Up</button>'
+      : '';
+    const drinkAction = canDrinkGearWater(item)
+      ? '<button type="button" class="gear-item-action-option" data-gear-item-action-drink role="menuitem">Drink</button>'
+      : '';
+    const eatAction = catalogIsRationFood(fuelContainerCatalog)
+      ? '<button type="button" class="gear-item-action-option" data-gear-item-action-eat role="menuitem">Eat</button>'
+      : '';
     const itemVehicleCatalog = vehicleCatalogForItem(item);
     const vehicleEnergyAction = itemVehicleCatalog && (vehicleCanFuelUp(item, itemVehicleCatalog) || vehicleCanRecharge(item, itemVehicleCatalog))
       ? `<button type="button" class="gear-item-action-option" data-gear-item-action-vehicle-energy role="menuitem">${itemVehicleCatalog.vehicleEnergyType === 'electric' ? 'Recharge' : 'Fuel Up'}</button>`
@@ -23042,6 +24050,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const removeBatteriesAction = canRemoveInstalledBatteries(item)
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-remove-batteries role="menuitem">Remove Batteries</button>'
       : '';
+    const removeBatteryPackAction = canRemoveInstalledBatteryPack(item)
+      ? '<button type="button" class="gear-item-action-option" data-gear-item-action-remove-battery-pack role="menuitem">Remove Battery Pack</button>'
+      : '';
     const testBatteryAction = primaryBatteryNeedsTesting(item)
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-test-battery role="menuitem"><span>Test</span><span aria-hidden="true">›</span></button>'
       : '';
@@ -23050,11 +24061,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       <button type="button" class="gear-item-action-option" data-gear-item-action-carry role="menuitem">${carryAction}</button>
       ${transferLiquidAction}
       ${fillWaterAction}
+      ${fuelContainerAction}
+      ${drinkAction}
+      ${eatAction}
       ${pourOutLiquidAction}
       ${vehicleEnergyAction}
       ${deviceRechargeAction}
       ${unloadAction}
       ${removeBatteriesAction}
+      ${removeBatteryPackAction}
       ${testBatteryAction}
       ${splitAction}
       <div class="gear-item-action-divider" aria-hidden="true"></div>
@@ -23063,11 +24078,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     menu.querySelector('[data-gear-item-action-carry]')?.addEventListener('click', () => setDownOrPickUpGearItem(item));
     menu.querySelector('[data-gear-item-action-transfer-liquid]')?.addEventListener('click', () => renderGearItemLiquidTransferMenu(item));
     menu.querySelector('[data-gear-item-action-fill-water]')?.addEventListener('click', () => fillLiquidContainerWithWater(item));
+    menu.querySelector('[data-gear-item-action-fuel-container]')?.addEventListener('click', () => openLiquidContainerFuelDialog(item, fuelContainerCatalog));
+    menu.querySelector('[data-gear-item-action-drink]')?.addEventListener('click', () => openResourceConsumeDialog(item, 'drink'));
+    menu.querySelector('[data-gear-item-action-eat]')?.addEventListener('click', () => openResourceConsumeDialog(item, 'eat'));
     menu.querySelector('[data-gear-item-action-pour-out]')?.addEventListener('click', () => pourOutGearItemLiquid(item));
     menu.querySelector('[data-gear-item-action-vehicle-energy]')?.addEventListener('click', () => openVehicleEnergyDialog(item, itemVehicleCatalog));
     menu.querySelector('[data-gear-item-action-device-recharge]')?.addEventListener('click', () => openGearRechargeDialog(item, rechargeableCatalog));
     menu.querySelector('[data-gear-item-action-unload]')?.addEventListener('click', () => unloadGearItem(item));
     menu.querySelector('[data-gear-item-action-remove-batteries]')?.addEventListener('click', () => removeInstalledBatteries(item));
+    menu.querySelector('[data-gear-item-action-remove-battery-pack]')?.addEventListener('click', () => removeInstalledBatteryPack(item));
     menu.querySelector('[data-gear-item-action-test-battery]')?.addEventListener('click', () => renderPrimaryBatteryTestMenu(item));
     menu.querySelector('[data-gear-item-action-split]')?.addEventListener('click', () => renderGearItemSplitMenu(item));
     menu.querySelector('[data-gear-item-action-delete]')?.addEventListener('click', () => deleteGearItemFromActionMenu(item));
@@ -23188,9 +24207,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const primaryBatteryStatus = primaryBatteryCatalog ? primaryBatteryStackStatusMarkup(g, primaryBatteryCatalog) : '';
       const replaceableBatteryCatalog = draft || vehicleCatalog ? null : replaceableBatteryDeviceCatalogForItem(g);
       const replaceableBatteryStatus = replaceableBatteryCatalog ? replaceableBatteryDeviceStatusMarkup(g, replaceableBatteryCatalog) : '';
+      const batteryPackDeviceCatalog = draft || vehicleCatalog ? null : batteryPackDeviceCatalogForItem(g);
+      const batteryPackStatus = batteryPackDeviceCatalog ? batteryPackDeviceStatusMarkup(g, batteryPackDeviceCatalog) : '';
       const loadedStatus = draft ? '' : firearmOrMagazineStatusMarkup(g, catalogItem);
       const liquidStatus = draft ? '' : liquidContainerStatusMarkup(g, catalogItem);
-      const liveStatus = vehicleStatus || batteryStatus || primaryBatteryStatus || replaceableBatteryStatus || loadedStatus || liquidStatus;
+      const liveStatus = vehicleStatus || batteryStatus || primaryBatteryStatus || replaceableBatteryStatus || batteryPackStatus || loadedStatus || liquidStatus;
       const embeddedDepth = draft ? 0 : gearEmbeddedDepth(g);
       const quantityUnitLabel = draft ? '' : liquidQuantityUnitLabel(catalogItem, g);
       const quantityDisplayValue = draft ? gearItemQuantity(g) : liquidQuantityInputValue(g, catalogItem);
@@ -23389,7 +24410,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         const sanitized = sanitizeGearQuantityInput(event.clipboardData?.getData('text'));
         quantityInput.value = sanitized;
         const itemCatalog = catalogForGearInstance(item);
-        item.quantity = sanitized === '' ? '' : liquidQuantityStoredValue(sanitized, item, itemCatalog);
+        if (sanitized === '') item.quantity = '';
+        else setGearQuantityFromDisplayValue(item, sanitized, itemCatalog);
         updateGearLocationSummary(item.locationId);
         calculate();
         queueSave();
@@ -23398,16 +24420,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         const sanitized = sanitizeGearQuantityInput(quantityInput.value);
         if (sanitized !== quantityInput.value) quantityInput.value = sanitized;
         const itemCatalog = catalogForGearInstance(item);
-        item.quantity = sanitized === '' || sanitized === '.'
-          ? ''
-          : liquidQuantityStoredValue(sanitized, item, itemCatalog);
+        if (sanitized === '' || sanitized === '.') item.quantity = '';
+        else setGearQuantityFromDisplayValue(item, sanitized, itemCatalog);
         updateGearLocationSummary(item.locationId);
         calculate();
         queueSave();
       });
       quantityInput?.addEventListener('blur', () => {
-        item.quantity = liquidQuantityStoredValue(quantityInput.value, item, catalogForGearInstance(item));
-        quantityInput.value = liquidQuantityInputValue(item, catalogForGearInstance(item));
+        const itemCatalog = catalogForGearInstance(item);
+        setGearQuantityFromDisplayValue(item, quantityInput.value, itemCatalog);
+        quantityInput.value = liquidQuantityInputValue(item, itemCatalog);
         updateGearLocationSummary(item.locationId);
         calculate();
         queueSave();
@@ -26333,6 +27355,23 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   document.getElementById('deviceUseDialog')?.addEventListener('cancel', event => {
     event.preventDefault();
     settleDeviceUseDialog(false);
+  });
+
+  document.querySelectorAll('[data-resource-consume-step]').forEach(button => {
+    bindFocusPreservingStepButton(button, () => adjustResourceConsumeAmount(button.dataset.resourceConsumeStep), 'resourceConsumeAmount');
+  });
+  document.getElementById('resourceConsumeAmount')?.addEventListener('input', updateResourceConsumeUi);
+  document.getElementById('resourceConsumeAmount')?.addEventListener('blur', event => setResourceConsumeAmount(event.currentTarget.value));
+  document.getElementById('resourceConsumeAmount')?.addEventListener('keydown', event => {
+    if (event.key === 'Enter') { event.preventDefault(); settleResourceConsumeDialog(true); }
+    if (event.key === 'Escape') { event.preventDefault(); settleResourceConsumeDialog(false); }
+    if ([',', 'e', 'E', '+', '-'].includes(event.key)) event.preventDefault();
+  });
+  document.getElementById('resourceConsumeCancel')?.addEventListener('click', () => settleResourceConsumeDialog(false));
+  document.getElementById('resourceConsumeConfirm')?.addEventListener('click', () => settleResourceConsumeDialog(true));
+  document.getElementById('resourceConsumeDialog')?.addEventListener('cancel', event => {
+    event.preventDefault();
+    settleResourceConsumeDialog(false);
   });
 
   window.addEventListener('resize', closeGearItemActionMenu);
