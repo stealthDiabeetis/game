@@ -9515,7 +9515,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v631</div>
+<div class="footer-note no-print">Character Sheet v632</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -10485,6 +10485,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   // v621: urine catalog pass — synthetic/paraphernalia, pooled human laboratory urine, and common hunting/trapping urine scents.
+  // v632: step buttons and device-use presets preserve focus and select the active numeric text for immediate overwrite; recharge/refuel sliders use continuous targets so their exact maximum is reachable; newly added Gear-style vehicles default from On Person to Set Down without relocating existing saves or explicitly placed items.
   // v631: Drive/Travel and device Use dialogs use compact centered minus/value/plus controls that preserve mobile input focus; personal electric vehicle recharging is free-only while Passenger Vehicles retain optional paid charging; iOS energy-slider thumbs are vertically centered; Waist Packs gain fanny-pack and related aliases.
   // v630: rechargeable-device Use steps by one minute below 00:05, five minutes from 00:05 through 00:59, and fifteen minutes from 01:00 onward; vehicle travel gains arrows with consistent one-unit steps below 5 mi/nmi, five-unit steps from 5 through 49, and ten-unit steps from 50 onward.
   // v629: rechargeable-device Use now uses HH:MM clock fields with 00:05 default, 5-minute steps below one hour, 15-minute steps from one hour onward, and clock-formatted presets; vehicle travel gains nonredundant type-scaled defaults and three distance presets.
@@ -14756,6 +14757,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return String(catalog.vehicleBehavior || 'location');
   }
 
+  function vehicleDefaultsToSetDown(catalog) {
+    const behavior = vehicleBehaviorForCatalog(catalog);
+    return behavior === 'gear' || behavior === 'overlap';
+  }
+
   function vehicleCatalogForItem(item) {
     const catalog = item?.catalogId ? GEAR_CATALOG_BY_ID.get(item.catalogId) : null;
     return catalog?.category === 'Vehicles' ? catalog : null;
@@ -15134,7 +15140,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       : `Current fuel: ${Number(current.toFixed(2))}/${Number(max.toFixed(2))} gal`;
     slider.min = String(current);
     slider.max = String(max);
-    slider.step = isElectric ? '1' : '0.1';
+    slider.step = 'any';
     slider.value = String(max);
     const buyWrap = document.getElementById('vehicleEnergyBuyWrap');
     if (buyWrap) buyWrap.hidden = !allowPurchase;
@@ -15167,7 +15173,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     document.getElementById('vehicleEnergyDialogSummary').textContent = `Current charge: ${Math.round(current)}%`;
     slider.min = String(current);
     slider.max = '100';
-    slider.step = '1';
+    slider.step = 'any';
     slider.value = '100';
     const buyWrap = document.getElementById('vehicleEnergyBuyWrap');
     if (buyWrap) buyWrap.hidden = true;
@@ -15366,7 +15372,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     setDeviceUseClockMinutes(value);
     document.getElementById('deviceUseError').textContent = '';
     updateDeviceUseDurationUi();
-    document.getElementById('deviceUseMinutes')?.focus();
+    const minutesInput = document.getElementById('deviceUseMinutes');
+    minutesInput?.focus({preventScroll:true});
+    minutesInput?.select();
   }
 
   function normalizeDeviceUseClock() {
@@ -19117,14 +19125,19 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         }
         state.gear = state.gear.filter(entry => entry.id !== item.id);
       } else {
-        if (mode === 'overlap') {
+        const currentLocation = state.gearLocations.find(location => location.id === item.locationId);
+        const shouldDefaultToSetDown = mode === 'overlap'
+          || (mode === 'gear' && previousCatalogId !== catalog.id && isOnPersonGearLocation(currentLocation));
+        if (shouldDefaultToSetDown) {
           const previousLocationId = item.locationId;
           item.locationId = setDownGearLocation().id;
-          const ownedLocation = ownedGearLocationForItem(item.id);
-          if (ownedLocation) {
-            ownedLocation.name = uniqueVehicleLocationName(`${catalog.name} (Contents)`, ownedLocation.id);
-            if (previousLocationId && previousLocationId !== item.locationId) ownedLocation.carriedReturnLocationId = previousLocationId;
-            ownedLocation.carried = false;
+          if (mode === 'overlap') {
+            const ownedLocation = ownedGearLocationForItem(item.id);
+            if (ownedLocation) {
+              ownedLocation.name = uniqueVehicleLocationName(`${catalog.name} (Contents)`, ownedLocation.id);
+              if (previousLocationId && previousLocationId !== item.locationId) ownedLocation.carriedReturnLocationId = previousLocationId;
+              ownedLocation.carried = false;
+            }
           }
         }
         if (!existingCatalogLocation) createCatalogGearLocation(catalog, item);
@@ -20947,7 +20960,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const location = createStandaloneVehicleLocation(catalog, {color:selectedState.color, condition:selectedState.condition, vehicleEnergy:generatedVehicleEnergy});
       return {item:null, location};
     }
-    const resolvedLocationId = catalog.category === 'Vehicles' && vehicleBehaviorForCatalog(catalog) === 'overlap' ? setDownGearLocation().id : locationId;
+    const requestedLocation = gearLocationById(locationId);
+    const resolvedLocationId = vehicleDefaultsToSetDown(catalog) && isOnPersonGearLocation(requestedLocation)
+      ? setDownGearLocation().id
+      : requestedLocation.id;
     const item = createGearItem(resolvedLocationId);
     item.item = catalogGearName(catalog);
     item.quantity = normalizeGearQuantity(quantity);
@@ -26245,20 +26261,33 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   });
   document.getElementById('vehicleTravelCancel')?.addEventListener('click', () => settleVehicleTravelDialog(false));
   document.getElementById('vehicleTravelConfirm')?.addEventListener('click', () => settleVehicleTravelDialog(true));
-  function bindFocusPreservingStepButton(button, action) {
+  function bindFocusPreservingStepButton(button, action, preferredInputId) {
     if (!button) return;
+    let preservedInput = null;
     const preserveFocus = event => {
-      if (!button.disabled) event.preventDefault();
+      if (button.disabled) return;
+      const control = button.closest('.step-value-control');
+      const active = document.activeElement;
+      preservedInput = control?.contains(active) && active?.matches?.('input')
+        ? active
+        : document.getElementById(preferredInputId);
+      event.preventDefault();
     };
     button.addEventListener('pointerdown', preserveFocus);
     button.addEventListener('mousedown', preserveFocus);
-    button.addEventListener('click', action);
+    button.addEventListener('click', () => {
+      const input = preservedInput || document.getElementById(preferredInputId);
+      action();
+      input?.focus({preventScroll:true});
+      input?.select();
+      preservedInput = null;
+    });
   }
   document.querySelectorAll('[data-vehicle-travel-preset]').forEach(button => {
     button.addEventListener('click', () => setVehicleTravelPresetDistance(button.dataset.vehicleTravelPreset));
   });
   document.querySelectorAll('[data-vehicle-travel-step]').forEach(button => {
-    bindFocusPreservingStepButton(button, () => adjustVehicleTravelDistance(button.dataset.vehicleTravelStep));
+    bindFocusPreservingStepButton(button, () => adjustVehicleTravelDistance(button.dataset.vehicleTravelStep), 'vehicleTravelMiles');
   });
   document.getElementById('vehicleTravelMiles')?.addEventListener('input', updateVehicleTravelDistanceUi);
   document.getElementById('vehicleTravelMiles')?.addEventListener('keydown', event => {
@@ -26282,7 +26311,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   });
 
   document.querySelectorAll('[data-device-use-step]').forEach(button => {
-    bindFocusPreservingStepButton(button, () => adjustDeviceUseMinutes(button.dataset.deviceUseStep));
+    bindFocusPreservingStepButton(button, () => adjustDeviceUseMinutes(button.dataset.deviceUseStep), 'deviceUseMinutes');
   });
   document.querySelectorAll('[data-device-use-preset]').forEach(button => {
     button.addEventListener('click', () => setDeviceUsePresetMinutes(button.dataset.deviceUsePreset));
