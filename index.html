@@ -9341,7 +9341,7 @@
       }
       #gear .gear-table .gear-quantity-cell input,
       #gear .gear-table .gear-weight-cell input {
-        font-size: 11px !important;
+        font-size: 16px !important;
         font-variant-numeric: tabular-nums !important;
       }
     }
@@ -9610,7 +9610,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v639</div>
+<div class="footer-note no-print">Character Sheet v641</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -10589,6 +10589,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   // v621: urine catalog pass — synthetic/paraphernalia, pooled human laboratory urine, and common hunting/trapping urine scents.
+  // v640: phone Gear numeric-text correction — Qty and Weight retain the wider equal phone columns from v639 but restore the prior 16px mobile input text size; footer version synchronized.
+  // v641: empty retail-container reuse fix — emptied ordinary retail liquid packages can receive other non-fuel liquids; fuel restrictions and no-mixing rules remain intact.
   // v639: phone Gear layout + consume-dialog polish — item actions move to the Item row's top-right on phones; Color is tighter while Qty/Weight get equal extra width; Eat/Drink steppers no longer summon the phone keyboard or auto-select the amount; manual amount focus selects for editing; Conditions capitalizes Rations; consume dialogs omit the Moderate-hydration default text; footer version is synchronized.
   // v638: stock-power + sustenance QoL — new replaceable-battery devices include fresh installed cells; new cordless 18–20 V tools include one full compatible (specific) pack; integrated rechargeables start full; Used generation can still have missing/depleted power; Eat/Drink are direct Gear-row buttons; Conditions tracks/reset today's water and ration consumption.
   // v637: sealed-service cleanup — AED/PLB/EPIRB proprietary service batteries remain descriptive parts of their devices and no longer expose a battery-state chip or manual controls; removable/common batteries and removable power-tool packs are unchanged.
@@ -14679,12 +14681,27 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return numeric;
   }
 
+  function liquidFamilyIsFuel(family) {
+    return ['gasoline','diesel','avgas','jet-a','jet-fuel'].includes(String(family || ''));
+  }
+
+  function liquidContainerAcceptsFamily(target, catalog, family) {
+    const allowed = Array.isArray(catalog?.liquidAllowedFamilies) ? catalog.liquidAllowedFamilies : [];
+    if (allowed.includes(family)) return true;
+    // Once an ordinary retail package is truly empty, let players repurpose the
+    // physical bottle/jug/can for another non-fuel liquid. Keep fuel out of
+    // arbitrary retail packaging and keep non-empty containers family-locked.
+    if (String(catalog?.liquidUsedProfile || '') !== 'retail') return false;
+    if (embeddedLiquidLiters(target) > 1e-9) return false;
+    return !liquidFamilyIsFuel(family);
+  }
+
   function liquidContainerTransferCompatibility(source, target) {
     if (!source || !target || source.id === target.id) return null;
     const sourceInfo = liquidSourceInfo(source);
     const targetCatalog = catalogForGearInstance(target);
     if (!sourceInfo || !catalogIsLiquidContainer(targetCatalog)) return null;
-    if (!targetCatalog.liquidAllowedFamilies.includes(sourceInfo.family)) return null;
+    if (!liquidContainerAcceptsFamily(target, targetCatalog, sourceInfo.family)) return null;
     const existingFamily = embeddedLiquidFamily(target);
     if (existingFamily && existingFamily !== sourceInfo.family) return null;
     const roomLiters = Math.max(0, Number(targetCatalog.liquidCapacityLiters) - liquidContainerPerUnitLiters(target));
@@ -14972,7 +14989,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (catalogIsBulkLiquid(sourceCatalog) && catalogIsLiquidContainer(targetCatalog)) {
       const sourceFamily = String(sourceCatalog.liquidFamily || '');
       const existingFamily = embeddedLiquidFamily(target);
-      if (!targetCatalog.liquidAllowedFamilies.includes(sourceFamily)) {
+      if (!liquidContainerAcceptsFamily(target, targetCatalog, sourceFamily)) {
         const allowed = targetCatalog.liquidAllowedFamilies.map(liquidFamilyLabel).join(' / ');
         return {applicable:true, valid:false, text:allowed ? `Requires ${allowed}` : 'Incompatible liquid'};
       }
