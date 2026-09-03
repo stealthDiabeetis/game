@@ -209,6 +209,7 @@
     }
     .btn:not(:disabled):hover { border-color: var(--strong-line); transform: translateY(-1px); }
     .btn:disabled { transform: none; cursor: default; }
+    #vehicleEnergyConfirm:disabled { opacity:.42; cursor:not-allowed; filter:saturate(.45); }
     .btn.primary { background: var(--accent); color: #fff; border-color: transparent; }
     .btn.danger { color: var(--danger); }
     .btn.small { min-height: 32px; padding: 5px 9px; font-size: 13px; }
@@ -8826,7 +8827,40 @@
     .gear-recharge-sources[hidden] { display:none !important; }
     .gear-recharge-time { margin-top:8px; min-height:17px; color:var(--muted); font-size:11px; line-height:1.35; }
     .gear-recharge-time strong { color:var(--text); }
-    @media screen and (max-width:600px) { .stored-charge-target-grid { grid-template-columns:1fr; } }
+
+    /* v663: app-native portable-fuel picker. Native iOS <select> presentation
+       could auto-open when the modal appeared and visually layered the system
+       picker over the styled field. */
+    .fuel-type-picker { position:relative; min-width:0; }
+    .fuel-type-picker-button {
+      width:100%; min-height:40px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+      border:1px solid var(--line); border-radius:8px; background:var(--panel-2); color:var(--text);
+      padding:9px 10px; font:inherit; text-align:left; cursor:pointer; outline:none;
+    }
+    .fuel-type-picker-button:hover { border-color:var(--line-strong); }
+    .fuel-type-picker-button:focus-visible { border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+    .fuel-type-picker-chevron { flex:0 0 auto; color:var(--muted); font-size:15px; line-height:1; transition:transform .14s ease; }
+    .fuel-type-picker-button[aria-expanded="true"] .fuel-type-picker-chevron { transform:rotate(180deg); }
+    .fuel-type-picker-menu {
+      position:absolute; z-index:40; left:0; right:0; top:calc(100% + 6px); display:grid; gap:2px;
+      padding:6px; border:1px solid var(--line); border-radius:10px; background:var(--panel);
+      box-shadow:0 16px 44px rgba(0,0,0,.34);
+    }
+    .fuel-type-picker-menu[hidden] { display:none !important; }
+    .fuel-type-picker-option {
+      width:100%; min-height:38px; display:flex; align-items:center; border:0; border-radius:7px;
+      background:transparent; color:var(--text); padding:8px 10px; font:inherit; text-align:left; cursor:pointer;
+    }
+    .fuel-type-picker-option:hover, .fuel-type-picker-option:focus-visible { background:var(--panel-2); outline:none; }
+    .fuel-type-picker-option[aria-selected="true"] { background:color-mix(in srgb, var(--accent) 14%, var(--panel-2)); font-weight:800; }
+    .fuel-type-picker-option[aria-selected="true"]::before { content:'✓'; width:20px; flex:0 0 20px; color:var(--accent); font-weight:900; }
+    .fuel-type-picker-option[aria-selected="false"]::before { content:''; width:20px; flex:0 0 20px; }
+
+    @media screen and (max-width:600px) {
+      .stored-charge-target-grid { grid-template-columns:1fr; }
+      .fuel-type-picker-button { min-height:44px; font-size:16px; }
+      .fuel-type-picker-option { min-height:44px; font-size:16px; }
+    }
 
     @media screen and (min-width: 601px) {
       #vehicleEnergyPurchaseFields {
@@ -9676,7 +9710,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v662</div>
+<div class="footer-note no-print">Character Sheet v666</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -9730,7 +9764,18 @@
 <div class="dialog-inner">
 <h2 id="vehicleEnergyDialogTitle">Fuel Up</h2>
 <p class="hint" id="vehicleEnergyDialogSummary"></p>
-<div class="field" id="vehicleEnergyFuelTypeWrap" hidden><label for="vehicleEnergyFuelType">Fuel type</label><select id="vehicleEnergyFuelType"><option value="gasoline">Gasoline</option><option value="diesel">Diesel</option><option value="avgas">Avgas</option><option value="jet-fuel">Jet Fuel</option></select></div>
+<div class="field" id="vehicleEnergyFuelTypeWrap" hidden>
+<label id="vehicleEnergyFuelTypeLabel">Fuel type</label>
+<div class="fuel-type-picker" id="vehicleEnergyFuelTypePicker">
+<button class="fuel-type-picker-button" id="vehicleEnergyFuelTypeButton" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="vehicleEnergyFuelTypeLabel vehicleEnergyFuelTypeValue"><span id="vehicleEnergyFuelTypeValue">Gasoline</span><span class="fuel-type-picker-chevron" aria-hidden="true">▾</span></button>
+<div class="fuel-type-picker-menu" id="vehicleEnergyFuelTypeMenu" role="listbox" aria-labelledby="vehicleEnergyFuelTypeLabel" hidden>
+<button class="fuel-type-picker-option" type="button" role="option" data-fuel-type-option="gasoline" aria-selected="true">Gasoline</button>
+<button class="fuel-type-picker-option" type="button" role="option" data-fuel-type-option="diesel" aria-selected="false">Diesel</button>
+<button class="fuel-type-picker-option" type="button" role="option" data-fuel-type-option="avgas" aria-selected="false">Avgas</button>
+<button class="fuel-type-picker-option" type="button" role="option" data-fuel-type-option="jet-fuel" aria-selected="false">Jet Fuel</button>
+</div>
+</div>
+</div>
 <div class="field">
 <label id="vehicleEnergyTargetLabel" for="vehicleEnergyTarget">Target level</label>
 <div class="energy-adjust-range-wrap" id="vehicleEnergyRangeWrap"><input id="vehicleEnergyTarget" class="energy-adjust-range" type="range"/></div>
@@ -11810,6 +11855,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (pack) pack.batteryCapacityWh = 90.0; // representative 18 V nominal × 5 Ah pack
   }
 
+  // v663: replaces the portable-fuel native select with an app-native picker so iOS does not auto-open or overlay its system selector.
   // v662: representative maximum charge-input power for the USB-C QoL device classes.
   // USB PD negotiates to the weakest link, so these are device-side caps rather than charger output assumptions.
   const V662_USB_C_MAX_CHARGE_W = Object.freeze({
@@ -11846,6 +11892,66 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   for (const id of ['gc0177','gc0178','gc0179','gc0180','gc2219']) {
     const item = GEAR_CATALOG.find(entry => entry.id === id);
     if (item) item.chargeCurveKind = 'phone';
+  }
+
+  // v665: passenger-vehicle USB charging. The existing generic 12 V car adapter is
+  // modeled as a modern USB-C PD unit so it has a meaningful advantage over basic
+  // built-in vehicle USB ports and can support laptop-class targets.
+  {
+    const carCharger = GEAR_CATALOG.find(entry => entry.id === 'gc2457');
+    if (carCharger) {
+      carCharger.price = 25.0;
+      carCharger.specs = 'Compact 12/24 V vehicle accessory-outlet USB-C Power Delivery charger · Representative 65 W single-port output for phones, tablets, and USB-C laptops';
+      carCharger.aliases = Array.from(new Set([...(carCharger.aliases || []), 'USB-C car charger', '65W car charger', '65 W car charger', '12 V USB-C charger']));
+      carCharger.vehicleUsbOutputW = 65;
+    }
+  }
+
+
+  // v666: 2027+ USB-C PD/EPR personal-electric-vehicle charging pass.
+  // 140 W is the representative commuter/light-PEV tier; performance boards/EUCs use
+  // the USB PD 3.1 EPR ceiling of 240 W. Device-side caps still negotiate down to the
+  // weakest available charger/cable/source.
+  GEAR_CATALOG.push(
+    {
+      id:'gc2864', name:'Wall Charger, USB-C, 140 W', category:'Electronics & Communications', subcategory:'Power',
+      weight:0.65, price:100.0, availability:'Specialty', colors:['Black','Gray','White'],
+      specs:'140 W USB-C Power Delivery 3.1 EPR wall charger · Representative 28 V / 5 A high-power GaN class · Power: 100–240 V AC · ~155 W maximum input for 140 W USB output',
+      aliases:['140W USB-C charger','140 W USB-C charger','USB-C EPR charger','PD 3.1 charger'], usbPdOutputW:140
+    },
+    {
+      id:'gc2865', name:'Wall Charger, USB-C, 240 W', category:'Electronics & Communications', subcategory:'Power',
+      weight:1.0, price:100.0, availability:'Specialty', colors:['Black','Gray','White'],
+      specs:'Forward-looking 2027+ single-port USB-C Power Delivery 3.1 EPR wall charger · Up to 48 V / 5 A (240 W) negotiated output · Emerging 2026 hardware already demonstrates this full EPR tier · Power: 100–240 V AC · ~265 W maximum input for 240 W USB output · Requires a 240 W EPR-rated USB-C cable for full output',
+      aliases:['240W USB-C charger','240 W USB-C charger','240W PD charger','240 W PD charger','USB-C EPR charger','48V USB-C charger'], usbPdOutputW:240
+    },
+    {
+      id:'gc2866', name:'USB-C to USB-C Cable, 1 m, 240 W', category:'Electronics & Communications', subcategory:'Computers > Cables & Power',
+      weight:0.12, price:25.0, availability:'Common', colors:['Black','Gray','White'],
+      specs:'1 m full-featured/e-marked USB-C to USB-C cable rated for USB Power Delivery 3.1 Extended Power Range up to 240 W (48 V / 5 A)',
+      aliases:['240W USB-C cable','240 W USB-C cable','EPR USB-C cable','USB C to C 240W cable'], usbPdCableW:240
+    }
+  );
+  const V666_PEV_USB_C_CHARGING = Object.freeze({
+    gc1703:{capacityWh:750, maxW:140},   // commuter e-bike; present-day USB-C e-bike precedent is 140 W
+    gc1704:{capacityWh:550, maxW:140},   // commuter scooter; current dedicated chargers commonly live near this tier
+    gc2712:{capacityWh:525, maxW:240},   // Onewheel GT-class; performance fast charging already exceeds 140 W
+    gc2713:{capacityWh:432, maxW:240},   // Exway Flex V3-class; existing proprietary fast-charge support exceeds 240 W
+    gc2714:{capacityWh:1750, maxW:240},  // InMotion V12 Pro-class; stock charger is about 232 W
+    gc2715:{capacityWh:335, maxW:140}    // Ninebot S2-class; present dedicated charger is about 124 W
+  });
+  for (const [id, profile] of Object.entries(V666_PEV_USB_C_CHARGING)) {
+    const item = GEAR_CATALOG.find(entry => entry.id === id);
+    if (!item) continue;
+    item.usbChargeConnector = 'USB-C';
+    item.batteryCapacityWh = profile.capacityWh;
+    item.vehicleBatteryKWh = profile.capacityWh / 1000;
+    item.maxChargeInputW = profile.maxW;
+    item.chargeCurveKind = 'pev';
+    const batteryText = /Battery:\s*~/i.test(String(item.specs || '')) ? '' : ` · Battery: ~${Number((profile.capacityWh / 1000).toFixed(3))} kWh`;
+    if (!/Charging:\s*USB-C/i.test(String(item.specs || ''))) {
+      item.specs = `${String(item.specs || '').trim()}${batteryText} · Charging: USB-C PD 3.1 EPR · Maximum USB-C charge input: ${profile.maxW} W`;
+    }
   }
 
   const GEAR_CATALOG_BY_ID = new Map(GEAR_CATALOG.map(item => [item.id, item]));
@@ -16404,13 +16510,42 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return VEHICLE_ENERGY_PRICE_DEFAULTS.gasoline;
   }
 
-  function syncLiquidContainerFuelChoiceUi() {
+  function closePortableFuelPicker() {
+    const button = document.getElementById('vehicleEnergyFuelTypeButton');
+    const menu = document.getElementById('vehicleEnergyFuelTypeMenu');
+    if (button) button.setAttribute('aria-expanded', 'false');
+    if (menu) menu.hidden = true;
+  }
+
+  function renderPortableFuelPickerSelection(family) {
+    const normalized = PORTABLE_FUEL_FAMILIES.includes(family) ? family : 'gasoline';
+    const value = document.getElementById('vehicleEnergyFuelTypeValue');
+    if (value) value.textContent = liquidFamilyLabel(normalized);
+    document.querySelectorAll('[data-fuel-type-option]').forEach(option => {
+      option.setAttribute('aria-selected', String(option.dataset.fuelTypeOption === normalized));
+    });
+  }
+
+  function togglePortableFuelPicker() {
+    const button = document.getElementById('vehicleEnergyFuelTypeButton');
+    const menu = document.getElementById('vehicleEnergyFuelTypeMenu');
+    if (!button || !menu) return;
+    const opening = menu.hidden;
+    menu.hidden = !opening;
+    button.setAttribute('aria-expanded', String(opening));
+    if (opening) {
+      const selected = menu.querySelector('[aria-selected="true"]') || menu.querySelector('[data-fuel-type-option]');
+      selected?.focus({preventScroll:true});
+    }
+  }
+
+  function syncLiquidContainerFuelChoiceUi(requestedFamily=null) {
     const pending = pendingVehicleEnergyAdjust;
     if (!pending || pending.kind !== 'liquid-container-fuel') return;
-    const select = document.getElementById('vehicleEnergyFuelType');
-    const family = PORTABLE_FUEL_FAMILIES.includes(select?.value) ? select.value : pending.fuelFamily;
+    const family = PORTABLE_FUEL_FAMILIES.includes(requestedFamily) ? requestedFamily : pending.fuelFamily;
     if (!PORTABLE_FUEL_FAMILIES.includes(family)) return;
     pending.fuelFamily = family;
+    renderPortableFuelPickerSelection(family);
     const summary = document.getElementById('vehicleEnergyDialogSummary');
     if (summary) summary.textContent = `Current ${liquidFamilyLabel(family).toLowerCase()}: ${Number(pending.current.toFixed(2))}/${Number(pending.max.toFixed(2))} gal`;
     const price = document.getElementById('vehicleEnergyUnitPrice');
@@ -16478,6 +16613,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   function gearItemsShareChargingContext(a, b) {
     if (!a || !b) return false;
     if (sameGearLocation(a, b)) return true;
+    // Anything rooted in the same physical Gear Location is reachable even when one
+    // item is directly in that location and the other is nested through bags/pouches.
+    const aRoot = gearLocationRoot(a.locationId);
+    const bRoot = gearLocationRoot(b.locationId);
+    if (aRoot?.id && bRoot?.id && String(aRoot.id) === String(bRoot.id)) return true;
     // Carried Gear is assumed to be physically together even when organized into
     // separate Gear Locations such as On Person, backpack, belt pouch, etc.
     if (gearItemIsCarried(a) && gearItemIsCarried(b)) return true;
@@ -16499,6 +16639,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function usbCToUsbCCablePowerW(item, catalog=catalogForGearInstance(item)) {
+    const explicit = Math.max(0, Number(catalog?.usbPdCableW) || 0);
+    if (explicit > 0) return explicit;
     const id = String(item?.catalogId || catalog?.id || '');
     if (id === 'gc0233') return 100;
     if (id === 'gc0232') return 60;
@@ -16525,8 +16667,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return state.gear.filter(item => item && gearItemQuantity(item) > 0 && usbCToUsbCCablePowerW(item) > 0);
   }
 
-  function wallUsbChargerPowerW(item) {
-    const id = String(item?.catalogId || '');
+  function wallUsbChargerPowerW(item, catalog=catalogForGearInstance(item)) {
+    const explicit = Math.max(0, Number(catalog?.usbPdOutputW) || 0);
+    if (explicit > 0) return explicit;
+    const id = String(item?.catalogId || catalog?.id || '');
     if (id === 'gc0231') return 100;
     if (id === 'gc0230') return 65;
     if (id === 'gc0229') return 30;
@@ -16535,6 +16679,66 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function ownedUsbWallChargers() {
     return state.gear.filter(item => item && gearItemQuantity(item) > 0 && wallUsbChargerPowerW(item) > 0);
+  }
+
+  function wallChargeAccessoryCanMeetTarget(targetItem, accessoryItem) {
+    if (!targetItem || !accessoryItem) return false;
+    if (gearItemsShareChargingContext(targetItem, accessoryItem)) return true;
+    // Wall charging may stage carried items into the shared Set Down area. This is
+    // deliberately one-way QoL: stationary items in Car/Garage/etc. are never moved.
+    const targetNearby = gearItemIsCarried(targetItem) || gearItemIsInSetDownContext(targetItem);
+    const accessoryNearby = gearItemIsCarried(accessoryItem) || gearItemIsInSetDownContext(accessoryItem);
+    return targetNearby && accessoryNearby;
+  }
+
+  function carUsbChargerPowerW(item, catalog=catalogForGearInstance(item)) {
+    if (String(item?.catalogId || catalog?.id || '') !== 'gc2457') return 0;
+    return Math.max(0, Number(catalog?.vehicleUsbOutputW) || 65);
+  }
+
+  function passengerVehicleChargingLocations() {
+    return (state.gearLocations || []).filter(location => {
+      const catalog = vehicleCatalogForLocation(location);
+      return catalog?.category === 'Vehicles' && String(catalog.subcategory || '') === 'Passenger Vehicles';
+    });
+  }
+
+  function itemIsInGearLocationTree(item, rootLocation) {
+    if (!item || !rootLocation) return false;
+    const root = gearLocationRoot(item.locationId);
+    return Boolean(root?.id && String(root.id) === String(rootLocation.id));
+  }
+
+  function gearItemsInLocationTree(rootLocation, predicate) {
+    return (state.gear || []).filter(item => item && gearItemQuantity(item) > 0 && itemIsInGearLocationTree(item, rootLocation) && predicate(item, catalogForGearInstance(item)));
+  }
+
+  function vehicleRechargeSetup(vehicleLocation, targetItem, targetCatalog) {
+    const vehicleCatalog = vehicleCatalogForLocation(vehicleLocation);
+    const targetProfile = chargingTargetProfile(targetCatalog);
+    if (!vehicleLocation || vehicleCatalog?.subcategory !== 'Passenger Vehicles' || targetProfile?.kind !== 'usb-c') return null;
+
+    const targetInVehicle = itemIsInGearLocationTree(targetItem, vehicleLocation);
+    const cables = gearItemsInLocationTree(vehicleLocation, (item, catalog) => usbCToUsbCCablePowerW(item, catalog) > 0);
+    const carChargers = gearItemsInLocationTree(vehicleLocation, (item, catalog) => carUsbChargerPowerW(item, catalog) > 0);
+    const cable = cables.sort((a,b) => usbCToUsbCCablePowerW(b) - usbCToUsbCCablePowerW(a))[0] || null;
+    const carCharger = carChargers.sort((a,b) => carUsbChargerPowerW(b) - carUsbChargerPowerW(a))[0] || null;
+    const isLaptop = ['gc0184','gc0185','gc0186','gc0187'].includes(String(targetCatalog?.id || ''));
+    const builtInW = 15;
+    const sourceW = carCharger ? carUsbChargerPowerW(carCharger) : builtInW;
+    const cableW = cable ? usbCToUsbCCablePowerW(cable) : Infinity;
+    const powerW = Math.min(targetProfile.maxInputW, sourceW, cableW);
+    let reason = '';
+    if (!targetInVehicle) reason = `Device is not inside ${String(vehicleLocation.name || vehicleCatalog.name || 'this passenger vehicle')}.`;
+    else if (!cable) reason = 'Requires a USB-C to USB-C cable inside this vehicle.';
+    else if (isLaptop && !carCharger) reason = 'Built-in vehicle USB is limited to about 15 W; a Car Charger, 12 V USB is required for laptop charging.';
+    else if (!(powerW > 0)) reason = 'Vehicle USB charging power is unavailable.';
+    return {
+      active:!reason, reason, vehicleLocation, vehicleCatalog, targetProfile, cable, carCharger, powerW,
+      mode:carCharger ? '12v-adapter' : 'built-in-usb',
+      modeLabel:carCharger ? '12 V USB-C charger' : 'Built-in USB',
+      accessories:[cable, carCharger].filter(Boolean)
+    };
   }
 
   function chargingTargetCapacityWh(catalog) {
@@ -16558,6 +16762,40 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return null;
   }
 
+
+  function catalogIsPersonalElectricVehicle(catalog) {
+    return Boolean(catalog?.category === 'Vehicles' && String(catalog?.subcategory || '') === 'Personal Electric' && catalog?.vehicleEnergyType === 'electric');
+  }
+
+  function chargingTargetCatalogForItem(item) {
+    const vehicleCatalog = vehicleCatalogForItem(item);
+    if (catalogIsPersonalElectricVehicle(vehicleCatalog) && chargingTargetProfile(vehicleCatalog)) return vehicleCatalog;
+    return batteryCatalogForItem(item);
+  }
+
+  function chargingTargetEnergyState(item, catalog) {
+    if (!item || !catalog) return null;
+    return catalogIsPersonalElectricVehicle(catalog)
+      ? ensureVehicleEnergyState(item, catalog)
+      : ensureGearBatteryState(item, catalog);
+  }
+
+  function chargingTargetChargePercent(item, catalog) {
+    const energy = chargingTargetEnergyState(item, catalog);
+    return Math.max(0, Math.min(100, Number(energy?.chargePercent) || 0));
+  }
+
+  function setChargingTargetChargePercent(item, catalog, percent) {
+    const energy = chargingTargetEnergyState(item, catalog);
+    if (!energy) return false;
+    energy.chargePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+    return true;
+  }
+
+  function pendingUsesManagedRecharge(pending=pendingVehicleEnergyAdjust) {
+    return Boolean(pending && (pending.kind === 'device' || pending.kind === 'pev'));
+  }
+
   function portableSourcePowerW(catalog, outputKind) {
     if (!catalog) return 0;
     if (outputKind === 'ac') return Math.max(0, Number(catalog.portableEnergyAcOutputW) || 0);
@@ -16574,7 +16812,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       ? [[0,80,.90],[80,95,.70],[95,100,.40]]
       : curveKind === 'phone'
         ? [[0,50,.75],[50,80,.65],[80,90,.38],[90,100,.20]]
-        : [[0,80,.85],[80,95,.55],[95,100,.25]];
+        : curveKind === 'pev'
+          ? [[0,80,.85],[80,95,.55],[95,100,.25]]
+          : [[0,80,.85],[80,95,.55],[95,100,.25]];
     let hours = 0;
     for (const [lo, hi, powerFactor] of segments) {
       const a = Math.max(start, lo);
@@ -16603,19 +16843,28 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return Math.max(0, Number(profile.capacityWh) || 0) * Math.max(0, Number(targetPercent) - Number(startPercent)) / 100;
   }
 
-  function bestWallUsbSetup(targetCatalog) {
+  function bestWallUsbSetup(targetItem, targetCatalog) {
     const profile = chargingTargetProfile(targetCatalog);
     if (!profile || profile.kind !== 'usb-c') return null;
     const cables = ownedUsbCCables();
     const chargers = ownedUsbWallChargers();
-    if (!cables.length || !chargers.length) {
-      const missing = [];
-      if (!cables.length) missing.push('a USB-C to USB-C cable');
-      if (!chargers.length) missing.push('a USB-C wall charger');
-      return {active:false, reason:`Requires ${formatHumanList(missing)}.`, profile, accessories:[]};
+    const missing = [];
+    if (!cables.length) missing.push('a USB-C to USB-C cable');
+    if (!chargers.length) missing.push('a USB-C wall charger');
+    if (missing.length) return {active:false, reason:`Requires ${formatHumanList(missing)}.`, profile, accessories:[]};
+
+    const reachableCables = cables.filter(item => wallChargeAccessoryCanMeetTarget(targetItem, item));
+    const reachableChargers = chargers.filter(item => wallChargeAccessoryCanMeetTarget(targetItem, item));
+    const blocked = [];
+    if (!reachableCables.length) blocked.push('USB-C cable');
+    if (!reachableChargers.length) blocked.push('USB-C wall charger');
+    if (blocked.length) {
+      const noun = blocked.length === 1 ? 'is' : 'are';
+      return {active:false, reason:`Your ${formatHumanList(blocked)} ${noun} owned but in a different physical Gear location.`, profile, accessories:[]};
     }
+
     let best = null;
-    for (const cable of cables) for (const charger of chargers) {
+    for (const cable of reachableCables) for (const charger of reachableChargers) {
       const powerW = Math.min(profile.maxInputW, usbCToUsbCCablePowerW(cable), wallUsbChargerPowerW(charger));
       if (!best || powerW > best.powerW) best = {active:true, profile, powerW, cable, charger, accessories:[cable, charger]};
     }
@@ -16628,36 +16877,40 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (profile.kind === 'power-tool') {
       const chargers = ownedGearInstancesByCatalogId('gc2506');
       if (!chargers.length) return {active:false, profile, reason:'Requires Power Tool Battery Charger, 18–20 V.', accessories:[]};
-      const charger = chargers[0];
+      const reachable = chargers.filter(item => wallChargeAccessoryCanMeetTarget(targetItem, item));
+      if (!reachable.length) return {active:false, profile, reason:'Power Tool Battery Charger, 18–20 V is owned but in a different physical Gear location.', accessories:[]};
+      const charger = reachable[0];
       return {active:true, profile, powerW:Math.min(profile.maxInputW, 120), charger, accessories:[charger]};
     }
-    const usb = bestWallUsbSetup(targetCatalog);
+    const usb = bestWallUsbSetup(targetItem, targetCatalog);
     return usb || {active:false, profile, reason:'No compatible wall charging setup is available.', accessories:[]};
   }
 
   function sourceRechargeSetup(sourceItem, sourceCatalog, targetItem, targetCatalog) {
     const targetProfile = chargingTargetProfile(targetCatalog);
     if (!sourceItem || !sourceCatalog || !targetProfile) return null;
-    if (!gearItemsShareChargingContext(sourceItem, targetItem)) return null;
     const outputs = portableEnergySourceOutputs(sourceCatalog);
     const sourceCapacity = portableEnergyCapacityWh(sourceCatalog);
     const sourceEnergy = ensureGearBatteryState(sourceItem, sourceCatalog);
     const sourcePercent = Math.max(0, Math.min(100, Number(sourceEnergy?.chargePercent) || 0));
     const availableWh = sourceCapacity == null ? 0 : sourceCapacity * sourcePercent / 100;
+    const contextReachable = gearItemsShareChargingContext(sourceItem, targetItem);
     let outputKind = '';
     let accessory = null;
     let powerW = 0;
     let reason = '';
     if (targetProfile.kind === 'usb-c' && outputs.includes('usb-c')) {
       outputKind = 'usb-c';
-      accessory = reachableUsbCCable(sourceItem, targetItem);
-      if (!accessory) reason = 'Requires a USB-C to USB-C cable in the same carried/Set Down context or container tree.';
+      if (contextReachable) accessory = reachableUsbCCable(sourceItem, targetItem);
+      if (!contextReachable) reason = 'Power source is owned but is in a different physical Gear location.';
+      else if (!accessory) reason = 'Requires a USB-C to USB-C cable in the same carried/Set Down context or location tree.';
       const cableW = accessory ? usbCToUsbCCablePowerW(accessory) : Infinity;
       powerW = Math.min(targetProfile.maxInputW, portableSourcePowerW(sourceCatalog, 'usb-c') || targetProfile.maxInputW, cableW);
     } else if (targetProfile.kind === 'power-tool' && outputs.includes('ac')) {
       outputKind = 'ac';
-      accessory = reachablePowerToolCharger(sourceItem, targetItem);
-      if (!accessory) reason = 'Requires Power Tool Battery Charger, 18–20 V in the same carried/Set Down context or container tree.';
+      if (contextReachable) accessory = reachablePowerToolCharger(sourceItem, targetItem);
+      if (!contextReachable) reason = 'Power source is owned but is in a different physical Gear location.';
+      else if (!accessory) reason = 'Requires Power Tool Battery Charger, 18–20 V in the same carried/Set Down context or location tree.';
       powerW = Math.min(targetProfile.maxInputW, 120, portableSourcePowerW(sourceCatalog, 'ac') || 120);
     } else {
       return null;
@@ -16667,7 +16920,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!(powerW > 0)) reason = reason || 'Source charging power is unavailable.';
     const maxDeliveredWh = Math.max(0, availableWh) * PORTABLE_CHARGING_EFFICIENCY;
     const maxAddedPercent = targetProfile.capacityWh > 0 ? 100 * maxDeliveredWh / targetProfile.capacityWh : 0;
-    return {active:!reason, reason, sourceItem, sourceCatalog, sourcePercent, sourceCapacity, availableWh, targetProfile, outputKind, accessory, powerW, maxAddedPercent};
+    return {active:!reason, reason, sourceItem, sourceCatalog, sourcePercent, sourceCapacity, availableWh, targetProfile, outputKind, accessory, powerW, maxAddedPercent, contextReachable};
   }
 
   function portableChargeTargetCandidates(sourceItem, sourceCatalog) {
@@ -16681,30 +16934,30 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const candidates = [];
 
     for (const target of state.gear) {
-      if (!target || target.id === sourceItem.id || !gearItemsShareChargingContext(sourceItem, target) || gearItemQuantity(target) <= 0) continue;
-      const catalog = batteryCatalogForItem(target);
+      if (!target || target.id === sourceItem.id || gearItemQuantity(target) <= 0) continue;
+      const catalog = chargingTargetCatalogForItem(target);
       const profile = chargingTargetProfile(catalog);
       if (!catalog || !profile) continue;
+      const compatible = (profile.kind === 'power-tool' && outputs.includes('ac')) || (profile.kind === 'usb-c' && outputs.includes('usb-c'));
+      if (!compatible) continue;
+      const contextReachable = gearItemsShareChargingContext(sourceItem, target);
       const quantity = Math.floor(Math.max(1, gearItemQuantity(target)));
-      const targetEnergy = ensureGearBatteryState(target, catalog);
-      const targetPercent = Math.max(0, Math.min(100, Number(targetEnergy?.chargePercent) || 0));
-      let reason = '';
+      const targetPercent = chargingTargetChargePercent(target, catalog);
+      let reason = contextReachable ? '' : 'Device is owned but is in a different physical Gear location.';
       let accessory = null;
       let powerW = 0;
 
       if (profile.kind === 'power-tool' && outputs.includes('ac')) {
-        if (quantity > 1) reason = 'Split the battery stack to charge one pack at a time.';
-        else if (target.embeddedInGearId) reason = 'Remove the power-tool battery from the tool before charging it.';
-        accessory = reachablePowerToolCharger(sourceItem, target);
-        if (!reason && !accessory) reason = 'Requires Power Tool Battery Charger, 18–20 V in the same carried/Set Down context or container tree.';
+        if (!reason && quantity > 1) reason = 'Split the battery stack to charge one pack at a time.';
+        else if (!reason && target.embeddedInGearId) reason = 'Remove the power-tool battery from the tool before charging it.';
+        if (contextReachable) accessory = reachablePowerToolCharger(sourceItem, target);
+        if (!reason && !accessory) reason = 'Requires Power Tool Battery Charger, 18–20 V in the same carried/Set Down context or location tree.';
         powerW = Math.min(profile.maxInputW, 120, portableSourcePowerW(sourceCatalog, 'ac') || 120);
       } else if (profile.kind === 'usb-c' && outputs.includes('usb-c')) {
-        if (quantity > 1) reason = 'Split stacked devices to charge an individual battery state.';
-        accessory = reachableUsbCCable(sourceItem, target);
-        if (!reason && !accessory) reason = 'Requires a USB-C to USB-C cable in the same carried/Set Down context or container tree.';
+        if (!reason && quantity > 1) reason = 'Split stacked devices to charge an individual battery state.';
+        if (contextReachable) accessory = reachableUsbCCable(sourceItem, target);
+        if (!reason && !accessory) reason = 'Requires a USB-C to USB-C cable in the same carried/Set Down context or location tree.';
         powerW = Math.min(profile.maxInputW, portableSourcePowerW(sourceCatalog, 'usb-c') || profile.maxInputW, accessory ? usbCToUsbCCablePowerW(accessory) : Infinity);
-      } else {
-        continue;
       }
 
       const deliveredWh = chargeEnergyForTarget(profile, targetPercent, 100) * quantity;
@@ -16717,7 +16970,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
       candidates.push({
         item:target, catalog, profile, targetPercent, capacityWh:profile.capacityWh, deliveredWh, sourceWh, powerW, chargeMinutes,
-        reason, active:!reason, label:gearInstanceLabel(target, catalog)
+        reason, active:!reason, label:gearInstanceLabel(target, catalog), contextReachable
       });
     }
     return candidates;
@@ -16790,7 +17043,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function gearRechargeSourceCandidates(pending=pendingVehicleEnergyAdjust) {
-    if (!pending || pending.kind !== 'device' || !pending.item || !pending.catalog) return [];
+    if (!pendingUsesManagedRecharge(pending) || !pending.item || !pending.catalog) return [];
     const targetItem = pending.item;
     const targetCatalog = pending.catalog;
     const candidates = [];
@@ -16812,6 +17065,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         reason:setup.reason || '', setup, powerW:Number(setup.powerW) || null
       });
     }
+    if (targetProfile.kind === 'usb-c') {
+      for (const vehicleLocation of passengerVehicleChargingLocations()) {
+        const setup = vehicleRechargeSetup(vehicleLocation, targetItem, targetCatalog);
+        if (!setup) continue;
+        const baseLabel = String(vehicleLocation.name || setup.vehicleCatalog?.name || 'Passenger Vehicle');
+        candidates.push({
+          id:`vehicle:${vehicleLocation.id}`, label:`${baseLabel} · ${setup.modeLabel}`, type:'vehicle', active:Boolean(setup.active),
+          reason:setup.reason || '', setup, powerW:Number(setup.powerW) || null
+        });
+      }
+    }
     return candidates;
   }
 
@@ -16820,8 +17084,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function rechargeMaxTargetPercent(candidate, pending=pendingVehicleEnergyAdjust) {
-    if (!pending || pending.kind !== 'device') return pending?.max || 100;
-    if (!candidate || candidate.type === 'wall' || candidate.setup?.legacy) return 100;
+    if (!pendingUsesManagedRecharge(pending)) return pending?.max || 100;
+    if (!candidate || candidate.type === 'wall' || candidate.type === 'vehicle' || candidate.setup?.legacy) return 100;
     const setup = candidate.setup;
     const profile = setup?.targetProfile;
     if (!profile || !(profile.capacityWh > 0)) return pending.current;
@@ -16830,7 +17094,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function selectGearRechargeSource(sourceId, preserveTarget=false) {
     const pending = pendingVehicleEnergyAdjust;
-    if (!pending || pending.kind !== 'device') return;
+    if (!pendingUsesManagedRecharge(pending)) return;
     const candidate = rechargeSourceById(sourceId, pending);
     const error = document.getElementById('vehicleEnergyError');
     if (!candidate) return;
@@ -16855,7 +17119,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const grid = document.getElementById('gearRechargeSourceGrid');
     const time = document.getElementById('gearRechargeTime');
     if (!wrap || !grid || !time) return;
-    const isRecharge = pending?.kind === 'device';
+    const isRecharge = pendingUsesManagedRecharge(pending);
     wrap.hidden = !isRecharge;
     if (!isRecharge) { grid.innerHTML = ''; time.textContent = ''; return; }
     const candidates = gearRechargeSourceCandidates(pending);
@@ -16870,6 +17134,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         title = accessories.length ? `Uses ${formatHumanList(accessories)}.` : 'Charge from wall power.';
       }
       if (!title && candidate.type === 'gear') title = `Charge from ${candidate.label}.`;
+      if (!title && candidate.type === 'vehicle') {
+        const accessories = (candidate.setup?.accessories || []).map(item => gearInstanceLabel(item));
+        title = accessories.length ? `Charge from vehicle power using ${formatHumanList(accessories)}.` : 'Charge from the vehicle’s built-in USB port.';
+      }
       return `<button type="button" class="stored-charge-target${selected ? ' selected' : ''}" data-gear-recharge-source="${esc(candidate.id)}" aria-disabled="${candidate.active ? 'false' : 'true'}" title="${esc(title)}">${esc(candidate.label)}${esc(power)}</button>`;
     }).join('');
     grid.querySelectorAll('[data-gear-recharge-source]').forEach(button => {
@@ -16879,7 +17147,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function rechargeDetailsForSelection(pending=pendingVehicleEnergyAdjust) {
-    if (!pending || pending.kind !== 'device') return null;
+    if (!pendingUsesManagedRecharge(pending)) return null;
     const candidate = rechargeSourceById(pending.rechargeSourceId, pending);
     if (!candidate?.active) return {candidate, active:false};
     const slider = document.getElementById('vehicleEnergyTarget');
@@ -16897,7 +17165,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   function updateGearRechargeTimeUi(pending=pendingVehicleEnergyAdjust) {
     const time = document.getElementById('gearRechargeTime');
     if (!time) return;
-    if (!pending || pending.kind !== 'device') { time.textContent = ''; return; }
+    if (!pendingUsesManagedRecharge(pending)) { time.textContent = ''; return; }
     const details = rechargeDetailsForSelection(pending);
     if (!details?.candidate) {
       time.textContent = 'Choose a charging source.';
@@ -16924,7 +17192,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       renderStoredChargeTargets(pending);
     }
     updateVehicleEnergyDialogUi();
-    if (pending?.kind === 'device') updateGearRechargeTimeUi(pending);
+    if (pendingUsesManagedRecharge(pending)) updateGearRechargeTimeUi(pending);
   }
 
   function vehicleCanRecharge(owner, catalog) {
@@ -16949,7 +17217,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const targetLabel = document.getElementById('vehicleEnergyTargetLabel');
     const confirm = document.getElementById('vehicleEnergyConfirm');
     if (targetLabel) targetLabel.textContent = 'Target level';
-    if (confirm) confirm.textContent = 'Confirm';
+    if (confirm) {
+      confirm.textContent = 'Confirm';
+      confirm.disabled = false;
+      confirm.removeAttribute('aria-disabled');
+      confirm.removeAttribute('title');
+    }
     renderGearRechargeSources(null);
   }
 
@@ -16995,9 +17268,46 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return catalog?.vehicleEnergyType === 'electric' && String(catalog?.subcategory || '') === 'Passenger Vehicles';
   }
 
+
+  function openPersonalElectricRechargeDialog(item, catalog) {
+    if (!item || !catalog || !catalogIsPersonalElectricVehicle(catalog) || !vehicleCanRecharge(item, catalog)) return;
+    const dialog = document.getElementById('vehicleEnergyDialog');
+    const slider = document.getElementById('vehicleEnergyTarget');
+    if (!dialog || !slider) return;
+    resetVehicleEnergyDialogActionLabels();
+    renderStoredChargeTargets(null);
+    const energy = ensureVehicleEnergyState(item, catalog);
+    const current = Math.max(0, Math.min(100, Number(energy?.chargePercent) || 0));
+    pendingVehicleEnergyAdjust = {kind:'pev', owner:item, item, catalog, isElectric:true, current, max:100, allowPurchase:false, rechargeSourceId:''};
+    const fuelTypeWrap = document.getElementById('vehicleEnergyFuelTypeWrap');
+    if (fuelTypeWrap) fuelTypeWrap.hidden = true;
+    document.getElementById('vehicleEnergyDialogTitle').textContent = `Recharge ${item.item || catalog.name || 'Personal Electric Vehicle'}`;
+    document.getElementById('vehicleEnergyDialogSummary').textContent = `Current charge: ${Math.round(current)}% · USB-C PD maximum: ${Math.round(Number(catalog.maxChargeInputW) || 0)} W`;
+    slider.min = String(current);
+    slider.max = '100';
+    slider.step = 'any';
+    slider.value = '100';
+    const buyWrap = document.getElementById('vehicleEnergyBuyWrap');
+    if (buyWrap) buyWrap.hidden = true;
+    const buy = document.getElementById('vehicleEnergyBuy');
+    if (buy) buy.checked = false;
+    const fields = document.getElementById('vehicleEnergyPurchaseFields');
+    if (fields) fields.hidden = true;
+    document.getElementById('vehicleEnergyError').textContent = '';
+    renderGearRechargeSources(pendingVehicleEnergyAdjust);
+    const sources = gearRechargeSourceCandidates(pendingVehicleEnergyAdjust);
+    const defaultSource = sources.find(candidate => candidate.id === 'wall' && candidate.active) || sources.find(candidate => candidate.active);
+    if (defaultSource) selectGearRechargeSource(defaultSource.id, false);
+    else updateVehicleEnergyDialogUi();
+    closeGearItemActionMenu();
+    if (dialog.open) dialog.close();
+    dialog.showModal();
+  }
+
   function openVehicleEnergyDialog(owner, catalog) {
     if (!owner || !catalog || !['fuel','electric'].includes(catalog.vehicleEnergyType)) return;
     const isElectric = catalog.vehicleEnergyType === 'electric';
+    if (isElectric && catalogIsPersonalElectricVehicle(catalog)) { openPersonalElectricRechargeDialog(owner, catalog); return; }
     if (isElectric ? !vehicleCanRecharge(owner, catalog) : !vehicleCanFuelUp(owner, catalog)) return;
     const dialog = document.getElementById('vehicleEnergyDialog');
     const slider = document.getElementById('vehicleEnergyTarget');
@@ -17053,13 +17363,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const max = Math.max(0, Number(catalog.liquidCapacityLiters) || 0) / LITERS_PER_US_GALLON;
     pendingVehicleEnergyAdjust = {kind:'liquid-container-fuel', item, catalog, isElectric:false, current, max, allowPurchase:true, fuelFamily:family};
     const fuelTypeWrap = document.getElementById('vehicleEnergyFuelTypeWrap');
-    const fuelTypeSelect = document.getElementById('vehicleEnergyFuelType');
     const existingFamily = embeddedLiquidFamily(item);
     if (fuelTypeWrap) fuelTypeWrap.hidden = Boolean(existingFamily);
-    if (fuelTypeSelect) {
-      fuelTypeSelect.value = PORTABLE_FUEL_FAMILIES.includes(family) ? family : 'gasoline';
-      fuelTypeSelect.disabled = Boolean(existingFamily);
-    }
+    renderPortableFuelPickerSelection(PORTABLE_FUEL_FAMILIES.includes(family) ? family : 'gasoline');
+    closePortableFuelPicker();
     document.getElementById('vehicleEnergyDialogTitle').textContent = `Fuel Up ${item.item || catalog.name || 'Gas Can'}`;
     document.getElementById('vehicleEnergyDialogSummary').textContent = `Current ${liquidFamilyLabel(family).toLowerCase()}: ${Number(current.toFixed(2))}/${Number(max.toFixed(2))} gal`;
     slider.min = String(current);
@@ -17163,7 +17470,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       return {target, added:target - pending.current, used:pending.current - target, unit:'%', purchaseAmount:null};
     }
     const target = Math.max(pending.current, Math.min(pending.max, Number.isFinite(rawTarget) ? rawTarget : pending.current));
-    if (pending.kind === 'device') {
+    if (pendingUsesManagedRecharge(pending)) {
       return {target, added:target - pending.current, unit:'%', purchaseAmount:null};
     }
     if (pending.isElectric) {
@@ -17184,6 +17491,32 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const value = Math.max(min, Math.min(max, Number(slider.value) || min));
     const fill = max > min ? 100 * (value - min) / (max - min) : 100;
     wrap.style.setProperty('--energy-range-fill', `${Math.max(0, Math.min(100, fill))}%`);
+  }
+
+  function updateGearRechargeConfirmState(pending=pendingVehicleEnergyAdjust, details=energyAdjustmentDetails(pending)) {
+    const confirm = document.getElementById('vehicleEnergyConfirm');
+    if (!confirm) return;
+    // Only managed rechargeable Gear uses source/accessory validation here. Other
+    // energy dialogs retain their existing confirm behavior.
+    if (!pendingUsesManagedRecharge(pending)) {
+      confirm.disabled = false;
+      confirm.removeAttribute('aria-disabled');
+      confirm.removeAttribute('title');
+      return;
+    }
+    const candidate = rechargeSourceById(pending.rechargeSourceId, pending);
+    let reason = '';
+    if (!candidate) reason = 'Choose an available charging source.';
+    else if (!candidate.active) reason = candidate.reason || 'The selected charging source is unavailable.';
+    else if (!details || !(details.added > 1e-9)) reason = 'Choose a target charge above the current level.';
+    else {
+      const maxTarget = rechargeMaxTargetPercent(candidate, pending);
+      if (details.target > maxTarget + 1e-9) reason = 'The selected source does not have enough energy for that target charge.';
+    }
+    confirm.disabled = Boolean(reason);
+    confirm.setAttribute('aria-disabled', reason ? 'true' : 'false');
+    if (reason) confirm.title = reason;
+    else confirm.removeAttribute('title');
   }
 
   function updateVehicleEnergyDialogUi() {
@@ -17224,6 +17557,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         costOutput.textContent = `${details.purchaseAmount.toFixed(pending.isElectric ? 2 : 2)} ${details.purchaseUnit} × $${price.toFixed(pending.isElectric ? 3 : 2)} = $${cost.toFixed(2)}`;
       }
     }
+    updateGearRechargeConfirmState(pending, details);
   }
 
   function itemsNeedingSetDownForWallCharge(pending, candidate) {
@@ -17234,7 +17568,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     for (const item of items) {
       if (seen.has(item.id)) continue;
       seen.add(item.id);
-      if (!gearItemIsInSetDownContext(item)) unique.push(item);
+      // QoL staging is allowed only for Gear the character is actually carrying.
+      // Stationary Gear in a car, garage, camp, etc. is never teleported to Set Down.
+      if (gearItemIsCarried(item) && !gearItemIsInSetDownContext(item)) unique.push(item);
     }
     return unique;
   }
@@ -17270,8 +17606,20 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       }
       candidate.setup = refreshed;
       if (!confirmAndSetDownWallChargingItems(pending, candidate)) return false;
-      const targetEnergy = ensureGearBatteryState(pending.item, pending.catalog);
-      if (targetEnergy) targetEnergy.chargePercent = details.target;
+      setChargingTargetChargePercent(pending.item, pending.catalog, details.target);
+      return true;
+    }
+
+    if (candidate.type === 'vehicle') {
+      const vehicleId = String(candidate.setup?.vehicleLocation?.id || '');
+      const vehicleLocation = state.gearLocations.find(location => String(location?.id || '') === vehicleId);
+      const refreshed = vehicleLocation ? vehicleRechargeSetup(vehicleLocation, pending.item, pending.catalog) : null;
+      if (!refreshed?.active) {
+        if (error) error.textContent = refreshed?.reason || 'The selected vehicle charging source is no longer available.';
+        renderGearRechargeSources(pending);
+        return false;
+      }
+      setChargingTargetChargePercent(pending.item, pending.catalog, details.target);
       return true;
     }
 
@@ -17299,8 +17647,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       return false;
     }
     sourceEnergy.chargePercent = Math.max(0, Number(sourceEnergy.chargePercent) - 100 * sourceWh / sourceCapacity);
-    const targetEnergy = ensureGearBatteryState(pending.item, pending.catalog);
-    if (targetEnergy) targetEnergy.chargePercent = details.target;
+    setChargingTargetChargePercent(pending.item, pending.catalog, details.target);
     return true;
   }
 
@@ -17344,8 +17691,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       }
     }
 
-    if (pending.kind === 'device' || pending.kind === 'device-discharge') {
-      if (pending.kind === 'device') {
+    if (pendingUsesManagedRecharge(pending) || pending.kind === 'device-discharge') {
+      if (pendingUsesManagedRecharge(pending)) {
         if (!settleManagedGearRecharge(pending, details, error)) return;
       } else {
         if (pending.chargeTarget) {
@@ -17362,8 +17709,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
             renderStoredChargeTargets(pending);
             return;
           }
-          const targetEnergy = ensureGearBatteryState(candidate.item, candidate.catalog);
-          if (targetEnergy) targetEnergy.chargePercent = 100;
+          setChargingTargetChargePercent(candidate.item, candidate.catalog, 100);
         }
         const energy = ensureGearBatteryState(pending.energyItem || pending.item, pending.energyCatalog || pending.catalog);
         if (energy) energy.chargePercent = details.target;
@@ -28822,7 +29168,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   });
 
   document.getElementById('vehicleEnergyTarget')?.addEventListener('input', handleVehicleEnergyTargetInput);
-  document.getElementById('vehicleEnergyFuelType')?.addEventListener('change', syncLiquidContainerFuelChoiceUi);
+  document.getElementById('vehicleEnergyFuelTypeButton')?.addEventListener('click', togglePortableFuelPicker);
+  document.querySelectorAll('[data-fuel-type-option]').forEach(option => {
+    option.addEventListener('click', () => {
+      const family = option.dataset.fuelTypeOption;
+      if (!PORTABLE_FUEL_FAMILIES.includes(family)) return;
+      syncLiquidContainerFuelChoiceUi(family);
+      closePortableFuelPicker();
+      document.getElementById('vehicleEnergyFuelTypeButton')?.focus({preventScroll:true});
+    });
+  });
   document.getElementById('vehicleEnergyBuy')?.addEventListener('change', updateVehicleEnergyDialogUi);
   document.getElementById('vehicleEnergyUnitPrice')?.addEventListener('input', updateVehicleEnergyDialogUi);
   document.getElementById('vehicleEnergyAccount')?.addEventListener('change', updateVehicleEnergyDialogUi);
@@ -28830,8 +29185,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   document.getElementById('vehicleEnergyConfirm')?.addEventListener('click', () => settleVehicleEnergyDialog(true));
   document.getElementById('vehicleEnergyDialog')?.addEventListener('cancel', event => {
     event.preventDefault();
+    closePortableFuelPicker();
     settleVehicleEnergyDialog(false);
   });
+  document.getElementById('vehicleEnergyDialog')?.addEventListener('close', closePortableFuelPicker);
 
   document.querySelectorAll('[data-device-use-step]').forEach(button => {
     bindFocusPreservingStepButton(button, () => adjustDeviceUseMinutes(button.dataset.deviceUseStep), 'deviceUseMinutes');
@@ -30567,6 +30924,20 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Audited rechargeable USB/storage-battery Gear. Runtime-based rechargeable devices retain their existing time-based Use… controls and conditional Recharge action.
      - Power banks and portable power stations now expose Use… even though they intentionally have no fake fixed runtime; Use opens a stored-charge dialog that records remaining charge directly by percentage.
      - After stored charge is reduced, Recharge appears in the Gear … menu through the existing rechargeable-device flow; it remains absent at 100% charge.
+  */
+
+  /* INTERNAL v666 USB-C PD/EPR PERSONAL-ELECTRIC CHARGING — NOT USER-FACING
+     - Personal Electric vehicle Gear now participates in the same managed Recharge workflow as USB-C rechargeable devices: target %, From Wall first, owned portable sources, passenger-vehicle USB sources, cable/charger reachability, Set Down staging for carried wall-charging items only, nonlinear charge-time estimates, and disabled Confirm until valid.
+     - 2027+ representative USB-C charging caps: Bicycle/E-scooter/Self-Balancing Transporter 140 W; Single-Wheel Board/Longboard/EUC 240 W. Missing representative battery capacities are supplied for the Onewheel GT-class (525 Wh) and Ninebot S2-class (335 Wh).
+     - Adds 140 W and emerging 240 W USB-C PD 3.1 EPR wall chargers plus a 240 W EPR USB-C cable.
+     - Power-bank/power-station Use presets now also discover USB-C PEVs and operate on their live vehicle charge state.
+   */
+
+  /* INTERNAL v665 CHARGING REACHABILITY + PASSENGER-VEHICLE USB SOURCES — NOT USER-FACING
+     - Owned power banks/power stations remain visible as Recharge sources when physically unreachable; they render disabled with a location reason instead of disappearing. Portable-source Use presets likewise keep compatible remote targets visible but disabled.
+     - Same-root named Gear Locations now count as one physical charging tree, so an item directly in a car/crate/garage can interact with another item nested in a pouch within that same root.
+     - Wall-charge auto-staging moves only currently carried required Gear to Set Down. Stationary Gear in a car, garage, camp, or other named location is never teleported.
+     - Passenger Vehicles provide representative ~15 W built-in USB-C charging with an in-vehicle USB-C cable. The existing 12 V car charger is normalized to a 65 W USB-C PD adapter; when present in that vehicle it becomes the faster path and enables laptop-class charging.
   */
 
   /* INTERNAL v662 CHARGING SOURCES + TAPERED TIME MODEL — NOT USER-FACING
