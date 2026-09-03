@@ -9625,7 +9625,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v648</div>
+<div class="footer-note no-print">Character Sheet v649</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -11624,6 +11624,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   // v648: recalibrated hard-surface Wet/Dirty carried-weight additions; Wet + Dirty uses a moderate interaction allowance, with stronger combined retention for tires, knee-high rubber boots, and towable generators.
+  // v649: restore drag-in compatibility for removable 18–20 V cordless-tool battery packs so a removed pack can be dropped back onto a compatible tool.
   // v647: Gear ellipsis menus expose catalog Specs in a read-only dialog for dependable mobile access; XS hard-surface Muddy addition is 0.03 oz.
   // v646: hard-surface environmental carried-weight model. Surface classes approximate
   // exposed exterior area; porous/absorbent items retain the established percentage model.
@@ -15380,6 +15381,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (loadedMagazineForWeapon(target, targetCatalog)) return null;
       if (gearItemQuantity(source) !== 1 && gearEmbeddedChildren(source.id).length) return null;
       return {kind:'magazine', quantity:1};
+    }
+
+    if (sourceCatalog.batteryPackFamily && sourceCatalog.rechargeable === true && targetCatalog.replaceableBatteryPackFamily) {
+      if (String(sourceCatalog.batteryPackFamily) !== String(targetCatalog.replaceableBatteryPackFamily)) return null;
+      const required = Math.max(1, Math.floor(Number(targetCatalog.replaceableBatteryPackCount) || 1));
+      if (installedBatteryPackItems(target, targetCatalog).length >= required) return null;
+      return gearItemQuantity(source) >= 1
+        ? {kind:'battery-pack', quantity:1, batteryPackFamily:sourceCatalog.batteryPackFamily}
+        : null;
     }
 
     if (sourceCatalog.primaryBatteryType && sourceCatalog.primaryBatteryChemistry && targetCatalog.replaceableBatteryType) {
