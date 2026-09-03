@@ -9274,6 +9274,78 @@
       .primary-battery-chip .primary-battery-state-label,
       .replaceable-battery-chip .primary-battery-state-label { padding:0 2px; }
     }
+
+
+    /* v639: phone Gear row density + item-action placement. */
+    @media screen and (max-width: 600px),
+           screen and (max-height: 520px) and (pointer: coarse) {
+      #gear .gear-table tr.gear-row {
+        grid-template-columns:
+          34px
+          minmax(56px, .9fr)
+          minmax(56px, .9fr)
+          minmax(62px, 1.15fr)
+          30px
+          30px !important;
+        column-gap: 4px !important;
+        position: relative !important;
+      }
+      #gear .gear-table td:nth-child(1) {
+        grid-column: 1 / -1 !important;
+        padding-right: 32px !important;
+      }
+      #gear .gear-table td:nth-child(2),
+      #gear .gear-table td:nth-child(3),
+      #gear .gear-table td:nth-child(4),
+      #gear .gear-table td:nth-child(5),
+      #gear .gear-table td:nth-child(6),
+      #gear .gear-table td:nth-child(7) {
+        grid-column: auto !important;
+        min-width: 0 !important;
+      }
+      #gear .gear-table td:nth-child(8) {
+        position: absolute !important;
+        top: 27px !important;
+        right: 9px !important;
+        width: 28px !important;
+        min-width: 28px !important;
+        height: 28px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        z-index: 3 !important;
+      }
+      #gear .gear-table td:nth-child(8) .gear-item-actions-button {
+        width: 28px !important;
+        min-width: 28px !important;
+        height: 28px !important;
+      }
+      #gear .gear-table .gear-color-cell,
+      #gear .gear-table .gear-color-cell button.gear-color-picker {
+        min-width: 0 !important;
+        width: 100% !important;
+      }
+      #gear button.gear-color-picker {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+        gap: 1px !important;
+      }
+      #gear button.gear-color-picker::after {
+        margin-left: 1px !important;
+        font-size: 7px !important;
+      }
+      #gear .gear-table .gear-quantity-cell,
+      #gear .gear-table .gear-weight-cell {
+        width: auto !important;
+      }
+      #gear .gear-table .gear-quantity-cell input,
+      #gear .gear-table .gear-weight-cell input {
+        font-size: 11px !important;
+        font-variant-numeric: tabular-nums !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -9448,7 +9520,7 @@
 </div>
 <div class="daily-consumption-panel">
   <div class="daily-consumption-field"><label for="dailyWaterConsumed">Water consumed today</label><div class="unit-input"><input id="dailyWaterConsumed" data-path="sustenance.consumedToday.waterLiters" inputmode="decimal" min="0" step="0.25" type="number"/><span class="unit">L</span></div></div>
-  <div class="daily-consumption-field"><label for="dailyFoodConsumed">Food consumed today</label><div class="unit-input"><input id="dailyFoodConsumed" data-path="sustenance.consumedToday.foodRations" inputmode="decimal" min="0" step="0.25" type="number"/><span class="unit">rations</span></div></div>
+  <div class="daily-consumption-field"><label for="dailyFoodConsumed">Food consumed today</label><div class="unit-input"><input id="dailyFoodConsumed" data-path="sustenance.consumedToday.foodRations" inputmode="decimal" min="0" step="0.25" type="number"/><span class="unit">Rations</span></div></div>
   <button class="btn small daily-consumption-reset no-print" id="resetDailyConsumptionBtn" type="button">Reset daily consumption</button>
 </div>
 <h3 class="section-title">Condition Tracker</h3><div class="toolbar no-print section-edit-only"><button class="btn primary" id="addConditionBtn">+ Add custom condition</button></div>
@@ -9538,7 +9610,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v637</div>
+<div class="footer-note no-print">Character Sheet v639</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -10517,6 +10589,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   // v621: urine catalog pass — synthetic/paraphernalia, pooled human laboratory urine, and common hunting/trapping urine scents.
+  // v639: phone Gear layout + consume-dialog polish — item actions move to the Item row's top-right on phones; Color is tighter while Qty/Weight get equal extra width; Eat/Drink steppers no longer summon the phone keyboard or auto-select the amount; manual amount focus selects for editing; Conditions capitalizes Rations; consume dialogs omit the Moderate-hydration default text; footer version is synchronized.
   // v638: stock-power + sustenance QoL — new replaceable-battery devices include fresh installed cells; new cordless 18–20 V tools include one full compatible (specific) pack; integrated rechargeables start full; Used generation can still have missing/depleted power; Eat/Drink are direct Gear-row buttons; Conditions tracks/reset today's water and ration consumption.
   // v637: sealed-service cleanup — AED/PLB/EPIRB proprietary service batteries remain descriptive parts of their devices and no longer expose a battery-state chip or manual controls; removable/common batteries and removable power-tool packs are unchanged.
   // v636: battery dependency audit — expands live replaceable-primary-battery support to lithium/button cells and many previously unpowered digital/electronic devices; adds CR2 and LR44 cells; wires obvious portable specialist instruments to representative replaceable or rechargeable power; makes the existing 18–20 V power-tool pack removable/loadable in bare cordless tools; gives sealed-service batteries (AED/PLB/EPIRB) a non-rechargeable coarse state; removes a stale dual-power radio conflict.
@@ -16254,7 +16327,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const defaultValue = Math.min(max, moderateHourlyConsumptionDefault());
     const title = kind === 'drink' ? `Drink ${item.item || 'Water'}` : `Eat ${item.item || 'Ration'}`;
     document.getElementById('resourceConsumeDialogTitle').textContent = title;
-    document.getElementById('resourceConsumeDialogSummary').textContent = `Default: ${formatQuarter(moderateHourlyConsumptionDefault())} ${kind === 'drink' ? 'L' : 'rations'} (character Moderate hydration need per hour). Available: ${formatQuarter(max)} ${kind === 'drink' ? 'L' : 'rations'}.`;
+    document.getElementById('resourceConsumeDialogSummary').textContent = `Available: ${formatQuarter(max)} ${kind === 'drink' ? 'L' : 'rations'}.`;
     document.getElementById('resourceConsumeAmountLabel').textContent = kind === 'drink' ? 'Water to drink' : 'Rations to eat';
     document.getElementById('resourceConsumeUnitLabel').textContent = kind === 'drink' ? 'L' : 'rations';
     document.getElementById('resourceConsumeConfirm').textContent = kind === 'drink' ? 'Drink' : 'Eat';
@@ -16267,7 +16340,6 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     closeGearItemActionMenu();
     if (dialog.open) dialog.close();
     dialog.showModal();
-    requestAnimationFrame(() => { input.focus(); input.select(); });
   }
 
   function settleResourceConsumeDialog(commit) {
@@ -27493,7 +27565,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   });
 
   document.querySelectorAll('[data-resource-consume-step]').forEach(button => {
-    bindFocusPreservingStepButton(button, () => adjustResourceConsumeAmount(button.dataset.resourceConsumeStep), 'resourceConsumeAmount');
+    const suppressFocus = event => { if (!button.disabled) event.preventDefault(); };
+    button.addEventListener('pointerdown', suppressFocus);
+    button.addEventListener('mousedown', suppressFocus);
+    button.addEventListener('click', () => adjustResourceConsumeAmount(button.dataset.resourceConsumeStep));
+  });
+  document.getElementById('resourceConsumeAmount')?.addEventListener('focus', event => {
+    requestAnimationFrame(() => event.currentTarget.select());
   });
   document.getElementById('resourceConsumeAmount')?.addEventListener('input', updateResourceConsumeUi);
   document.getElementById('resourceConsumeAmount')?.addEventListener('blur', event => setResourceConsumeAmount(event.currentTarget.value));
