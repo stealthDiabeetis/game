@@ -9710,7 +9710,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v666</div>
+<div class="footer-note no-print">Character Sheet v668</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -17105,9 +17105,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     pending.rechargeSourceId = candidate.id;
     const slider = document.getElementById('vehicleEnergyTarget');
     if (slider) {
-      const maxTarget = rechargeMaxTargetPercent(candidate, pending);
-      slider.max = String(maxTarget);
-      if (!preserveTarget || Number(slider.value) > maxTarget + 1e-9) slider.value = String(maxTarget);
+      const sourceMaxTarget = rechargeMaxTargetPercent(candidate, pending);
+      const intendedTarget = preserveTarget
+        ? Math.max(pending.current, Math.min(pending.max || 100, Number(pending.rechargeRequestedTarget) || Number(slider.value) || pending.current))
+        : sourceMaxTarget;
+      if (!preserveTarget) pending.rechargeRequestedTarget = intendedTarget;
+      // Keep the physical slider on the full charge scale. A limited portable source
+      // clamps the thumb to what it can actually reach instead of redefining that
+      // reachable percentage as the right edge of the control.
+      slider.max = String(pending.max || 100);
+      slider.value = String(Math.min(sourceMaxTarget, intendedTarget));
+      slider.dataset.rechargeSourceMax = String(sourceMaxTarget);
     }
     if (error) error.textContent = '';
     renderGearRechargeSources(pending);
@@ -17190,6 +17198,19 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (pending?.kind === 'device-discharge' && pending.chargeTarget) {
       clearStoredChargeTargetSelection(pending);
       renderStoredChargeTargets(pending);
+    }
+    if (pendingUsesManagedRecharge(pending)) {
+      const slider = document.getElementById('vehicleEnergyTarget');
+      if (slider) {
+        const requested = Math.max(pending.current, Math.min(pending.max || 100, Number(slider.value) || pending.current));
+        pending.rechargeRequestedTarget = requested;
+        const candidate = rechargeSourceById(pending.rechargeSourceId, pending);
+        if (candidate?.active) {
+          const sourceMaxTarget = rechargeMaxTargetPercent(candidate, pending);
+          if (requested > sourceMaxTarget) slider.value = String(sourceMaxTarget);
+          slider.dataset.rechargeSourceMax = String(sourceMaxTarget);
+        }
+      }
     }
     updateVehicleEnergyDialogUi();
     if (pendingUsesManagedRecharge(pending)) updateGearRechargeTimeUi(pending);
@@ -17278,7 +17299,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     renderStoredChargeTargets(null);
     const energy = ensureVehicleEnergyState(item, catalog);
     const current = Math.max(0, Math.min(100, Number(energy?.chargePercent) || 0));
-    pendingVehicleEnergyAdjust = {kind:'pev', owner:item, item, catalog, isElectric:true, current, max:100, allowPurchase:false, rechargeSourceId:''};
+    pendingVehicleEnergyAdjust = {kind:'pev', owner:item, item, catalog, isElectric:true, current, max:100, allowPurchase:false, rechargeSourceId:'', rechargeRequestedTarget:100};
     const fuelTypeWrap = document.getElementById('vehicleEnergyFuelTypeWrap');
     if (fuelTypeWrap) fuelTypeWrap.hidden = true;
     document.getElementById('vehicleEnergyDialogTitle').textContent = `Recharge ${item.item || catalog.name || 'Personal Electric Vehicle'}`;
@@ -17400,7 +17421,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     renderStoredChargeTargets(null);
     const energy = ensureGearBatteryState(item, catalog);
     const current = Math.max(0, Math.min(100, Number(energy?.chargePercent) || 0));
-    pendingVehicleEnergyAdjust = {kind:'device', item, catalog, isElectric:true, current, max:100, rechargeSourceId:''};
+    pendingVehicleEnergyAdjust = {kind:'device', item, catalog, isElectric:true, current, max:100, rechargeSourceId:'', rechargeRequestedTarget:100};
     const fuelTypeWrap = document.getElementById('vehicleEnergyFuelTypeWrap');
     if (fuelTypeWrap) fuelTypeWrap.hidden = true;
     document.getElementById('vehicleEnergyDialogTitle').textContent = `Recharge ${item.item || catalog.name || 'Device'}`;
@@ -30924,6 +30945,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Audited rechargeable USB/storage-battery Gear. Runtime-based rechargeable devices retain their existing time-based Use… controls and conditional Recharge action.
      - Power banks and portable power stations now expose Use… even though they intentionally have no fake fixed runtime; Use opens a stored-charge dialog that records remaining charge directly by percentage.
      - After stored charge is reduced, Recharge appears in the Gear … menu through the existing rechargeable-device flow; it remains absent at 100% charge.
+  */
+
+  /* INTERNAL v668 RECHARGE TARGET VISUAL CLAMP — NOT USER-FACING
+     - Managed Recharge keeps the range control on the full charge scale instead of shrinking its HTML max to a portable source's energy ceiling.
+     - Selecting a source that can only reach (for example) 40% now places the thumb at the actual 40% position on the full-scale slider while retaining the player's higher intended target separately.
+     - Dragging beyond a limited source's reachable ceiling remembers the requested target but immediately clamps the visible thumb to the source ceiling; changing to a stronger source restores the remembered target.
+
+     v667 RECHARGE TARGET PRESERVATION
+     - Managed Recharge now remembers the player's intended target charge independently of the selected source's temporary energy ceiling.
+     - Selecting a limited portable source may clamp the visible slider to what that source can actually provide, but switching back to wall or another stronger source restores the previously intended target instead of leaving the slider stuck at the lower percentage.
+     - Manually changing the target while a source is selected updates the remembered intended target, so deliberate lower targets remain deliberate across source changes.
   */
 
   /* INTERNAL v666 USB-C PD/EPR PERSONAL-ELECTRIC CHARGING — NOT USER-FACING
