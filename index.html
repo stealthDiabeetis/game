@@ -9625,7 +9625,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v649</div>
+<div class="footer-note no-print">Character Sheet v650</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -15175,12 +15175,6 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (gearItemQuantity(source) !== 1 && gearEmbeddedChildren(source.id).length) return {applicable:true, valid:false, text:'Split loaded magazine first'};
       const compatibility = canEmbedGearItem(source, target);
       return {applicable:true, valid:Boolean(compatibility), compatibility, text:'Insert Magazine'};
-    }
-
-    if (sourceCatalog.batteryPackFamily && sourceCatalog.rechargeable === true && targetCatalog.replaceableBatteryPackFamily) {
-      if (String(sourceCatalog.batteryPackFamily) !== String(targetCatalog.replaceableBatteryPackFamily)) return null;
-      if (installedBatteryPackItems(target, targetCatalog).length >= Math.max(1, Math.floor(Number(targetCatalog.replaceableBatteryPackCount) || 1))) return null;
-      return gearItemQuantity(source) >= 1 ? {kind:'battery-pack', quantity:1, batteryPackFamily:sourceCatalog.batteryPackFamily} : null;
     }
 
     if (sourceCatalog.batteryPackFamily && sourceCatalog.rechargeable === true && targetCatalog.replaceableBatteryPackFamily) {
@@ -29514,6 +29508,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   refreshVisibleEncumbranceLayout();
   void refreshExportControlAvailability();
 })();
+
+/* INTERNAL v650 CORDLESS BATTERY DRAG-TARGET FIX — NOT USER-FACING
+   - Removed an accidental raw battery-pack compatibility return from specialGearDragFeedback().
+   - The raw compatibility belongs only in canEmbedGearItem(); drag feedback now reaches the proper
+     applicable/valid Install Battery Pack branch, allowing compatible 18–20 V packs to highlight
+     and drop back into cordless tools after removal.
+*/
 </script>
 </body>
 </html>
