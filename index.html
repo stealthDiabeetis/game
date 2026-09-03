@@ -4354,6 +4354,23 @@
       padding: 0;
     }
 
+    .daily-consumption-panel {
+      display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; margin:10px 0 2px;
+      padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2);
+    }
+    .daily-consumption-field { min-width:150px; }
+    .daily-consumption-field label { display:block; margin:0 0 4px; color:var(--muted); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+    .daily-consumption-field .unit-input { display:flex; align-items:center; gap:5px; }
+    .daily-consumption-field input { width:78px; min-height:34px; padding:6px 7px; border:1px solid var(--line); border-radius:7px; background:var(--panel); text-align:center; font-variant-numeric:tabular-nums; }
+    .daily-consumption-field .unit { color:var(--muted); font-size:11px; font-weight:750; }
+    .daily-consumption-reset { margin-left:auto; }
+    .resource-consume-inline { margin-left:3px; }
+    @media screen and (max-width:600px) {
+      .daily-consumption-panel { align-items:stretch; }
+      .daily-consumption-field { min-width:calc(50% - 5px); flex:1 1 130px; }
+      .daily-consumption-reset { margin-left:0; width:100%; }
+    }
+
     .field.center-label > label {
       display: block;
       width: 100%;
@@ -9428,7 +9445,13 @@
 <tr><td><strong>Food</strong></td><td><div class="unit-input"><input class="calculated-food" data-calculated-food="sedentary" data-path="sustenance.food.sedentary" readonly="" title="Calculated from character weight and rounded to the nearest 0.25."/><span class="unit">/ day</span></div></td><td><div class="unit-input"><input class="calculated-food" data-calculated-food="light" data-path="sustenance.food.light" readonly="" title="Calculated from character weight and rounded to the nearest 0.25."/><span class="unit">/ day</span></div></td><td><div class="unit-input"><input class="calculated-food" data-calculated-food="moderate" data-path="sustenance.food.moderate" readonly="" title="Calculated from character weight and rounded to the nearest 0.25."/><span class="unit">/ day</span></div></td><td><div class="unit-input"><input class="calculated-food" data-calculated-food="heavy" data-path="sustenance.food.heavy" readonly="" title="Calculated from character weight and rounded to the nearest 0.25."/><span class="unit">/ day</span></div></td></tr>
 </tbody>
 </table>
-</div><h3 class="section-title">Condition Tracker</h3><div class="toolbar no-print section-edit-only"><button class="btn primary" id="addConditionBtn">+ Add custom condition</button></div>
+</div>
+<div class="daily-consumption-panel">
+  <div class="daily-consumption-field"><label for="dailyWaterConsumed">Water consumed today</label><div class="unit-input"><input id="dailyWaterConsumed" data-path="sustenance.consumedToday.waterLiters" inputmode="decimal" min="0" step="0.25" type="number"/><span class="unit">L</span></div></div>
+  <div class="daily-consumption-field"><label for="dailyFoodConsumed">Food consumed today</label><div class="unit-input"><input id="dailyFoodConsumed" data-path="sustenance.consumedToday.foodRations" inputmode="decimal" min="0" step="0.25" type="number"/><span class="unit">rations</span></div></div>
+  <button class="btn small daily-consumption-reset no-print" id="resetDailyConsumptionBtn" type="button">Reset daily consumption</button>
+</div>
+<h3 class="section-title">Condition Tracker</h3><div class="toolbar no-print section-edit-only"><button class="btn primary" id="addConditionBtn">+ Add custom condition</button></div>
 <div class="table-wrap condition-tracker-wrap">
 <table class="data-table condition-tracker-table">
 <thead><tr><th>Type</th><th>Stage</th><th>Location</th><th>Treatment</th><th><span class="condition-notes-heading-part">Subtype /</span> <span class="condition-notes-heading-part">Progression Notes</span></th><th class="no-print delete-cell"></th></tr></thead>
@@ -10494,6 +10517,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   // v621: urine catalog pass — synthetic/paraphernalia, pooled human laboratory urine, and common hunting/trapping urine scents.
+  // v638: stock-power + sustenance QoL — new replaceable-battery devices include fresh installed cells; new cordless 18–20 V tools include one full compatible (specific) pack; integrated rechargeables start full; Used generation can still have missing/depleted power; Eat/Drink are direct Gear-row buttons; Conditions tracks/reset today's water and ration consumption.
   // v637: sealed-service cleanup — AED/PLB/EPIRB proprietary service batteries remain descriptive parts of their devices and no longer expose a battery-state chip or manual controls; removable/common batteries and removable power-tool packs are unchanged.
   // v636: battery dependency audit — expands live replaceable-primary-battery support to lithium/button cells and many previously unpowered digital/electronic devices; adds CR2 and LR44 cells; wires obvious portable specialist instruments to representative replaceable or rechargeable power; makes the existing 18–20 V power-tool pack removable/loadable in bare cordless tools; gives sealed-service batteries (AED/PLB/EPIRB) a non-rechargeable coarse state; removes a stale dual-power radio conflict.
   // v635: liquid-container stacking pass — identical empty/prefilled liquid containers may remain stacked; per-container liquid state is shown on stacks; mutating one container auto-splits exactly one unit while preserving the remainder; manual Split proportionally divides embedded liquid contents.
@@ -11996,13 +12020,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   const makeAttributes = names => Object.fromEntries(names.map(name => [name, {current:50, max:50}]));
   const makeBlankSkills = count => Array.from({length:count}, () => ({id:uid(), name:'', level:'', groupId:''}));
   const defaultState = () => ({
-    version: 45,
+    version: 46,
     ui: {mode:'edit', starterSkillsFinished:false, freeEntryMode:false, skillGroupView:false, skillGroupOrder:['__ungrouped__'], gearWeightUnit:'lb', attributeLinks:{body:true, mind:true}, sectionLocks:{overview:false, skills:false, conditions:false, gear:false, background:false}, specificSkillWarningIds:[]},
     identity: {player:'', name:'', sex:'', age:30, height:'5 ft 8 in', weight:160, skin:'', hair:'', eyes:'', voice:'', features:'', vision:100, hearing:100, smell:100, temperament:'', goals:'', portrait:''},
     attributes: {body: makeAttributes(BODY_ATTRIBUTES), mind: makeAttributes(MIND_ATTRIBUTES)},
     skills: makeBlankSkills(60),
     skillGroups: [],
-    sustenance: {hydration:{sedentary:'',light:'',moderate:'',heavy:''}, food:{sedentary:'',light:'',moderate:'',heavy:''}},
+    sustenance: {hydration:{sedentary:'',light:'',moderate:'',heavy:''}, food:{sedentary:'',light:'',moderate:'',heavy:''}, consumedToday:{waterLiters:0, foodRations:0}},
     encumbrance: {light:'', medium:'', heavy:''},
     conditions: DEFAULT_CONDITIONS.map(([type, systemic]) => ({id:uid(), type, stage:0, location: systemic ? 'Systemic' : '', treatment:'', progression:'', noneCleanupFields:[], builtIn:true, automation:{qualifiers:{}, targets:[], customEffects:{}, customConfigured:false}})),
     conditionAutomation: {baseScores:{}, appliedPoints:{}, senseMax:{}},
@@ -16137,6 +16161,39 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return Number.isFinite(value) && value > 0 ? value : 0.25;
   }
 
+  function ensureDailyConsumptionState() {
+    state.sustenance = state.sustenance && typeof state.sustenance === 'object' ? state.sustenance : {};
+    state.sustenance.consumedToday = state.sustenance.consumedToday && typeof state.sustenance.consumedToday === 'object'
+      ? state.sustenance.consumedToday
+      : {waterLiters:0, foodRations:0};
+    for (const key of ['waterLiters','foodRations']) {
+      const value = Number(state.sustenance.consumedToday[key]);
+      state.sustenance.consumedToday[key] = Number.isFinite(value) && value >= 0 ? value : 0;
+    }
+    return state.sustenance.consumedToday;
+  }
+
+  function recordDailyConsumption(kind, amount) {
+    const daily = ensureDailyConsumptionState();
+    const value = Math.max(0, Number(amount) || 0);
+    if (!(value > 0)) return;
+    const key = kind === 'drink' ? 'waterLiters' : 'foodRations';
+    daily[key] = Math.round(((Number(daily[key]) || 0) + value + Number.EPSILON) * 100) / 100;
+    const field = document.getElementById(kind === 'drink' ? 'dailyWaterConsumed' : 'dailyFoodConsumed');
+    if (field) field.value = String(daily[key]);
+  }
+
+  function resetDailyConsumption() {
+    const daily = ensureDailyConsumptionState();
+    daily.waterLiters = 0;
+    daily.foodRations = 0;
+    const water = document.getElementById('dailyWaterConsumed');
+    const food = document.getElementById('dailyFoodConsumed');
+    if (water) water.value = '0';
+    if (food) food.value = '0';
+    queueSave();
+  }
+
   let pendingResourceConsume = null;
 
   function roundConsumptionQuarter(value) {
@@ -16237,6 +16294,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (amount >= current - 1e-9) state.gear = state.gear.filter(entry => entry.id !== pending.item.id);
       else pending.item.quantity = normalizeGearQuantity(current - amount);
     }
+    recordDailyConsumption(pending.kind, amount);
     pendingResourceConsume = null;
     if (dialog?.open) dialog.close();
     clearGearSortState();
@@ -17521,7 +17579,18 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       }
       incoming.version = 45;
     }
-    incoming.version = 45;
+    if (Number(incoming.version ?? 0) < 46) {
+      incoming.sustenance = incoming.sustenance && typeof incoming.sustenance === 'object' ? incoming.sustenance : {};
+      incoming.sustenance.consumedToday = incoming.sustenance.consumedToday && typeof incoming.sustenance.consumedToday === 'object'
+        ? incoming.sustenance.consumedToday
+        : {waterLiters:0, foodRations:0};
+      const water = Number(incoming.sustenance.consumedToday.waterLiters);
+      const food = Number(incoming.sustenance.consumedToday.foodRations);
+      incoming.sustenance.consumedToday.waterLiters = Number.isFinite(water) && water >= 0 ? water : 0;
+      incoming.sustenance.consumedToday.foodRations = Number.isFinite(food) && food >= 0 ? food : 0;
+      incoming.version = 46;
+    }
+    incoming.version = 46;
     return incoming;
   }
 
@@ -20120,7 +20189,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         if (!existingCatalogLocation) createCatalogGearLocation(catalog, item);
       }
     } else if (!existingCatalogLocation) createCatalogGearLocation(catalog, item);
-    if (!convertedVehicleLocation) initializePrefilledLiquidPackage(item, catalog);
+    if (!convertedVehicleLocation) {
+      initializePrefilledLiquidPackage(item, catalog);
+      if (previousCatalogId !== catalog.id) initializeStockDevicePower(item, catalog);
+    }
     const itemId = item.id;
     const locationId = convertedVehicleLocation?.id || '';
     closeGearItemAutocomplete();
@@ -21304,6 +21376,43 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return GEAR_CATALOG.find(candidate => candidate.primaryBatteryChemistry && candidate.primaryBatteryType === type) || null;
   }
 
+  function batteryPackCatalogForFamily(family) {
+    return GEAR_CATALOG.find(candidate => candidate.rechargeable === true && candidate.batteryPackFamily === family) || null;
+  }
+
+  function initializeStockDevicePower(item, catalog) {
+    if (!item || !catalog || gearItemQuantity(item) !== 1) return;
+    if (catalog.replaceableBatteryType && Number(catalog.replaceableBatteryCount) > 0 && !installedPrimaryBatteryCount(item, catalog)) {
+      const batteryCatalog = primaryBatteryCatalogForType(catalog.replaceableBatteryType);
+      const count = Math.max(1, Math.floor(Number(catalog.replaceableBatteryCount) || 1));
+      if (batteryCatalog) {
+        const batteries = createGeneratedEmbeddedConsumable(item, batteryCatalog, count, {primaryBatteryState:{condition:'fresh', actualCondition:'fresh'}});
+        if (batteries) batteries.condition = 'New';
+      }
+    }
+    if (catalog.replaceableBatteryPackFamily && !installedBatteryPack(item, catalog)) {
+      const packCatalog = batteryPackCatalogForFamily(catalog.replaceableBatteryPackFamily);
+      if (packCatalog) {
+        const pack = createGeneratedEmbeddedConsumable(item, packCatalog, 1);
+        if (pack) {
+          pack.condition = 'New';
+          pack.batteryEnergy = {chargePercent:100};
+        }
+      }
+    }
+    if (catalog.rechargeable === true && catalog.category !== 'Vehicles' && !catalog.batteryPackFamily) {
+      item.batteryEnergy = {chargePercent:100};
+    }
+  }
+
+  function randomUsedBatteryPackLoadPlan(catalog) {
+    const family = String(catalog?.replaceableBatteryPackFamily || '');
+    const packCatalog = family ? batteryPackCatalogForFamily(family) : null;
+    if (!packCatalog) return null;
+    if (Math.random() < .30) return {kind:'battery-pack', count:0, catalogId:packCatalog.id, family};
+    return {kind:'battery-pack', count:1, catalogId:packCatalog.id, family, chargePercent:randomUsedRechargeableChargePercent()};
+  }
+
   function randomUsedReplaceableBatteryLoadPlan(catalog) {
     const required = Math.max(0, Math.floor(Number(catalog?.replaceableBatteryCount) || 0));
     const type = String(catalog?.replaceableBatteryType || '');
@@ -21393,6 +21502,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     else if (catalogIsLiquidContainer(catalog)) generated.generatedLoad = randomUsedLiquidLoadPlan(catalog);
     if (catalogIsLoadableWeapon(catalog)) generated.generatedWeaponLoad = randomUsedWeaponLoadPlan(catalog);
     if (catalog.replaceableBatteryType && Number(catalog.replaceableBatteryCount) > 0) generated.generatedBatteryLoad = randomUsedReplaceableBatteryLoadPlan(catalog);
+    if (catalog.replaceableBatteryPackFamily) generated.generatedBatteryPackLoad = randomUsedBatteryPackLoadPlan(catalog);
     return generated;
   }
 
@@ -21423,6 +21533,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
     const batteryLoad = generated.generatedBatteryLoad;
     if (batteryLoad?.kind === 'batteries') parts.push(`Batteries: ${Math.max(0, Math.floor(Number(batteryLoad.count) || 0))}/${Math.max(0, Math.floor(Number(batteryLoad.required) || 0))} installed`);
+    const batteryPackLoad = generated.generatedBatteryPackLoad;
+    if (batteryPackLoad?.kind === 'battery-pack') parts.push(batteryPackLoad.count ? `Battery pack: ${Math.round(Number(batteryPackLoad.chargePercent) || 0)}%` : 'Battery pack: missing');
     return parts.join(' · ');
   }
 
@@ -21926,6 +22038,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         }
       }
     }
+    const batteryPackLoad = selectedState.generatedBatteryPackLoad;
+    if (batteryPackLoad?.kind === 'battery-pack' && catalog.replaceableBatteryPackFamily && Number(batteryPackLoad.count) > 0) {
+      const packCatalog = GEAR_CATALOG_BY_ID.get(batteryPackLoad.catalogId);
+      if (packCatalog?.batteryPackFamily === catalog.replaceableBatteryPackFamily) {
+        const pack = createGeneratedEmbeddedConsumable(item, packCatalog, 1);
+        if (pack) {
+          pack.condition = 'Good';
+          pack.batteryEnergy = {chargePercent:Math.max(0, Math.min(100, Math.round(Number(batteryPackLoad.chargePercent) || 0)))};
+        }
+      }
+    }
   }
 
   function addCatalogGearFromBulk(catalog, quantity, locationId, selectedState=defaultBulkGearState(), bundleEntriesOverride=null) {
@@ -21968,6 +22091,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (catalog.category === 'Vehicles') ensureVehicleEnergyState(item, catalog);
     state.gear.push(item);
     initializePrefilledLiquidPackage(item, catalog);
+    const generatedPrimaryBatteryState = Object.prototype.hasOwnProperty.call(selectedState, 'generatedBatteryLoad');
+    const generatedPackState = Object.prototype.hasOwnProperty.call(selectedState, 'generatedBatteryPackLoad');
+    const generatedRechargeState = Number.isFinite(Number(selectedState.generatedChargePercent));
+    if (!generatedPrimaryBatteryState && !generatedPackState && !generatedRechargeState) initializeStockDevicePower(item, catalog);
+    else {
+      if (!generatedPrimaryBatteryState && !generatedPackState && catalog.rechargeable !== true) initializeStockDevicePower(item, catalog);
+      if (!generatedPrimaryBatteryState && catalog.replaceableBatteryType) initializeStockDevicePower(item, catalog);
+      if (!generatedPackState && catalog.replaceableBatteryPackFamily) initializeStockDevicePower(item, catalog);
+    }
     applyBulkGeneratedResourceState(catalog, item, selectedState);
     const location = createCatalogGearLocation(catalog, item, bundleEntriesOverride);
     return {item, location};
@@ -24030,12 +24162,6 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const fuelContainerAction = canFuelUpLiquidContainer(item, fuelContainerCatalog)
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-fuel-container role="menuitem">Fuel Up</button>'
       : '';
-    const drinkAction = canDrinkGearWater(item)
-      ? '<button type="button" class="gear-item-action-option" data-gear-item-action-drink role="menuitem">Drink</button>'
-      : '';
-    const eatAction = catalogIsRationFood(fuelContainerCatalog)
-      ? '<button type="button" class="gear-item-action-option" data-gear-item-action-eat role="menuitem">Eat</button>'
-      : '';
     const itemVehicleCatalog = vehicleCatalogForItem(item);
     const vehicleEnergyAction = itemVehicleCatalog && (vehicleCanFuelUp(item, itemVehicleCatalog) || vehicleCanRecharge(item, itemVehicleCatalog))
       ? `<button type="button" class="gear-item-action-option" data-gear-item-action-vehicle-energy role="menuitem">${itemVehicleCatalog.vehicleEnergyType === 'electric' ? 'Recharge' : 'Fuel Up'}</button>`
@@ -24062,8 +24188,6 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       ${transferLiquidAction}
       ${fillWaterAction}
       ${fuelContainerAction}
-      ${drinkAction}
-      ${eatAction}
       ${pourOutLiquidAction}
       ${vehicleEnergyAction}
       ${deviceRechargeAction}
@@ -24079,8 +24203,6 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     menu.querySelector('[data-gear-item-action-transfer-liquid]')?.addEventListener('click', () => renderGearItemLiquidTransferMenu(item));
     menu.querySelector('[data-gear-item-action-fill-water]')?.addEventListener('click', () => fillLiquidContainerWithWater(item));
     menu.querySelector('[data-gear-item-action-fuel-container]')?.addEventListener('click', () => openLiquidContainerFuelDialog(item, fuelContainerCatalog));
-    menu.querySelector('[data-gear-item-action-drink]')?.addEventListener('click', () => openResourceConsumeDialog(item, 'drink'));
-    menu.querySelector('[data-gear-item-action-eat]')?.addEventListener('click', () => openResourceConsumeDialog(item, 'eat'));
     menu.querySelector('[data-gear-item-action-pour-out]')?.addEventListener('click', () => pourOutGearItemLiquid(item));
     menu.querySelector('[data-gear-item-action-vehicle-energy]')?.addEventListener('click', () => openVehicleEnergyDialog(item, itemVehicleCatalog));
     menu.querySelector('[data-gear-item-action-device-recharge]')?.addEventListener('click', () => openGearRechargeDialog(item, rechargeableCatalog));
@@ -24211,7 +24333,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const batteryPackStatus = batteryPackDeviceCatalog ? batteryPackDeviceStatusMarkup(g, batteryPackDeviceCatalog) : '';
       const loadedStatus = draft ? '' : firearmOrMagazineStatusMarkup(g, catalogItem);
       const liquidStatus = draft ? '' : liquidContainerStatusMarkup(g, catalogItem);
-      const liveStatus = vehicleStatus || batteryStatus || primaryBatteryStatus || replaceableBatteryStatus || batteryPackStatus || loadedStatus || liquidStatus;
+      const resourceConsumeButton = draft ? '' : (canDrinkGearWater(g)
+        ? '<button type="button" class="vehicle-drive-button resource-consume-inline no-print" data-resource-consume-direct="drink">Drink</button>'
+        : catalogIsRationFood(catalogItem)
+          ? '<button type="button" class="vehicle-drive-button resource-consume-inline no-print" data-resource-consume-direct="eat">Eat</button>'
+          : '');
+      const primaryLiveStatus = vehicleStatus || batteryStatus || primaryBatteryStatus || replaceableBatteryStatus || batteryPackStatus || loadedStatus || liquidStatus;
+      const liveStatus = `${primaryLiveStatus}${resourceConsumeButton}`;
       const embeddedDepth = draft ? 0 : gearEmbeddedDepth(g);
       const quantityUnitLabel = draft ? '' : liquidQuantityUnitLabel(catalogItem, g);
       const quantityDisplayValue = draft ? gearItemQuantity(g) : liquidQuantityInputValue(g, catalogItem);
@@ -24391,6 +24519,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         event.preventDefault();
         event.stopPropagation();
         openGearItemActionMenu(event.currentTarget, item);
+      });
+      row.querySelector('[data-resource-consume-direct]')?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        openResourceConsumeDialog(item, event.currentTarget.dataset.resourceConsumeDirect);
       });
 
       const itemInput = row.querySelector('[data-field="item"]');
@@ -26942,6 +27075,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const path = control.dataset.path || '';
       let playEditable = false;
       if (sectionId === 'overview') playEditable = path.endsWith('.current') || path === 'identity.goals';
+      else if (sectionId === 'conditions') playEditable = path.startsWith('sustenance.consumedToday.');
       else if (sectionId === 'background') playEditable = path === 'background.notes';
       setLockedControl(control, locked && !playEditable);
     });
@@ -26970,6 +27104,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
     const conditionsLocked = isSectionLocked('conditions');
     setLockedControl(document.getElementById('addConditionBtn'), conditionsLocked);
+    setLockedControl(document.getElementById('resetDailyConsumptionBtn'), false);
 
     const gearLocked = isSectionLocked('gear');
     // Gear rows are rendered dynamically and do not use data-path, so lock every
@@ -27369,6 +27504,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   });
   document.getElementById('resourceConsumeCancel')?.addEventListener('click', () => settleResourceConsumeDialog(false));
   document.getElementById('resourceConsumeConfirm')?.addEventListener('click', () => settleResourceConsumeDialog(true));
+  document.getElementById('resetDailyConsumptionBtn')?.addEventListener('click', resetDailyConsumption);
   document.getElementById('resourceConsumeDialog')?.addEventListener('cancel', event => {
     event.preventDefault();
     settleResourceConsumeDialog(false);
