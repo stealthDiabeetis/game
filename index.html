@@ -9589,15 +9589,15 @@
       }
 
       /* Condition no longer needs its original desktop width at the reduced
-         tablet font size. Also tighten the actions gutter around the 28 px …
-         control so the menu button is always inside the visible table. */
+         tablet font size. Keep the normal 48 px actions gutter and 10 px side
+         padding; the flexible Item column absorbs that space instead. */
       #gear .gear-table .gear-condition-col {
         width: 112px !important;
       }
       #gear .gear-table .delete-cell {
-        width: 36px !important;
-        padding-left: 4px !important;
-        padding-right: 4px !important;
+        width: 48px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
       }
 
       /* Match the phone abbreviation while retaining lower-case lb. */
@@ -9605,6 +9605,36 @@
       #gear .gear-weight-heading-short { display: inline !important; }
       #gear .gear-weight-unit-wrap { text-transform: none !important; }
     }
+
+
+    /* v690: keep the compact numeric Gear headers visually centered over
+       their controls. Sort indicators are positioned independently so they
+       cannot pull Qty or Wt (unit) off-center. */
+    @media screen and (min-width: 601px) {
+      #gear .gear-table th.gear-quantity-col,
+      #gear .gear-table th.gear-weight-col {
+        text-align: center !important;
+      }
+      #gear .gear-table th.gear-quantity-col .sort-header-btn {
+        position: relative;
+        width: 100%;
+        justify-content: center !important;
+      }
+      #gear .gear-table th.gear-quantity-col .sort-indicator {
+        position: absolute;
+        right: 0;
+      }
+      #gear .gear-table th.gear-weight-col .gear-weight-header {
+        position: relative;
+        width: 100%;
+        justify-content: center !important;
+      }
+      #gear .gear-table th.gear-weight-col .gear-weight-header > .sort-indicator {
+        position: absolute;
+        right: 0;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -9869,7 +9899,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v688</div>
+<div class="footer-note no-print">Character Sheet v690</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -32415,6 +32445,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Inline vehicle/device action buttons use Drive / Ride / Travel / Use without a trailing ellipsis to reclaim horizontal room.
      - Standalone large-vehicle Color and Condition replace native <select> presentation with the same custom web color and condition menus used by regular Gear, preventing iOS from falling back to the default system picker UI.
   */
+
+  /* INTERNAL v689 TABLET ACTION-GUTTER RESTORE — NOT USER-FACING
+     - Restores the tablet Gear … actions gutter to the normal 48 px width with 10 px side padding around the 28 px control.
+     - The Gear Item column remains flexible and gives up the reclaimed 12 px instead; Condition stays at 112 px and the no-horizontal-scroll tablet fit work remains otherwise unchanged.
+  */
 </script>
+
+  <!-- INTERNAL v690 NUMERIC HEADER CENTERING — NOT USER-FACING
+       - Qty and Wt (unit) Gear headers are explicitly centered over their fields on tablet/desktop.
+       - Sort indicators are absolutely positioned so they do not bias the visible label alignment.
+       - No column widths or control widths changed. -->
+
 </body>
 </html>
