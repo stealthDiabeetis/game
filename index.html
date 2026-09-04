@@ -3439,6 +3439,16 @@
       background: var(--panel-2);
       outline: none;
     }
+    /* v698: touch/coarse-pointer menus should not retain a desktop-style hover
+       highlight at the coordinates of the previous tap (notably iOS/iPadOS). */
+    @media (hover: none), (pointer: coarse) {
+      .gear-item-action-option:hover,
+      .gear-item-action-option:focus,
+      .gear-item-action-option:focus-visible {
+        background: transparent;
+        outline: none;
+      }
+    }
     .gear-item-action-option.danger { color: var(--danger); }
     .gear-item-action-divider { height: 1px; margin: 4px 3px; background: var(--line); }
     .gear-item-action-heading {
@@ -4284,6 +4294,14 @@
       border:1px solid var(--line); border-radius:6px; background:var(--panel);
     }
     .loaded-ammo-chip { color:#765828; border-color:color-mix(in srgb, #765828 42%, var(--line)); }
+    @keyframes firearm-ammo-feedback {
+      0% { background:color-mix(in srgb, var(--accent) 24%, var(--panel)); box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 52%, transparent); }
+      100% { background:var(--panel); box-shadow:0 0 0 0 transparent; }
+    }
+    .loaded-ammo-chip.fire-feedback { animation:firearm-ammo-feedback .42s ease-out; }
+    @media (prefers-reduced-motion: reduce) {
+      .loaded-ammo-chip.fire-feedback { animation-duration:.01ms; }
+    }
     .liquid-volume-chip.water { color:#287d9b; border-color:color-mix(in srgb, #287d9b 42%, var(--line)); }
     .liquid-volume-chip.fuel { color:#9a681b; border-color:color-mix(in srgb, #9a681b 42%, var(--line)); }
     .liquid-volume-chip.filled { color:var(--text); border-color:var(--line); }
@@ -8877,6 +8895,47 @@
     .fuel-type-picker-option[aria-selected="true"]::before { content:'✓'; width:20px; flex:0 0 20px; color:var(--accent); font-weight:900; }
     .fuel-type-picker-option[aria-selected="false"]::before { content:''; width:20px; flex:0 0 20px; }
 
+
+    /* v698: app-native Purify Water pickers replace native iOS <select>s and
+       keep disabled inventory choices visible with an explicit reason. */
+    .water-purification-picker { position:relative; min-width:0; }
+    .water-purification-picker-button {
+      width:100%; min-height:40px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+      border:1px solid var(--line); border-radius:8px; background:var(--panel-2); color:var(--text);
+      padding:9px 10px; font:inherit; text-align:left; cursor:pointer; outline:none;
+    }
+    .water-purification-picker-button:hover { border-color:var(--line-strong); transform:none; }
+    .water-purification-picker-button:focus-visible { border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+    .water-purification-picker-button[aria-expanded="true"] .water-purification-picker-chevron { transform:rotate(180deg); }
+    .water-purification-picker-value { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .water-purification-picker-chevron { flex:0 0 auto; color:var(--muted); font-size:15px; line-height:1; transition:transform .14s ease; }
+    .water-purification-picker-menu {
+      position:absolute; z-index:60; left:0; right:0; top:calc(100% + 6px); display:grid; gap:2px;
+      max-height:min(260px, 42vh); overflow-y:auto; padding:6px; border:1px solid var(--line);
+      border-radius:10px; background:var(--panel); box-shadow:0 16px 44px rgba(0,0,0,.34);
+    }
+    .water-purification-picker-menu[hidden] { display:none !important; }
+    .water-purification-picker-option {
+      width:100%; min-height:42px; display:grid; gap:2px; border:0; border-radius:7px;
+      background:transparent; color:var(--text); padding:8px 10px; font:inherit; text-align:left; cursor:pointer;
+    }
+    .water-purification-picker-option:hover, .water-purification-picker-option:focus-visible { background:var(--panel-2); outline:none; }
+    .water-purification-picker-option[aria-selected="true"] { background:color-mix(in srgb, var(--accent) 14%, var(--panel-2)); }
+    .water-purification-picker-option[aria-disabled="true"] { opacity:.52; cursor:not-allowed; }
+    .water-purification-picker-option[aria-disabled="true"]:hover { background:transparent; }
+    .water-purification-picker-option-label { font-size:12px; font-weight:800; line-height:1.25; }
+    .water-purification-picker-option-detail { color:var(--muted); font-size:10px; line-height:1.3; white-space:normal; }
+    @media (hover:none), (pointer:coarse) {
+      .water-purification-picker-option:hover:not([aria-selected="true"]),
+      .water-purification-picker-option:focus:not([aria-selected="true"]) { background:transparent; outline:none; }
+    }
+    @media screen and (max-width:600px), screen and (hover:none) and (pointer:coarse) {
+      .water-purification-picker-button { min-height:44px; font-size:16px; }
+      .water-purification-picker-option { min-height:46px; }
+      .water-purification-picker-option-label { font-size:14px; }
+      .water-purification-picker-option-detail { font-size:11px; }
+    }
+
     @media screen and (max-width:600px) {
       .stored-charge-target-grid { grid-template-columns:1fr; }
       .fuel-type-picker-button { min-height:44px; font-size:16px; }
@@ -9935,7 +9994,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v697</div>
+<div class="footer-note no-print">Character Sheet v699</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -9978,12 +10037,12 @@
 <div class="dialog-inner">
 <h2>Purify Untreated Freshwater</h2>
 <p class="hint" id="waterPurificationSummary"></p>
-<div class="field"><label for="waterPurificationMethod">Purification method</label><select id="waterPurificationMethod"></select></div>
+<div class="field"><label id="waterPurificationMethodLabel">Purification method</label><input type="hidden" id="waterPurificationMethod"/><div class="water-purification-picker" data-water-purification-picker="method"><button type="button" class="water-purification-picker-button" id="waterPurificationMethodButton" aria-labelledby="waterPurificationMethodLabel waterPurificationMethodValue" aria-haspopup="listbox" aria-expanded="false"><span class="water-purification-picker-value" id="waterPurificationMethodValue">Choose purification method</span><span class="water-purification-picker-chevron" aria-hidden="true">⌄</span></button><div class="water-purification-picker-menu" id="waterPurificationMethodMenu" role="listbox" hidden></div></div></div>
 <div class="gear-recharge-time" id="waterPurificationMethodNote" aria-live="polite"></div>
-<div class="field"><label for="waterPurificationDestination">Destination container</label><select id="waterPurificationDestination"></select></div>
+<div class="field"><label id="waterPurificationDestinationLabel">Destination container</label><input type="hidden" id="waterPurificationDestination"/><div class="water-purification-picker" data-water-purification-picker="destination"><button type="button" class="water-purification-picker-button" id="waterPurificationDestinationButton" aria-labelledby="waterPurificationDestinationLabel waterPurificationDestinationValue" aria-haspopup="listbox" aria-expanded="false"><span class="water-purification-picker-value" id="waterPurificationDestinationValue">Choose destination container</span><span class="water-purification-picker-chevron" aria-hidden="true">⌄</span></button><div class="water-purification-picker-menu" id="waterPurificationDestinationMenu" role="listbox" hidden></div></div></div>
 <div class="field"><label for="waterPurificationAmount">Amount</label><div class="step-value-control"><button class="step-value-button" type="button" data-water-purification-step="-1" aria-label="Decrease purification amount">−</button><div class="fund-dialog-amount"><input id="waterPurificationAmount" inputmode="decimal" autocomplete="off"/><span id="waterPurificationUnitLabel">L</span></div><button class="step-value-button" type="button" data-water-purification-step="1" aria-label="Increase purification amount">+</button></div></div>
 <div class="gear-recharge-time" id="waterPurificationPreview" aria-live="polite"></div>
-<p class="hint">Contact/wait times are shown for roleplay; the sheet converts successfully treated output to Water immediately.</p>
+<p class="hint">Treatment times are shown for roleplay; the sheet applies successful purification immediately.</p>
 <div class="fund-dialog-error" id="waterPurificationError" aria-live="polite"></div>
 <div class="dialog-actions"><button class="btn" id="waterPurificationCancel" type="button">Cancel</button><button class="btn primary" id="waterPurificationConfirm" type="button">Purify</button></div>
 </div>
@@ -10024,6 +10083,7 @@
 <span class="stored-charge-target-label">Charge from</span>
 <div class="stored-charge-target-grid" id="gearRechargeSourceGrid"></div>
 <div class="gear-recharge-time" id="gearRechargeTime" aria-live="polite"></div>
+<p class="hint" id="gearRechargeRoleplayHint">Charging times are shown for roleplay; the sheet applies successful charging immediately.</p>
 </div>
 <label class="energy-buy-toggle" id="vehicleEnergyBuyWrap"><input id="vehicleEnergyBuy" type="checkbox"/> Buy</label>
 <div id="vehicleEnergyPurchaseFields" hidden>
@@ -10044,6 +10104,7 @@
 <div class="stored-charge-target-grid" id="storedChargeUseTargetGrid"></div>
 </div>
 <div class="gear-recharge-time" id="storedChargeUseDetails" aria-live="polite"></div>
+<p class="hint">Charging times are shown for roleplay; the sheet applies successful charging immediately.</p>
 <div class="fund-dialog-error" id="storedChargeUseError" aria-live="polite"></div>
 <div class="dialog-actions"><button class="btn" id="storedChargeUseCancel" type="button">Cancel</button><button class="btn primary" id="storedChargeUseConfirm" type="button">Charge</button></div>
 </div>
@@ -13028,13 +13089,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const chlorineDioxide = GEAR_CATALOG.find(item => item.id === 'gc0528');
     if (chlorineDioxide) chlorineDioxide.specs = 'Individually foil-wrapped chlorine-dioxide water-treatment tablet · Treats about 1 L · Broad field disinfection including bacteria, viruses, Giardia and Cryptosporidium when label contact time is followed · Representative maximum contact time about 4 hr · Common retail package quantity: 30';
     const squeeze = GEAR_CATALOG.find(item => item.id === 'gc0523');
-    if (squeeze) squeeze.specs = '0.1 micron hollow-fiber backpacking filter · Removes sediment, protozoa and bacteria from ordinary field freshwater · Does not desalinate water or remove dissolved chemical contamination; typical microfilters do not reliably remove viruses';
+    if (squeeze) squeeze.specs = '0.1 micron hollow-fiber backpacking filter · Removes sediment, protozoa and bacteria from ordinary field freshwater · Representative clean-filter flow about 1.6 L/min · Does not desalinate water or remove dissolved chemical contamination; typical microfilters do not reliably remove viruses';
     const gravity = GEAR_CATALOG.find(item => item.id === 'gc0524');
-    if (gravity) gravity.specs = 'Portable gravity-fed backpacking water filter with approximately 4 L dirty-water reservoir · Representative hollow-fiber field filter for sediment, protozoa and bacteria · Does not desalinate water or remove dissolved chemical contamination';
+    if (gravity) gravity.specs = 'Portable gravity-fed backpacking water filter with approximately 4 L dirty-water reservoir · Representative hollow-fiber field filter for sediment, protozoa and bacteria · Representative flow about 1.75 L/min · Does not desalinate water or remove dissolved chemical contamination';
     const pump = GEAR_CATALOG.find(item => item.id === 'gc0525');
-    if (pump) pump.specs = 'Portable hand-pump backpacking water filter · Representative microfilter for sediment, protozoa and bacteria in ordinary field freshwater · Does not desalinate water or remove dissolved chemical contamination';
+    if (pump) pump.specs = 'Portable hand-pump backpacking water filter · Representative microfilter for sediment, protozoa and bacteria in ordinary field freshwater · Representative output about 1 L/min · Does not desalinate water or remove dissolved chemical contamination';
     const uv = GEAR_CATALOG.find(item => item.id === 'gc0526');
-    if (uv) uv.specs = 'Portable handheld UV water purifier for small field-water batches · UV can inactivate bacteria, viruses and protozoa in clear water; cloudy/turbid water should be filtered or clarified first · Does not remove salt or dissolved chemical contamination';
+    if (uv) uv.specs = 'Portable handheld UV water purifier for small field-water batches · Representative cycle about 48 sec for 0.5 L or 90 sec for 1 L · UV can inactivate bacteria, viruses and protozoa in clear water; cloudy/turbid water should be filtered or clarified first · Does not remove salt or dissolved chemical contamination';
 
     GEAR_CATALOG.push(
       {
@@ -14723,8 +14784,19 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   document.getElementById('waterPurificationCancel')?.addEventListener('click', () => settleWaterPurificationDialog(false));
   document.getElementById('waterPurificationConfirm')?.addEventListener('click', () => settleWaterPurificationDialog(true));
-  document.getElementById('waterPurificationMethod')?.addEventListener('change', () => { document.getElementById('waterPurificationError').textContent = ''; updateWaterPurificationDialog(true); });
-  document.getElementById('waterPurificationDestination')?.addEventListener('change', () => { document.getElementById('waterPurificationError').textContent = ''; updateWaterPurificationDialog(true); });
+  ['method','destination'].forEach(kind => {
+    const parts = waterPurificationPickerParts(kind);
+    parts.button?.addEventListener('click', event => {
+      event.preventDefault(); event.stopPropagation();
+      const opening = Boolean(parts.menu?.hidden);
+      closeWaterPurificationPickers(opening ? kind : '');
+      if (parts.menu) parts.menu.hidden = !opening;
+      parts.button?.setAttribute('aria-expanded', opening ? 'true' : 'false');
+    });
+  });
+  document.addEventListener('click', event => {
+    if (!event.target.closest?.('.water-purification-picker')) closeWaterPurificationPickers();
+  });
   document.getElementById('waterPurificationAmount')?.addEventListener('input', () => { document.getElementById('waterPurificationError').textContent = ''; updateWaterPurificationDialog(false); });
   document.querySelectorAll('[data-water-purification-step]').forEach(button => button.addEventListener('click', () => {
     const input = document.getElementById('waterPurificationAmount');
@@ -16688,12 +16760,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   const WATER_PURIFICATION_METHODS = Object.freeze({
-    'gc0523':{kind:'filter', detail:'0.1 µm hollow-fiber filter · ordinary backcountry filtration; no salt/chemical removal'},
-    'gc0524':{kind:'filter', detail:'Gravity filter · approximately 4 L dirty-water batch; no salt/chemical removal'},
-    'gc0525':{kind:'filter', detail:'Pump microfilter · ordinary backcountry filtration; no salt/chemical removal'},
-    'gc0526':{kind:'uv', detail:'UV purification · use on clear water; particles can reduce UV effectiveness'},
-    'gc0527':{kind:'tablet', litersPerUnit:0.5, detail:'Iodine · 2 tablets/L · wait at least 30 min; not reliable against Cryptosporidium'},
-    'gc0528':{kind:'tablet', litersPerUnit:1.0, detail:'Chlorine dioxide · 1 tablet/L · allow label contact time, up to about 4 hr'}
+    // Representative field rates: squeeze ~1.6 L/min (clean filter), gravity ~1.75 L/min,
+    // pump ~1 L/min; UV 0.5 L / 48 sec or 1 L / 90 sec; iodine 30 min contact;
+    // chlorine dioxide 4 hr maximum contact time for broad purifier-level treatment.
+    'gc0523':{kind:'filter', flowLitersPerMinute:1.6, detail:'0.1 µm hollow-fiber filter · representative clean-filter flow ~1.6 L/min · no salt/chemical removal'},
+    'gc0524':{kind:'filter', flowLitersPerMinute:1.75, detail:'Gravity filter · approximately 4 L dirty-water batch · representative flow ~1.75 L/min · no salt/chemical removal'},
+    'gc0525':{kind:'filter', flowLitersPerMinute:1.0, detail:'Pump microfilter · representative output ~1 L/min · no salt/chemical removal'},
+    'gc0526':{kind:'uv', uvHalfLiterSeconds:48, uvLiterSeconds:90, detail:'UV purification · about 48 sec/0.5 L or 90 sec/1 L · use on clear water; particles can reduce UV effectiveness'},
+    'gc0527':{kind:'tablet', litersPerUnit:0.5, contactSeconds:30*60, detail:'Iodine · 2 tablets/L · about 30 min contact time; not reliable against Cryptosporidium'},
+    'gc0528':{kind:'tablet', litersPerUnit:1.0, contactSeconds:4*60*60, detail:'Chlorine dioxide · 1 tablet/L · allow label contact time, up to about 4 hr'}
   });
 
   function canPurifyUntreatedFreshwater(item) {
@@ -16730,34 +16805,121 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   function waterPurificationDestinationEntries(source) {
     return (state.gear || []).filter(target => {
       if (!target || target.id === source?.id || gearItemIsEmbedded(target)) return false;
-      const catalog = catalogForGearInstance(target);
-      if (!catalogIsLiquidContainer(catalog)) return false;
-      const family = embeddedLiquidFamily(target);
-      if (family && family !== 'water') return false;
-      const room = Math.max(0, Number(catalog.liquidCapacityLiters) - liquidContainerPerUnitLiters(target));
-      return room > 1e-9 && liquidContainerAcceptsFamily(target, catalog, 'water');
+      return catalogIsLiquidContainer(catalogForGearInstance(target));
     }).map(target => {
       const catalog = catalogForGearInstance(target);
+      const family = embeddedLiquidFamily(target);
       const room = Math.max(0, Number(catalog.liquidCapacityLiters) - liquidContainerPerUnitLiters(target));
       const reachable = gearItemsShareChargingContext(source, target);
       const location = gearItemPhysicalLocationLabel(target);
-      return {
-        target, catalog, room, ready:reachable,
-        reason:reachable ? '' : `${gearInstanceLabel(target, catalog)} is in ${location}.`,
-        location
-      };
+      let reason = '';
+      if (family && family !== 'water') reason = `Contains ${liquidFamilyLabel(family)}; empty it before using it as a Water destination.`;
+      else if (!(room > 1e-9)) reason = 'Container is full.';
+      else if (!liquidContainerAcceptsFamily(target, catalog, 'water')) reason = 'This container does not accept Water.';
+      else if (!reachable) reason = `${gearInstanceLabel(target, catalog)} is in ${location}.`;
+      return {target, catalog, room, ready:!reason, reason, location};
     });
   }
 
+  function formatWaterPurificationDuration(seconds) {
+    const raw = Math.max(0, Number(seconds) || 0);
+    if (!(raw > 0)) return '';
+    if (raw < 60) return `about ${Math.max(5, Math.round(raw / 5) * 5)} sec in game`;
+    if (raw < 600) {
+      const rounded = Math.max(60, Math.round(raw / 5) * 5);
+      const min = Math.floor(rounded / 60);
+      const sec = rounded % 60;
+      return sec ? `about ${min} min ${sec} sec in game` : `about ${min} min in game`;
+    }
+    if (raw < 3600) return `about ${Math.max(1, Math.round(raw / 60))} min in game`;
+    const roundedMinutes = Math.max(60, Math.round(raw / 300) * 5);
+    const hours = Math.floor(roundedMinutes / 60);
+    const minutes = roundedMinutes % 60;
+    return minutes ? `about ${hours} hr ${minutes} min in game` : `about ${hours} hr in game`;
+  }
+
+  function waterPurificationTimeSeconds(def, liters) {
+    const amount = Math.max(0, Number(liters) || 0);
+    if (!def || !(amount > 0)) return 0;
+    if (Number(def.contactSeconds) > 0) return Number(def.contactSeconds);
+    if (Number(def.flowLitersPerMinute) > 0) return amount / Number(def.flowLitersPerMinute) * 60;
+    if (def.kind === 'uv') {
+      const literSeconds = Math.max(1, Number(def.uvLiterSeconds) || 90);
+      const halfSeconds = Math.max(1, Number(def.uvHalfLiterSeconds) || Math.round(literSeconds / 2));
+      const fullLiters = Math.floor(amount + 1e-9);
+      const remainder = Math.max(0, amount - fullLiters);
+      return fullLiters * literSeconds + (remainder > 1e-9 ? (remainder <= .5 + 1e-9 ? halfSeconds : literSeconds) : 0);
+    }
+    return 0;
+  }
+
   let pendingWaterPurification = null;
+
+  function waterPurificationPickerParts(kind) {
+    const prefix = kind === 'destination' ? 'waterPurificationDestination' : 'waterPurificationMethod';
+    return {
+      input:document.getElementById(prefix),
+      button:document.getElementById(`${prefix}Button`),
+      value:document.getElementById(`${prefix}Value`),
+      menu:document.getElementById(`${prefix}Menu`)
+    };
+  }
+
+  function closeWaterPurificationPickers(exceptKind='') {
+    ['method','destination'].forEach(kind => {
+      if (kind === exceptKind) return;
+      const parts = waterPurificationPickerParts(kind);
+      if (parts.menu) parts.menu.hidden = true;
+      parts.button?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function waterPurificationPickerEntryLabel(kind, entry) {
+    if (kind === 'method') return `${gearInstanceLabel(entry.item, entry.catalog)}${entry.def.kind === 'tablet' ? ` ×${Math.floor(gearItemQuantity(entry.item))}` : ''}`;
+    return gearInstanceLabel(entry.target, entry.catalog);
+  }
+
+  function waterPurificationPickerEntryDetail(kind, entry) {
+    if (!entry.ready) return `Unavailable · ${entry.reason}`;
+    if (kind === 'method') return entry.location || 'Reachable';
+    const roomUnit = liquidTransferDisplayUnit(entry.target, 'water') || 'L';
+    return `${entry.location} · room ${formatLiquidVolume(entry.room, roomUnit)} ${roomUnit}`;
+  }
+
+  function renderWaterPurificationPicker(kind, entries, selectedId='') {
+    const parts = waterPurificationPickerParts(kind);
+    if (!parts.input || !parts.button || !parts.value || !parts.menu) return;
+    const selected = entries.find(entry => String(kind === 'method' ? entry.item.id : entry.target.id) === String(selectedId) && entry.ready) || null;
+    parts.input.value = selected ? String(kind === 'method' ? selected.item.id : selected.target.id) : '';
+    parts.value.textContent = selected ? waterPurificationPickerEntryLabel(kind, selected) : (kind === 'method' ? 'Choose purification method' : 'Choose destination container');
+    parts.menu.innerHTML = entries.length ? entries.map(entry => {
+      const id = String(kind === 'method' ? entry.item.id : entry.target.id);
+      const isSelected = Boolean(selected && id === String(kind === 'method' ? selected.item.id : selected.target.id));
+      return `<button type="button" class="water-purification-picker-option" role="option" data-water-purification-picker-option="${kind}" data-water-purification-picker-value="${esc(id)}" aria-selected="${isSelected ? 'true' : 'false'}" aria-disabled="${entry.ready ? 'false' : 'true'}"${entry.ready ? '' : ' disabled'}><span class="water-purification-picker-option-label">${esc(waterPurificationPickerEntryLabel(kind, entry))}</span><span class="water-purification-picker-option-detail">${esc(waterPurificationPickerEntryDetail(kind, entry))}</span></button>`;
+    }).join('') : `<div class="stored-charge-target-empty">${kind === 'method' ? 'No purification methods found in Gear.' : 'No destination containers found in Gear.'}</div>`;
+    parts.menu.querySelectorAll('[data-water-purification-picker-option]').forEach(option => option.addEventListener('click', () => {
+      if (option.disabled || option.getAttribute('aria-disabled') === 'true') return;
+      const id = option.dataset.waterPurificationPickerValue || '';
+      parts.input.value = id;
+      const entry = entries.find(candidate => String(kind === 'method' ? candidate.item.id : candidate.target.id) === String(id));
+      parts.value.textContent = entry ? waterPurificationPickerEntryLabel(kind, entry) : '';
+      parts.menu.querySelectorAll('[role="option"]').forEach(node => node.setAttribute('aria-selected', node === option ? 'true' : 'false'));
+      parts.menu.hidden = true;
+      parts.button.setAttribute('aria-expanded', 'false');
+      document.getElementById('waterPurificationError').textContent = '';
+      updateWaterPurificationDialog(true);
+    }));
+    parts.menu.hidden = true;
+    parts.button.setAttribute('aria-expanded', 'false');
+  }
 
   function openWaterPurificationDialog(source) {
     if (!canPurifyUntreatedFreshwater(source)) return false;
     closeGearItemActionMenu();
     const dialog = document.getElementById('waterPurificationDialog');
-    const methodSelect = document.getElementById('waterPurificationMethod');
-    const destinationSelect = document.getElementById('waterPurificationDestination');
-    if (!dialog || !methodSelect || !destinationSelect) return false;
+    const methodParts = waterPurificationPickerParts('method');
+    const destinationParts = waterPurificationPickerParts('destination');
+    if (!dialog || !methodParts.input || !destinationParts.input) return false;
 
     pendingWaterPurification = {sourceId:source.id};
     const info = liquidSourceInfo(source);
@@ -16766,24 +16928,19 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     document.getElementById('waterPurificationSummary').textContent = `${gearInstanceLabel(source)} · ${formatLiquidVolume(info?.liters || 0, unit)} ${unit} Untreated Freshwater available`;
 
     const methods = waterPurificationMethodEntries(source);
-    methodSelect.innerHTML = methods.length
-      ? methods.map(entry => `<option value="${esc(entry.item.id)}"${entry.ready ? '' : ' disabled'}>${esc(`${gearInstanceLabel(entry.item, entry.catalog)}${entry.def.kind === 'tablet' ? ` ×${Math.floor(gearItemQuantity(entry.item))}` : ''}${entry.ready ? '' : ` — ${entry.reason}`}`)}</option>`).join('')
-      : '<option value="" disabled>No purification methods in Gear</option>';
     const firstMethod = methods.find(entry => entry.ready);
-    methodSelect.value = firstMethod?.item.id || '';
+    renderWaterPurificationPicker('method', methods, firstMethod?.item.id || '');
 
     const destinations = waterPurificationDestinationEntries(source);
-    destinationSelect.innerHTML = destinations.length
-      ? destinations.map(entry => `<option value="${esc(entry.target.id)}"${entry.ready ? '' : ' disabled'}>${esc(`${gearInstanceLabel(entry.target, entry.catalog)} — ${entry.location}${entry.ready ? '' : ` — ${entry.reason}`}`)}</option>`).join('')
-      : '<option value="" disabled>No compatible destination container with room</option>';
     const firstDestination = destinations.find(entry => entry.ready);
-    destinationSelect.value = firstDestination?.target.id || '';
+    renderWaterPurificationPicker('destination', destinations, firstDestination?.target.id || '');
 
     document.getElementById('waterPurificationError').textContent = '';
+    closeWaterPurificationPickers();
     if (dialog.open) dialog.close();
     dialog.showModal();
     updateWaterPurificationDialog(true);
-    requestAnimationFrame(() => (methodSelect.value ? methodSelect : destinationSelect)?.focus({preventScroll:true}));
+    requestAnimationFrame(() => (methodParts.button || destinationParts.button)?.focus({preventScroll:true}));
     return true;
   }
 
@@ -16837,7 +16994,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (!details.valid) preview.textContent = details.maxLiters > 1e-9 ? `Up to ${formatLiquidVolume(details.maxLiters, details.unit)} ${details.unit} can be purified with the selected setup.` : 'Choose a reachable method and destination container.';
       else {
         const consume = details.tabletUnits ? ` · consumes ${details.tabletUnits} ${details.tabletUnits === 1 ? 'tablet' : 'tablets'}` : '';
-        preview.textContent = `${formatLiquidVolume(details.liters, details.unit)} ${details.unit} Untreated Freshwater → Water${consume}`;
+        const time = formatWaterPurificationDuration(waterPurificationTimeSeconds(details.def, details.liters));
+        const timing = time ? ` · ${time}${details.def?.contactSeconds ? ' (contact time)' : ''}` : '';
+        preview.textContent = `${formatLiquidVolume(details.liters, details.unit)} ${details.unit} Untreated Freshwater → Water${consume}${timing}`;
       }
     }
     if (confirm) confirm.disabled = !details.valid;
@@ -16886,9 +17045,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function settleWaterPurificationDialog(commit) {
     const dialog = document.getElementById('waterPurificationDialog');
-    if (!pendingWaterPurification) { if (dialog?.open) dialog.close(); return; }
+    if (!pendingWaterPurification) { closeWaterPurificationPickers(); if (dialog?.open) dialog.close(); return; }
     if (!commit) {
       pendingWaterPurification = null;
+      closeWaterPurificationPickers();
       if (dialog?.open) dialog.close();
       return;
     }
@@ -16904,6 +17064,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       return;
     }
     pendingWaterPurification = null;
+    closeWaterPurificationPickers();
     if (dialog?.open) dialog.close();
   }
 
@@ -17313,7 +17474,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   function adjustLoadedAmmo(item, delta) {
     const catalog = catalogForGearInstance(item);
     const parent = ammoLoadParent(item, catalog);
-    if (!parent) return;
+    if (!parent) return false;
     const parentCatalog = catalogForGearInstance(parent);
     const family = String(parentCatalog?.ammoFamily || catalog?.ammoFamily || '');
     const cap = ammoCapacityForParent(item, catalog);
@@ -17321,16 +17482,31 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (delta < 0 && count > 0) {
       const loaded = directLoadedAmmoItems(parent);
       const ammo = loaded[loaded.length - 1];
-      if (!ammo) return;
+      if (!ammo) return false;
       const quantity = Math.max(1, Math.floor(Number(ammo.quantity) || 1));
       if (quantity <= 1) state.gear = state.gear.filter(entry => entry.id !== ammo.id);
       else ammo.quantity = quantity - 1;
     } else if (delta > 0 && (!Number.isFinite(cap) || count < cap)) {
       const source = looseMatchingAmmo(parent, family);
-      if (!source) return;
+      if (!source) return false;
       splitOrMoveIntoEmbeddedParent(source, parent, 1);
-    } else return;
+    } else return false;
     renderGear(); calculate(); queueSave();
+    return true;
+  }
+
+  function flashFirearmAmmoCount(itemId) {
+    if (!itemId) return;
+    requestAnimationFrame(() => {
+      const owner = document.querySelector(`[data-firearm-owner="${CSS.escape(String(itemId))}"]`);
+      const chip = owner?.querySelector('.loaded-ammo-chip');
+      if (!chip) return;
+      chip.classList.remove('fire-feedback');
+      void chip.offsetWidth;
+      chip.classList.add('fire-feedback');
+      chip.addEventListener('animationend', () => chip.classList.remove('fire-feedback'), {once:true});
+      setTimeout(() => chip.isConnected && chip.classList.remove('fire-feedback'), 520);
+    });
   }
 
   function firearmOrMagazineStatusMarkup(item, catalog) {
@@ -17394,7 +17570,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (!item) return;
       status.querySelector('[data-firearm-fire]')?.addEventListener('click', event => {
         event.preventDefault(); event.stopPropagation();
-        adjustLoadedAmmo(item, -1);
+        if (adjustLoadedAmmo(item, -1)) flashFirearmAmmoCount(item.id);
       });
     });
     root?.querySelectorAll('[data-loaded-ammo-owner]').forEach(status => {
@@ -33036,5 +33212,19 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
        - Dedicated existing water-treatment Gear is supported: squeeze/gravity/pump filters, UV purifier, iodine tablets, and chlorine-dioxide tablets. Tablet quantities are consumed using representative researched dosage; contact times are displayed for roleplay rather than tracked as delayed state.
        - Water remains the only water type with the inline Drink action.
        - Firearms/loadable weapons no longer show ammo +/- steppers on the weapon row. They show loaded-round status plus an inline Fire button, styled like Use/Drive, which consumes one loaded round. Magazine rows retain their loading steppers. -->
+
+  <!-- INTERNAL v698 PURIFICATION UX + ACTION FEEDBACK — NOT USER-FACING
+       - Fire now gives the firearm loaded-ammo chip a brief highlight after a successful one-round decrement.
+       - Coarse-pointer/touch Gear action menus suppress sticky desktop hover backgrounds so the option occupying the previous tap coordinates is not left highlighted on iPhone/iPad.
+       - Purify Water replaces native method/destination selects with app-native web pickers, avoiding iOS picker presentation.
+       - Purification destination discovery keeps owned liquid containers visible when unavailable and gives explicit reasons: remote Gear location, non-Water contents, full container, or incompatibility.
+       - Purification preview now reports representative in-game timing based on researched field rates: squeeze ~1.6 L/min, gravity ~1.75 L/min, pump ~1 L/min, UV ~48 sec/0.5 L or 90 sec/1 L, iodine ~30 min contact, chlorine dioxide up to ~4 hr contact.
+       - Treatment timing remains informational/roleplay pacing; the sheet still converts valid output immediately. -->
+
+
+  <!-- INTERNAL v699 ROLEPLAY-TIME LABEL CONSISTENCY — NOT USER-FACING
+       - Purify Water now labels its duration preview with the same concise roleplay/immediate-application pattern used for charging.
+       - Managed Recharge and portable stored-charge Use dialogs now explicitly state that charging times are in-game roleplay estimates and successful charging is applied immediately by the sheet.
+       - The managed-recharge hint lives inside the recharge-only block, so Fuel Up workflows do not show charging-specific guidance. -->
 </body>
 </html>
