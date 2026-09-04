@@ -9515,6 +9515,96 @@
       }
     }
 
+
+
+    /* v688: finish the iPad/tablet Gear fit pass and normalize compact labels. */
+    .unit-lowercase { text-transform: none; }
+    .gear-weight-heading-short { display: none; }
+
+    /* Standalone vehicle setup fields use the same custom web controls as
+       ordinary Gear, avoiding native iOS select presentation. */
+    #gear .standalone-vehicle-header .gear-location-vehicle-condition.combo-input-wrap {
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+    #gear .standalone-vehicle-header .gear-location-vehicle-condition input {
+      min-width: 0 !important;
+      min-height: 0 !important;
+      height: 100% !important;
+      padding: 2px 3px 2px 6px !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      color: var(--text) !important;
+      font-size: inherit !important;
+      cursor: pointer;
+    }
+    #gear .standalone-vehicle-header .gear-location-vehicle-condition .combo-arrow {
+      min-height: 0 !important;
+      height: 100% !important;
+      width: 25px !important;
+      min-width: 25px !important;
+      padding: 0 !important;
+    }
+    #gear .standalone-vehicle-header button.gear-location-vehicle-color.gear-color-picker [data-gear-color-label] {
+      display: inline !important;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #gear .standalone-vehicle-header button.gear-location-vehicle-color.gear-color-picker::after {
+      margin-left: auto !important;
+    }
+
+    @media screen and (min-width: 601px) {
+      #gear .standalone-vehicle-header button.gear-location-vehicle-color.gear-color-picker,
+      #gear .standalone-vehicle-header .gear-location-vehicle-condition.combo-input-wrap {
+        height: 30px !important;
+        min-height: 30px !important;
+      }
+    }
+
+    @media screen and (max-width: 600px), screen and (max-height: 520px) and (pointer: coarse) {
+      /* Phone field labels are generally uppercase, but the standard pound
+         abbreviation remains lowercase. */
+      #gear .gear-table .gear-weight-cell::before {
+        text-transform: none !important;
+      }
+      #gear .standalone-vehicle-header button.gear-location-vehicle-color.gear-color-picker,
+      #gear .standalone-vehicle-header .gear-location-vehicle-condition.combo-input-wrap {
+        height: 27px !important;
+        min-height: 27px !important;
+      }
+    }
+
+    @media screen and (min-width: 601px) and (max-width: 900px) and (min-height: 521px) {
+      /* The old 780 px floor was the remaining reason an iPad portrait Gear
+         table still had to scroll. Fixed-layout columns now fit the available
+         width and Item receives whatever space remains. */
+      #gear .gear-table {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      /* Condition no longer needs its original desktop width at the reduced
+         tablet font size. Also tighten the actions gutter around the 28 px …
+         control so the menu button is always inside the visible table. */
+      #gear .gear-table .gear-condition-col {
+        width: 112px !important;
+      }
+      #gear .gear-table .delete-cell {
+        width: 36px !important;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+      }
+
+      /* Match the phone abbreviation while retaining lower-case lb. */
+      #gear .gear-weight-heading-long { display: none !important; }
+      #gear .gear-weight-heading-short { display: inline !important; }
+      #gear .gear-weight-unit-wrap { text-transform: none !important; }
+    }
 </style>
 </head>
 <body>
@@ -9584,7 +9674,7 @@
 <div class="grid identity-primary-row">
 <div class="field character-name-field inset-label"><label for="identityName">Character name</label><input id="identityName" data-path="identity.name"/></div>
 <div class="field center-label"><label for="identityHeight">Height</label><div class="numeric-stepper"><input id="identityHeight" data-path="identity.height"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase height" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.height" type="button">▲</button><button aria-label="Decrease height" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.height" type="button">▼</button></div></div></div>
-<div class="field center-label"><label for="identityWeight">Weight (LB)</label><div class="numeric-stepper"><input id="identityWeight" data-path="identity.weight" inputmode="numeric" max="999" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase weight" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.weight" type="button">▲</button><button aria-label="Decrease weight" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.weight" type="button">▼</button></div></div></div>
+<div class="field center-label"><label for="identityWeight">Weight (<span class="unit-lowercase">lb</span>)</label><div class="numeric-stepper"><input id="identityWeight" data-path="identity.weight" inputmode="numeric" max="999" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase weight" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.weight" type="button">▲</button><button aria-label="Decrease weight" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.weight" type="button">▼</button></div></div></div>
 <div class="field center-value center-label"><label for="identitySex">Sex</label><input id="identitySex" data-path="identity.sex"/></div>
 <div class="field center-value center-label"><label for="identityAge">Age</label><div class="numeric-stepper"><input id="identityAge" data-path="identity.age" inputmode="numeric" max="999" min="0" step="1" type="number"/><div class="numeric-stepper-buttons no-print"><button aria-label="Increase age" class="numeric-stepper-button" data-step-direction="1" data-step-path="identity.age" type="button">▲</button><button aria-label="Decrease age" class="numeric-stepper-button" data-step-direction="-1" data-step-path="identity.age" type="button">▼</button></div></div></div>
 </div>
@@ -9779,7 +9869,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v687</div>
+<div class="footer-note no-print">Character Sheet v688</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -17300,7 +17390,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const key = `${ownerType}:${ownerId}`;
     const driveDisabled = !(Number.isFinite(range) && range > 1e-9);
     const travelVerb = vehicleTravelVerb(catalog, rangeUnit);
-    const travelLabel = `${travelVerb}…`;
+    const travelLabel = travelVerb;
     if (!isElectric) {
       const fuelDropAttr = ` data-vehicle-fuel-drop-target="${esc(key)}"`;
       return `<span class="vehicle-status-inline no-print" data-vehicle-status-owner="${esc(key)}"><span class="vehicle-energy-chip fuel${levelClass}"${fuelDropAttr} title="${esc(`${catalog.vehicleFuelType || 'Fuel'} remaining; tank ${maxDisplay} gal; drag compatible fuel here to refuel`)}"><span aria-hidden="true">${icon}</span><span class="vehicle-energy-reading">${esc(display)}/${esc(maxDisplay)} gal</span></span><span class="vehicle-range-chip" data-vehicle-range-output title="Estimated remaining range from representative full-range rating">↗ ${esc(rangeText)}</span><button type="button" class="vehicle-drive-button" data-vehicle-drive aria-label="Record distance traveled"${driveDisabled ? ' disabled aria-disabled="true"' : ''}>${travelLabel}</button></span>`;
@@ -19309,7 +19399,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const canTimedUse = Number.isFinite(fullRuntime) && fullRuntime > 0 && Number.isFinite(runtime) && runtime >= 1 / 60 && value > 1e-9;
     const canStoredChargeUse = catalog.manualBatteryDrain === true && value > 1e-9;
     const useButton = canTimedUse || canStoredChargeUse
-      ? '<button type="button" class="vehicle-drive-button" data-device-use aria-label="Record device use">Use…</button>'
+      ? '<button type="button" class="vehicle-drive-button" data-device-use aria-label="Record device use">Use</button>'
       : '';
     return `<span class="device-status-inline no-print" data-device-status-owner="${esc(item.id)}"><span class="device-energy-chip${levelClass}" title="Battery charge"><span aria-hidden="true">🔋</span><span class="vehicle-energy-reading">${esc(display)}%</span></span>${runtimeChip}${useButton}</span>`;
   }
@@ -19589,7 +19679,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       ? `<span class="device-runtime-chip" title="${esc(runtimeTitle)}">⏱ ${esc(formatBatteryRuntimeHours(remaining))}</span>`
       : '';
     const useButton = Number.isFinite(remaining) && remaining >= 1 / 60 && value > 1e-9
-      ? '<button type="button" class="vehicle-drive-button" data-battery-pack-device-use aria-label="Record cordless-tool use">Use…</button>'
+      ? '<button type="button" class="vehicle-drive-button" data-battery-pack-device-use aria-label="Record cordless-tool use">Use</button>'
       : '';
     return `<span class="device-status-inline no-print" data-battery-pack-device-owner="${esc(item.id)}"><span class="device-energy-chip${levelClass}" title="${esc(title)}"><span aria-hidden="true">🔋</span><span class="vehicle-energy-reading">${esc(String(Math.round(value)))}%</span></span>${runtimeChip}${useButton}</span>`;
   }
@@ -21165,13 +21255,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     activeSkillLevelButton = null;
   }
 
+  let activeGearConditionToggle = null;
+
   function closeGearConditionMenu() {
-    const activeRow = activeGearConditionInput?.closest('tr');
-    activeRow?.querySelector('[data-condition-toggle]')?.setAttribute('aria-expanded', 'false');
+    activeGearConditionToggle?.setAttribute('aria-expanded', 'false');
     gearConditionMenu.hidden = true;
     activeGearConditionId = null;
     activeGearConditionInput = null;
     activeGearConditionCommit = null;
+    activeGearConditionToggle = null;
   }
 
   function closeGearWeightUnitMenu() {
@@ -21278,7 +21370,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     positionPopupMenu(skillLevelMenu, button, Math.min(330, window.innerWidth - 20), Math.min(480, window.innerHeight * .62));
   }
 
-  function openGearConditionMenu(input, item, onChoose=null) {
+  function openGearConditionMenu(input, item, onChoose=null, toggleButton=null) {
     if (isSectionLocked('gear')) {
       closeGearConditionMenu();
       return;
@@ -21289,11 +21381,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     activeGearConditionId = item.id;
     activeGearConditionInput = input;
     activeGearConditionCommit = typeof onChoose === 'function' ? onChoose : null;
+    activeGearConditionToggle = toggleButton || input.closest('tr')?.querySelector('[data-condition-toggle]') || null;
     gearConditionMenu.innerHTML = GEAR_CONDITION_OPTIONS.map(option =>
       `<button type="button" class="gear-condition-option ${String(item.condition || '').toLowerCase() === option.toLowerCase() ? 'selected' : ''}" data-gear-condition="${esc(option)}" role="option">${esc(option)}</button>`
     ).join('');
     gearConditionMenu.hidden = false;
-    input.closest('tr')?.querySelector('[data-condition-toggle]')?.setAttribute('aria-expanded', 'true');
+    activeGearConditionToggle?.setAttribute('aria-expanded', 'true');
     positionPopupMenu(gearConditionMenu, input.closest('.combo-input-wrap') || input, Math.max(180, input.closest('.combo-input-wrap')?.getBoundingClientRect().width || input.getBoundingClientRect().width), 280);
   }
 
@@ -27198,7 +27291,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         <th class="gear-item-col"><button class="sort-header-btn" data-gear-sort="item" title="Sort items within each location by item" type="button">Item <span class="sort-indicator" data-gear-sort-indicator="item"></span></button></th>
         <th class="gear-color-col"><button class="sort-header-btn" data-gear-sort="color" title="Sort items within each location by color" type="button">Color <span class="sort-indicator" data-gear-sort-indicator="color"></span></button></th>
         <th class="gear-quantity-col"><button class="sort-header-btn" data-gear-sort="quantity" title="Sort items within each location by quantity" type="button">Qty <span class="sort-indicator" data-gear-sort-indicator="quantity"></span></button></th>
-        <th class="gear-weight-col"><div class="gear-weight-header"><button class="sort-header-btn" data-gear-sort="weight" title="Sort items within each location by weight per item" type="button">Weight</button><span class="gear-weight-unit-wrap no-print">(<button aria-expanded="false" aria-haspopup="listbox" aria-label="Choose gear weight display unit" class="gear-weight-unit-button" data-gear-weight-unit-button data-location-id="${locationId}" title="Choose the unit used to display and enter individual gear weights" type="button"><span class="gear-weight-unit-label">${weightUnit}</span><span aria-hidden="true" class="gear-weight-unit-chevron">▾</span></button>)</span><span class="print-only">(${weightUnit})</span><span class="sort-indicator" data-gear-sort-indicator="weight"></span></div></th>
+        <th class="gear-weight-col"><div class="gear-weight-header"><button class="sort-header-btn" data-gear-sort="weight" title="Sort items within each location by weight per item" type="button"><span class="gear-weight-heading-long">Weight</span><span class="gear-weight-heading-short" aria-hidden="true">Wt</span></button><span class="gear-weight-unit-wrap no-print">(<button aria-expanded="false" aria-haspopup="listbox" aria-label="Choose gear weight display unit" class="gear-weight-unit-button" data-gear-weight-unit-button data-location-id="${locationId}" title="Choose the unit used to display and enter individual gear weights" type="button"><span class="gear-weight-unit-label">${weightUnit}</span><span aria-hidden="true" class="gear-weight-unit-chevron">▾</span></button>)</span><span class="print-only">(${weightUnit})</span><span class="sort-indicator" data-gear-sort-indicator="weight"></span></div></th>
         <th class="gear-condition-col"><button class="sort-header-btn" data-gear-sort="condition" title="Sort items within each location by condition" type="button">Condition <span class="sort-indicator" data-gear-sort-indicator="condition"></span></button></th>
         <th class="gear-check-cell gear-dirty-col"><button class="sort-header-btn" data-gear-sort="dirty" title="Sort items within each location by dirty status" type="button">Dirty <span class="sort-indicator" data-gear-sort-indicator="dirty"></span></button><label class="gear-column-bulk-check no-print" title="Set Dirty for every item in this location"><input class="gear-check" type="checkbox" data-location-check="dirty" aria-label="Set Dirty for every item in this location"></label></th>
         <th class="gear-check-cell gear-wet-col"><button class="sort-header-btn" data-gear-sort="wet" title="Sort items within each location by wet status" type="button">Wet <span class="sort-indicator" data-gear-sort-indicator="wet"></span></button><label class="gear-column-bulk-check no-print" title="Set Wet for every item in this location"><input class="gear-check" type="checkbox" data-location-check="wet" aria-label="Set Wet for every item in this location"></label></th>
@@ -27294,14 +27387,23 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         : `<label class="gear-location-check-control gear-location-check-carried no-print${effectiveCarried ? ' is-effectively-carried' : ' is-effectively-not-carried'}" data-label="Carried" title="${esc(carriedTitle)}"><input class="gear-check" type="checkbox" data-location-check="carried" aria-label="Set whether ${esc(location.name)} is carried" ${localCarried ? 'checked' : ''}><span class="gear-location-carry-text">Carried</span></label>`;
       const collapseSymbol = location.collapsed ? '+' : '−';
       const collapseLabel = location.collapsed ? `Expand ${location.name}` : `Collapse ${location.name}`;
-      const vehicleColorControl = standaloneVehicle
-        ? `<select class="gear-location-vehicle-color no-print" data-vehicle-location-color aria-label="Vehicle color">${gearColorOptionsForItem({catalogId:locationVehicleCatalog.id,color:location.vehicleColor}).map(color => `<option value="${esc(color)}" ${color === location.vehicleColor ? 'selected' : ''}>${esc(color)}</option>`).join('')}</select><span class="gear-print-value print-only">${esc(location.vehicleColor || '')}</span>`
-        : '<span class="gear-location-color-spacer no-print" aria-hidden="true"></span>';
+      const vehicleColorControl = (() => {
+        if (!standaloneVehicle) return '<span class="gear-location-color-spacer no-print" aria-hidden="true"></span>';
+        const colorItem = {catalogId:locationVehicleCatalog.id, color:location.vehicleColor};
+        const colors = gearColorOptionsForItem(colorItem);
+        const fixedColor = Boolean(Array.isArray(locationVehicleCatalog.colors) && locationVehicleCatalog.colors.length === 1);
+        const current = fixedColor ? (colors[0] || '') : String(location.vehicleColor || '');
+        const options = fixedColor ? colors : ['', ...colors];
+        const hiddenOptions = options.map(color => `<option value="${esc(color)}"${current === color ? ' selected' : ''}>${esc(color || 'Color')}</option>`).join('');
+        const disabledPicker = fixedColor || colors.length === 0;
+        const title = fixedColor ? `Fixed color: ${current}` : (colors.length ? 'Vehicle color' : 'No catalog colors defined');
+        return `<select class="gear-color-select no-print" data-field="color" data-vehicle-location-color aria-label="Vehicle color">${hiddenOptions}</select><button type="button" class="gear-location-vehicle-color gear-color-picker no-print${disabledPicker ? ' is-disabled is-fixed' : ''}" data-gear-color-picker aria-label="${esc(title)}"${disabledPicker ? ' disabled aria-disabled="true"' : ''}><span class="gear-color-swatch${current ? '' : ' is-unspecified'}" style="${gearColorSwatchStyle(current)}" aria-hidden="true"></span><span data-gear-color-label>${esc(current || 'Color')}</span></button><span class="gear-print-value print-only">${esc(current)}</span>`;
+      })();
       const vehicleWeightControl = standaloneVehicle
         ? ''
         : '<span class="gear-location-quantity-spacer no-print" aria-hidden="true"></span>';
       const vehicleConditionControl = standaloneVehicle
-        ? `<select class="gear-location-vehicle-condition no-print" data-vehicle-location-condition aria-label="Vehicle condition">${GEAR_CONDITION_OPTIONS.map(option => `<option value="${esc(option)}" ${option === (location.vehicleCondition || 'New') ? 'selected' : ''}>${esc(option)}</option>`).join('')}</select><span class="gear-print-value print-only">${esc(location.vehicleCondition || 'New')}</span>`
+        ? `<div class="gear-location-vehicle-condition combo-input-wrap no-print"><input value="${esc(location.vehicleCondition || 'New')}" data-vehicle-location-condition aria-label="Vehicle condition" aria-haspopup="listbox" readonly><button class="combo-arrow" type="button" data-vehicle-location-condition-toggle aria-label="Show vehicle condition options" title="Show condition options" aria-expanded="false">▼</button></div><span class="gear-print-value print-only">${esc(location.vehicleCondition || 'New')}</span>`
         : '<span class="gear-location-condition-spacer no-print" aria-hidden="true"></span>';
 
       return `
@@ -27367,7 +27469,29 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const location = gearLocationById(group.dataset.locationId);
       const locationVehicleCatalog = vehicleCatalogForLocation(location);
       group.querySelector('[data-vehicle-location-color]')?.addEventListener('change', event => { location.vehicleColor = event.currentTarget.value; queueSave(); });
-      group.querySelector('[data-vehicle-location-condition]')?.addEventListener('change', event => { location.vehicleCondition = event.currentTarget.value; queueSave(); });
+      const vehicleConditionInput = group.querySelector('[data-vehicle-location-condition]');
+      const vehicleConditionToggle = group.querySelector('[data-vehicle-location-condition-toggle]');
+      const openVehicleConditionMenu = () => {
+        if (!vehicleConditionInput || isSectionLocked('gear')) return;
+        openGearConditionMenu(
+          vehicleConditionInput,
+          {id:`vehicle-location:${location.id}`, condition:location.vehicleCondition || 'New'},
+          value => {
+            location.vehicleCondition = value;
+            vehicleConditionInput.value = value;
+            queueSave();
+          },
+          vehicleConditionToggle
+        );
+      };
+      vehicleConditionInput?.addEventListener('click', openVehicleConditionMenu);
+      vehicleConditionInput?.addEventListener('focus', openVehicleConditionMenu);
+      vehicleConditionToggle?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!gearConditionMenu.hidden && activeGearConditionToggle === vehicleConditionToggle) closeGearConditionMenu();
+        else openVehicleConditionMenu();
+      });
       const locationDragHandle = group.querySelector('[data-location-drag]');
       if (locationDragHandle) bindGearLocationDragHandle(locationDragHandle, group, location);
       group.querySelector('[data-toggle-location]')?.addEventListener('click', () => {
@@ -30202,7 +30326,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!skillNameMenu.hidden && !skillNameMenu.contains(event.target) && !activeSkillNameInput?.contains(event.target)) {
       closeSkillNameMenu();
     }
-    if (!gearConditionMenu.hidden && !gearConditionMenu.contains(event.target) && !activeGearConditionInput?.contains(event.target) && !event.target.closest('[data-condition-toggle]')) {
+    if (!gearConditionMenu.hidden && !gearConditionMenu.contains(event.target) && !activeGearConditionInput?.contains(event.target) && !event.target.closest('[data-condition-toggle], [data-vehicle-location-condition-toggle]')) {
       closeGearConditionMenu();
     }
     if (!gearWeightUnitMenu.hidden && !gearWeightUnitMenu.contains(event.target) && !activeGearWeightUnitButton?.contains(event.target)) {
@@ -32283,6 +32407,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Phone card layouts and full desktop layouts are unchanged.
   */
 
+
+
+  /* INTERNAL v688 TABLET FIT + WEB VEHICLE PICKERS — NOT USER-FACING
+     - Tablet Gear Condition narrows to 112 px, the actions gutter to 36 px, and the old 780 px Gear-table minimum is removed at 601–900 px so iPad portrait can keep the … item menu on-screen without horizontal scrolling.
+     - Tablet Gear header abbreviates Weight to Wt; pound-unit display is normalized to the standard lower-case lb, including phone Gear labels and the character Weight label.
+     - Inline vehicle/device action buttons use Drive / Ride / Travel / Use without a trailing ellipsis to reclaim horizontal room.
+     - Standalone large-vehicle Color and Condition replace native <select> presentation with the same custom web color and condition menus used by regular Gear, preventing iOS from falling back to the default system picker UI.
+  */
 </script>
 </body>
 </html>
