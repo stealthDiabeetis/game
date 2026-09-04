@@ -209,7 +209,7 @@
     }
     .btn:not(:disabled):hover { border-color: var(--strong-line); transform: translateY(-1px); }
     .btn:disabled { transform: none; cursor: default; }
-    #vehicleEnergyConfirm:disabled { opacity:.42; cursor:not-allowed; filter:saturate(.45); }
+    #vehicleEnergyConfirm:disabled, #storedChargeUseConfirm:disabled { opacity:.42; cursor:not-allowed; filter:saturate(.45); }
     .btn.primary { background: var(--accent); color: #fff; border-color: transparent; }
     .btn.danger { color: var(--danger); }
     .btn.small { min-height: 32px; padding: 5px 9px; font-size: 13px; }
@@ -9446,6 +9446,75 @@
       }
     }
 
+
+    /* v685: tablet-width Gear density pass. Keep the desktop table structure,
+       but reclaim horizontal room where iPad portrait is most constrained:
+       Weight now matches Qty, PEV charge/range and replaceable-primary-battery
+       state/runtime stack, and only the two text-heavy editable fields are
+       reduced one step in size. Phone card layouts remain unchanged. */
+    @media screen and (min-width: 601px) and (max-width: 900px) and (min-height: 521px) {
+      /* Match Weight to Qty. Because Item is the table's flexible column, the
+         reclaimed width flows directly back into the item-name/status cell. */
+      #gear .gear-table .gear-weight-col,
+      #gear .gear-table .gear-weight-cell {
+        width: 70px !important;
+      }
+      #gear .gear-table .gear-weight-cell .numeric-stepper {
+        width: 5.5ch !important;
+        min-width: 56px !important;
+      }
+      #gear .gear-location-header {
+        grid-template-columns: minmax(0, 1fr) 116px 70px 70px 140px 38px 38px max-content 48px;
+      }
+
+      /* Start tablet typography reductions only where long editable text is
+         actually competing for width. Keep numeric fields, chips and headers
+         at their existing sizes for now. */
+      #gear .gear-item-name-highlight-wrap {
+        font-size: 12px;
+      }
+      #gear .gear-condition-col input {
+        font-size: 12px;
+      }
+
+      /* Portable electric vehicles: stack charge over range, but keep Ride…
+         beside the two-chip stack so the status block gets narrower without
+         becoming unnecessarily tall. */
+      #gear .gear-table .vehicle-status-inline[data-vehicle-status-owner^="item:"]:has(> .vehicle-energy-chip.electric) {
+        display: grid;
+        grid-template-columns: max-content max-content;
+        grid-template-rows: 23px 23px;
+        column-gap: 4px;
+        row-gap: 2px;
+        align-items: center;
+        margin-left: 2px;
+      }
+      #gear .gear-table .vehicle-status-inline[data-vehicle-status-owner^="item:"]:has(> .vehicle-energy-chip.electric) > .vehicle-energy-chip {
+        grid-column: 1;
+        grid-row: 1;
+      }
+      #gear .gear-table .vehicle-status-inline[data-vehicle-status-owner^="item:"]:has(> .vehicle-energy-chip.electric) > .vehicle-range-chip {
+        grid-column: 1;
+        grid-row: 2;
+      }
+      #gear .gear-table .vehicle-status-inline[data-vehicle-status-owner^="item:"]:has(> .vehicle-energy-chip.electric) > .vehicle-drive-button {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        align-self: center;
+      }
+
+      /* Replaceable-primary-battery devices (AA/AAA/C/D/9V/etc.): stack the
+         coarse battery-state chip over the derived runtime chip. Loose battery
+         rows have no runtime chip and are therefore visually unchanged. */
+      #gear .gear-table .device-status-inline[data-primary-device-owner] {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        margin-left: 2px;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -9710,7 +9779,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v668</div>
+<div class="footer-note no-print">Character Sheet v687</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -9781,10 +9850,6 @@
 <div class="energy-adjust-range-wrap" id="vehicleEnergyRangeWrap"><input id="vehicleEnergyTarget" class="energy-adjust-range" type="range"/></div>
 <div class="energy-adjust-readout" id="vehicleEnergyTargetOutput"></div>
 </div>
-<div class="stored-charge-targets" id="storedChargeTargets" hidden>
-<span class="stored-charge-target-label">Charge from this battery</span>
-<div class="stored-charge-target-grid" id="storedChargeTargetGrid"></div>
-</div>
 <div class="gear-recharge-sources" id="gearRechargeSources" hidden>
 <span class="stored-charge-target-label">Charge from</span>
 <div class="stored-charge-target-grid" id="gearRechargeSourceGrid"></div>
@@ -9798,6 +9863,19 @@
 </div>
 <div class="fund-dialog-error" id="vehicleEnergyError" aria-live="polite"></div>
 <div class="dialog-actions"><button class="btn" id="vehicleEnergyCancel" type="button">Cancel</button><button class="btn primary" id="vehicleEnergyConfirm" type="button">Confirm</button></div>
+</div>
+</dialog>
+<dialog id="storedChargeUseDialog">
+<div class="dialog-inner">
+<h2 id="storedChargeUseDialogTitle">Use battery</h2>
+<p class="hint" id="storedChargeUseDialogSummary"></p>
+<div class="stored-charge-targets">
+<span class="stored-charge-target-label">Charge a device</span>
+<div class="stored-charge-target-grid" id="storedChargeUseTargetGrid"></div>
+</div>
+<div class="gear-recharge-time" id="storedChargeUseDetails" aria-live="polite"></div>
+<div class="fund-dialog-error" id="storedChargeUseError" aria-live="polite"></div>
+<div class="dialog-actions"><button class="btn" id="storedChargeUseCancel" type="button">Cancel</button><button class="btn primary" id="storedChargeUseConfirm" type="button">Charge</button></div>
 </div>
 </dialog>
 <dialog id="deviceUseDialog">
@@ -11757,7 +11835,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   // v646: hard-surface environmental carried-weight model. Surface classes approximate
   // exposed exterior area; porous/absorbent items retain the established percentage model.
   // Fixed surface additions assume normal draining / a quick shake-off, not a proper cleaning.
-  const GEAR_SURFACE_CLASS_BY_ID = Object.freeze({"gc0819":"s","gc0820":"xs","gc0818":"s","gc0817":"s","gc0816":"m","gc0832":"s","gc0823":"m","gc0821":"s","gc0822":"m","gc0824":"s","gc0831":"s","gc1299":"xs","gc1292":"s","gc1304":"xs","gc1305":"xs","gc1293":"s","gc1300":"s","gc0813":"m","gc0812":"m","gc0814":"m","gc0815":"xs","gc1034":"s","gc1035":"s","gc1036":"s","gc0826":"s","gc0825":"s","gc1295":"xs","gc1297":"xs","gc0827":"m","gc1294":"xs","gc1296":"xs","gc1555":"s","gc1301":"s","gc1985":"s","gc1298":"s","gc1939":"s","gc1941":"s","gc1935":"s","gc1936":"s","gc1940":"xs","gc1937":"s","gc1946":"s","gc1950":"s","gc1945":"m","gc1943":"s","gc1949":"m","gc1948":"m","gc0975":"m","gc0979":"m","gc0974":"m","gc1996":"m","gc0978":"m","gc0977":"s","gc0976":"s","gc0981":"m","gc0984":"m","gc0983":"s","gc0982":"s","gc1998":"m","gc0985":"m","gc0992":"m","gc1986":"m","gc1987":"m","gc2000":"m","gc2001":"m","gc2002":"m","gc0994":"m","gc1988":"m","gc0988":"m","gc2004":"m","gc2003":"l","gc0989":"l","gc0986":"m","gc0993":"s","gc2005":"m","gc0987":"m","gc1989":"s","gc1990":"m","gc1991":"m","gc2006":"m","gc2007":"s","gc2009":"m","gc1993":"s","gc2008":"m","gc1994":"m","gc0991":"m","gc2010":"m","gc1995":"m","gc2011":"m","gc0990":"m","gc0997":"m","gc1997":"m","gc0998":"m","gc0835":"s","gc0836":"s","gc0837":"s","gc0834":"s","gc2181":"xs","gc0833":"m","gc2182":"xs","gc0134":"m","gc0133":"m","gc0132":"m","gc0135":"m","gc0136":"m","gc1028":"m","gc1107":"s","gc1102":"s","gc1103":"s","gc1104":"m","gc1105":"xs","gc1108":"m","gc1114":"xs","gc1082":"s","gc1076":"s","gc1078":"s","gc1077":"s","gc1079":"s","gc1084":"xs","gc1083":"s","gc0658":"m","gc0659":"m","gc0648":"s","gc0649":"s","gc1367":"s","gc0646":"xs","gc0645":"s","gc0644":"s","gc0647":"s","gc2094":"s","gc0640":"m","gc0639":"m","gc0641":"m","gc1040":"m","gc0643":"m","gc0642":"m","gc0655":"m","gc0654":"m","gc0652":"s","gc0651":"m","gc0650":"m","gc1610":"s","gc1609":"s","gc0218":"s","gc1315":"m","gc1314":"s","gc1316":"m","gc1313":"m","gc1308":"s","gc0219":"s","gc1319":"s","gc1318":"s","gc1317":"m","gc1320":"m","gc1307":"s","gc1306":"s","gc2205":"s","gc2203":"s","gc2204":"s","gc2206":"s","gc2207":"s","gc0980":"m","gc0200":"s","gc0197":"s","gc0198":"s","gc0199":"m","gc0196":"s","gc0192":"s","gc0195":"m","gc0193":"s","gc0194":"m","gc0202":"m","gc0201":"m","gc2187":"s","gc1018":"m","gc2186":"s","gc2184":"s","gc2201":"s","gc2198":"s","gc0232":"s","gc0233":"s","gc2195":"s","gc2193":"s","gc2194":"s","gc2189":"s","gc0190":"s","gc2192":"s","gc2191":"xs","gc2190":"xs","gc0191":"xs","gc2166":"l","gc2164":"m","gc2165":"l","gc0188":"s","gc1911":"s","gc0185":"m","gc0186":"m","gc0184":"m","gc0187":"m","gc1311":"m","gc1310":"m","gc1309":"s","gc1039":"m","gc1927":"m","gc1038":"m","gc1312":"s","gc1919":"xs","gc1910":"s","gc1914":"s","gc1913":"s","gc1922":"m","gc1921":"s","gc1928":"m","gc1017":"s","gc1902":"xs","gc1915":"s","gc1918":"s","gc1912":"s","gc1016":"s","gc2248":"m","gc2249":"m","gc2250":"m","gc2251":"m","gc2252":"s","gc2253":"m","gc2254":"s","gc2255":"m","gc1906":"s","gc1924":"s","gc1905":"s","gc1904":"s","gc1903":"xs","gc1923":"xs","gc1917":"s","gc1909":"s","gc1920":"xs","gc1019":"s","gc1925":"s","gc1916":"s","gc1926":"s","gc1020":"s","gc1908":"s","gc1929":"s","gc1907":"s","gc1700":"m","gc1694":"m","gc1695":"m","gc1698":"m","gc1696":"m","gc1699":"m","gc1693":"m","gc0761":"m","gc1817":"m","gc1701":"m","gc1697":"m","gc1629":"s","gc0762":"s","gc0221":"s","gc0220":"s","gc0166":"xs","gc0223":"s","gc0224":"m","gc0167":"s","gc1630":"m","gc0216":"s","gc1588":"s","gc0211":"s","gc1611":"m","gc0215":"s","gc0212":"s","gc0213":"s","gc0214":"s","gc0205":"s","gc0206":"m","gc1825":"s","gc2168":"xs","gc0208":"s","gc0207":"s","gc1819":"m","gc1822":"m","gc1821":"m","gc1823":"m","gc0210":"s","gc1820":"s","gc1824":"m","gc0209":"s","gc0183":"s","gc0180":"s","gc0177":"s","gc0179":"s","gc0178":"s","gc0182":"m","gc0181":"m","gc0239":"xs","gc2175":"xs","gc0236":"xs","gc0237":"xs","gc2173":"xs","gc0238":"xs","gc2176":"xs","gc2174":"xs","gc1417":"l","gc1416":"m","gc0234":"m","gc0235":"m","gc0226":"s","gc0227":"s","gc0228":"s","gc0225":"s","gc1419":"m","gc1418":"m","gc0231":"s","gc0229":"s","gc0230":"s","gc1934":"m","gc1931":"m","gc1933":"l","gc1932":"m","gc1828":"xs","gc1829":"xs","gc1830":"s","gc1835":"s","gc2237":"s","gc2238":"s","gc2239":"s","gc1930":"m","gc1832":"s","gc1831":"s","gc1833":"s","gc2256":"s","gc1834":"s","gc1849":"xs","gc1826":"s","gc1827":"s","gc1839":"s","gc1837":"m","gc1841":"m","gc1836":"m","gc1847":"m","gc1842":"m","gc1838":"s","gc1840":"s","gc1848":"s","gc1843":"s","gc1850":"s","gc1846":"m","gc1851":"m","gc1845":"s","gc2100":"s","gc2102":"s","gc2101":"xs","gc0152":"s","gc0151":"s","gc1505":"s","gc1515":"s","gc1514":"s","gc1492":"xs","gc1496":"s","gc1498":"s","gc1499":"s","gc1502":"s","gc1504":"m","gc1495":"m","gc1497":"xs","gc1501":"s","gc1513":"m","gc1646":"xs","gc1648":"xs","gc1649":"s","gc1644":"xs","gc1645":"xs","gc1642":"s","gc1641":"s","gc1647":"xs","gc1643":"xs","gc1636":"s","gc1637":"s","gc1634":"xs","gc1635":"s","gc1633":"s","gc1638":"s","gc1639":"xs","gc1640":"s","gc1651":"xs","gc1650":"xs","gc1032":"m","gc1654":"xs","gc1656":"xs","gc1655":"s","gc1686":"s","gc1685":"s","gc1554":"xs","gc1553":"xs","gc1667":"s","gc1672":"s","gc1673":"s","gc1670":"s","gc1671":"s","gc1669":"s","gc1668":"s","gc0170":"s","gc1674":"s","gc1030":"s","gc1031":"s","gc1029":"m","gc1677":"s","gc1675":"s","gc0171":"s","gc1676":"m","gc1683":"s","gc1682":"xs","gc1684":"xs","gc0172":"xs","gc1681":"xs","gc1680":"s","gc1679":"s","gc1662":"s","gc1664":"s","gc1658":"s","gc1659":"s","gc1661":"s","gc1660":"s","gc1665":"s","gc1666":"s","gc1033":"m","gc0169":"s","gc0173":"xs","gc0147":"s","gc0148":"s","gc0145":"s","gc0146":"s","gc0150":"s","gc0149":"s","gc1602":"s","gc0162":"xs","gc0163":"xs","gc0164":"s","gc1818":"s","gc0168":"xs","gc0793":"s","gc0796":"s","gc1376":"s","gc0806":"s","gc0805":"s","gc0797":"s","gc0798":"s","gc0795":"s","gc0794":"s","gc0799":"s","gc0792":"s","gc0807":"xs","gc0790":"xs","gc0791":"s","gc0787":"s","gc0786":"s","gc0789":"s","gc0788":"s","gc0810":"s","gc1532":"s","gc1535":"xs","gc1530":"s","gc1536":"s","gc1539":"xs","gc1533":"xs","gc1529":"xs","gc1534":"xs","gc1531":"s","gc1538":"xs","gc1528":"xs","gc2104":"xs","gc2105":"s","gc2103":"s","gc2119":"xs","gc2120":"xs","gc2112":"xs","gc2111":"xs","gc2113":"s","gc2128":"m","gc2125":"s","gc2124":"s","gc2127":"xs","gc2129":"xs","gc2130":"xs","gc2126":"s","gc2116":"xs","gc2114":"xs","gc2117":"xs","gc2115":"s","gc2118":"s","gc2121":"s","gc2106":"xs","gc2107":"xs","gc2109":"xs","gc2108":"xs","gc2110":"xs","gc2122":"xs","gc1562":"s","gc1561":"xs","gc1566":"s","gc1565":"xs","gc1564":"s","gc0143":"xs","gc0142":"xs","gc0140":"xs","gc0139":"xs","gc1549":"s","gc0144":"xs","gc1280":"s","gc1272":"s","gc1281":"s","gc1363":"s","gc1364":"xs","gc1277":"s","gc1274":"s","gc1278":"s","gc1279":"s","gc1276":"s","gc1275":"s","gc1273":"xs","gc1557":"s","gc1556":"s","gc1559":"s","gc1560":"s","gc1558":"s","gc1372":"s","gc0532":"m","gc0533":"m","gc0529":"m","gc0530":"m","gc0531":"m","gc0534":"m","gc0537":"m","gc0536":"s","gc0535":"s","gc1567":"s","gc0883":"s","gc0887":"s","gc0885":"s","gc1568":"s","gc0886":"s","gc0879":"s","gc0880":"s","gc0888":"s","gc0881":"m","gc0882":"m","gc1690":"m","gc1687":"s","gc1688":"m","gc1692":"s","gc2228":"s","gc1689":"s","gc0546":"s","gc1479":"m","gc0545":"s","gc0543":"s","gc0544":"s","gc1477":"m","gc1478":"l","gc0540":"s","gc0541":"s","gc0539":"s","gc0538":"s","gc0542":"s","gc0558":"s","gc0556":"m","gc0555":"m","gc0551":"s","gc0553":"s","gc0552":"s","gc0549":"s","gc0550":"s","gc1974":"s","gc0547":"s","gc0548":"s","gc1370":"s","gc1371":"s","gc0557":"s","gc0516":"s","gc0518":"s","gc0517":"s","gc0515":"s","gc0514":"s","gc1357":"s","gc1358":"s","gc0522":"m","gc1360":"s","gc0519":"s","gc0520":"s","gc0521":"s","gc0528":"xs","gc1361":"s","gc1362":"xs","gc0524":"s","gc0525":"s","gc0523":"s","gc0527":"xs","gc0526":"s","gc2424":"l","gc2425":"m","gc2426":"m","gc2450":"l","gc2451":"m","gc1242":"s","gc0778":"s","gc1243":"s","gc0781":"xs","gc0785":"s","gc1241":"s","gc0780":"s","gc1238":"s","gc0783":"s","gc1240":"s","gc1239":"s","gc0767":"s","gc0768":"l","gc1237":"m","gc1236":"l","gc1205":"s","gc1206":"m","gc1428":"m","gc1422":"m","gc1420":"s","gc1427":"l","gc1246":"s","gc1592":"m","gc0763":"m","gc1590":"m","gc1426":"m","gc1439":"m","gc1425":"l","gc1414":"l","gc1415":"xl","gc1424":"m","gc1596":"m","gc1421":"s","gc1423":"m","gc1215":"m","gc0775":"s","gc1220":"s","gc1219":"s","gc1222":"s","gc1211":"s","gc1207":"s","gc1208":"s","gc1204":"m","gc1245":"s","gc1203":"m","gc1209":"xs","gc1210":"m","gc1543":"xs","gc0730":"xs","gc0731":"s","gc0732":"s","gc0733":"m","gc0729":"xs","gc0734":"s","gc0735":"s","gc0728":"xs","gc0727":"s","gc2178":"xs","gc1303":"s","gc2170":"s","gc0161":"xs","gc0159":"xs","gc0156":"xs","gc0157":"xs","gc0158":"xs","gc0160":"xs","gc1569":"xs","gc1572":"xs","gc1573":"xs","gc1578":"m","gc1232":"m","gc1234":"m","gc1233":"m","gc0890":"s","gc0889":"s","gc0891":"s","gc0893":"xs","gc0895":"s","gc0894":"xs","gc0896":"s","gc2179":"xs","gc0892":"xs","gc0906":"xs","gc0907":"s","gc0905":"xs","gc2208":"m","gc0897":"m","gc0898":"m","gc0425":"s","gc0423":"s","gc0431":"xs","gc0428":"s","gc0426":"s","gc0430":"s","gc0427":"xs","gc0446":"xs","gc0452":"xs","gc0445":"xs","gc0448":"xs","gc0451":"xs","gc0447":"xs","gc0450":"xs","gc0449":"xs","gc0439":"xs","gc0440":"xs","gc0444":"xs","gc0443":"xs","gc0441":"xs","gc0442":"xs","gc0511":"xs","gc0510":"xs","gc0513":"xs","gc0512":"xs","gc0495":"xs","gc0498":"xs","gc0497":"xs","gc0493":"xs","gc0494":"xs","gc0496":"xs","gc0499":"xs","gc0505":"s","gc0504":"xs","gc0503":"s","gc0501":"xs","gc0500":"xs","gc2132":"s","gc0502":"xs","gc0459":"xs","gc0454":"xs","gc0455":"xs","gc0461":"xs","gc0456":"xs","gc0453":"xs","gc0462":"xs","gc0457":"xs","gc0458":"s","gc0460":"xs","gc0469":"xs","gc0470":"xs","gc0471":"xs","gc0473":"xs","gc0474":"xs","gc0472":"xs","gc0475":"xs","gc0481":"xs","gc0476":"xs","gc0478":"xs","gc2180":"xs","gc0479":"xs","gc0480":"xs","gc0477":"xs","gc0488":"xs","gc0492":"xs","gc0485":"xs","gc0486":"xs","gc0490":"xs","gc0484":"xs","gc0483":"xs","gc0487":"xs","gc0489":"xs","gc0491":"xs","gc0482":"xs","gc0506":"s","gc0508":"s","gc0507":"s","gc0509":"s","gc0466":"s","gc0464":"s","gc0463":"s","gc0468":"s","gc0465":"s","gc0467":"s","gc2294":"xs","gc2295":"xs","gc2296":"xs","gc2297":"xs","gc2298":"xs","gc2299":"xs","gc2300":"xs","gc2301":"s","gc2302":"s","gc2303":"s","gc2304":"xs","gc2305":"xs","gc2306":"xs","gc2307":"xs","gc2308":"xs","gc2309":"xs","gc2310":"xs","gc2311":"xs","gc2312":"s","gc2313":"xs","gc2314":"s","gc2315":"s","gc2316":"s","gc2317":"xs","gc2318":"xs","gc2319":"xs","gc2320":"xs","gc2321":"xs","gc2332":"xs","gc2335":"xs","gc1582":"m","gc1581":"m","gc1587":"xs","gc1586":"m","gc1583":"l","gc1580":"s","gc0902":"xs","gc0903":"xs","gc0900":"xs","gc0899":"xs","gc0901":"xs","gc0904":"s","gc0417":"s","gc2336":"s","gc0409":"xs","gc2078":"xs","gc0408":"xs","gc0411":"s","gc0399":"xs","gc2084":"xs","gc2079":"xs","gc2080":"s","gc0955":"m","gc1889":"s","gc1890":"s","gc1897":"xs","gc1878":"m","gc1873":"s","gc1891":"s","gc1898":"xs","gc1900":"s","gc1899":"m","gc1901":"m","gc0388":"s","gc0382":"s","gc0385":"s","gc0383":"m","gc0389":"s","gc1983":"m","gc1354":"xs","gc0384":"s","gc0387":"s","gc2340":"xs","gc2342":"xs","gc2344":"s","gc0368":"s","gc1339":"xs","gc0364":"s","gc0367":"s","gc1369":"s","gc1410":"s","gc1341":"s","gc1612":"s","gc1613":"s","gc0369":"s","gc0363":"s","gc1368":"m","gc0365":"xs","gc1340":"s","gc1338":"xs","gc0366":"s","gc0370":"s","gc1342":"s","gc0375":"s","gc1344":"s","gc0371":"s","gc0374":"xs","gc1603":"s","gc1366":"s","gc0373":"s","gc1343":"s","gc0965":"s","gc0961":"m","gc0960":"m","gc0964":"m","gc0962":"m","gc0394":"m","gc0391":"m","gc0392":"m","gc0393":"m","gc1346":"s","gc1347":"m","gc1345":"s","gc1351":"m","gc1350":"m","gc1355":"m","gc1349":"m","gc0350":"s","gc0351":"s","gc1352":"s","gc1353":"s","gc1348":"s","gc0352":"m","gc0348":"s","gc0349":"s","gc0355":"s","gc0967":"s","gc0968":"s","gc2013":"m","gc0356":"s","gc0357":"s","gc1375":"s","gc1374":"s","gc1356":"s","gc1328":"s","gc1335":"s","gc1966":"s","gc0969":"m","gc0970":"m","gc1408":"s","gc1400":"s","gc1403":"l","gc1404":"m","gc1413":"m","gc1402":"l","gc1412":"s","gc1401":"s","gc1604":"s","gc0971":"m","gc1200":"s","gc1199":"m","gc1201":"s","gc1189":"m","gc1191":"s","gc1190":"m","gc1192":"s","gc1180":"s","gc1177":"m","gc1178":"s","gc1181":"m","gc1186":"s","gc1179":"s","gc1185":"s","gc2070":"s","gc1182":"m","gc1183":"s","gc1171":"s","gc1173":"s","gc1169":"m","gc1175":"s","gc1170":"s","gc1174":"xs","gc2063":"xs","gc1197":"m","gc1196":"m","gc1198":"s","gc1193":"m","gc1195":"m","gc2064":"m","gc1187":"m","gc0958":"m","gc2322":"xs","gc2323":"xs","gc2324":"xs","gc2325":"xs","gc2326":"xs","gc2327":"xs","gc2328":"xs","gc2329":"xs","gc2330":"xs","gc2331":"s","gc2333":"xs","gc2334":"xs","gc0853":"m","gc2172":"m","gc0858":"m","gc1049":"m","gc1047":"s","gc1046":"s","gc0870":"s","gc0872":"m","gc0868":"m","gc0849":"s","gc0857":"s","gc1045":"m","gc0845":"s","gc0840":"m","gc0846":"m","gc0838":"s","gc0843":"m","gc0844":"l","gc0839":"s","gc0864":"s","gc1161":"s","gc1101":"s","gc1160":"s","gc1162":"s","gc1131":"s","gc0869":"s","gc1387":"s","gc0874":"s","gc0873":"m","gc0875":"m","gc2099":"xs","gc0876":"s","gc1122":"s","gc1120":"m","gc1121":"m","gc1124":"s","gc1125":"s","gc1123":"m","gc1116":"m","gc1127":"s","gc1097":"s","gc1096":"s","gc1143":"m","gc1142":"s","gc2075":"s","gc2076":"s","gc2077":"s","gc1147":"s","gc1146":"s","gc1145":"s","gc2338":"m","gc1156":"xs","gc1155":"s","gc1099":"m","gc1098":"s","gc1133":"m","gc1153":"s","gc2019":"s","gc1152":"s","gc1151":"xs","gc1154":"xs","gc1149":"s","gc2339":"xs","gc1136":"m","gc1135":"m","gc1134":"s","gc1159":"s","gc1959":"s","gc1955":"s","gc1963":"xs","gc1960":"xs","gc1954":"s","gc1952":"s","gc1956":"xs","gc1953":"s","gc1962":"s","gc1961":"s","gc1957":"s","gc1965":"s","gc1958":"s","gc1964":"xs","gc1951":"s","gc1165":"m","gc1141":"m","gc1140":"m","gc1139":"m","gc1100":"s","gc1138":"s","gc1137":"m","gc2196":"m","gc0189":"s","gc2197":"m","gc2092":"m","gc2438":"m","gc2439":"m","gc2440":"m","gc2441":"m","gc2445":"m","gc0707":"m","gc0715":"s","gc1441":"s","gc0711":"s","gc0710":"s","gc2247":"s","gc0709":"s","gc0708":"s","gc0713":"m","gc0712":"s","gc1442":"s","gc0714":"m","gc1444":"m","gc1449":"s","gc2162":"s","gc2163":"s","gc2158":"s","gc0705":"s","gc0699":"s","gc0701":"m","gc0702":"m","gc0703":"m","gc2160":"s","gc1624":"m","gc2161":"s","gc0704":"s","gc0700":"m","gc2159":"s","gc1446":"s","gc2157":"s","gc0706":"s","gc0688":"m","gc0691":"m","gc0687":"l","gc0686":"m","gc0935":"l","gc0690":"s","gc0689":"s","gc0692":"m","gc0698":"m","gc0695":"s","gc0696":"m","gc1443":"m","gc1450":"l","gc0693":"m","gc0697":"m","gc1451":"m","gc1448":"xs","gc1447":"s","gc0679":"m","gc0678":"m","gc0685":"l","gc0682":"m","gc0683":"s","gc0681":"s","gc0680":"s","gc1445":"m","gc0684":"xs","gc0313":"s","gc0312":"s","gc2183":"xs","gc1455":"xs","gc0305":"s","gc0306":"s","gc0303":"m","gc0304":"m","gc1456":"xs","gc1452":"xs","gc1454":"xs","gc0307":"s","gc0314":"m","gc1466":"m","gc1464":"s","gc1453":"xs","gc0309":"xs","gc0308":"xs","gc0911":"s","gc1468":"m","gc1467":"m","gc0910":"m","gc0909":"s","gc0908":"s","gc0916":"m","gc0914":"m","gc0913":"m","gc0915":"l","gc0917":"s","gc1857":"m","gc0918":"s","gc0919":"s","gc0920":"m","gc0921":"m","gc0269":"s","gc1614":"l","gc0275":"m","gc0276":"m","gc0268":"s","gc0274":"s","gc0271":"s","gc0272":"s","gc0273":"s","gc0270":"m","gc0923":"xs","gc0924":"s","gc0925":"s","gc0930":"l","gc1485":"m","gc0929":"m","gc1487":"m","gc0928":"m","gc1490":"m","gc0927":"m","gc1484":"m","gc0926":"s","gc1486":"xs","gc1488":"m","gc1489":"l","gc1852":"s","gc0766":"s","gc1853":"s","gc1854":"s","gc0931":"s","gc0765":"s","gc1856":"s","gc1855":"s","gc0933":"s","gc0932":"s","gc1471":"m","gc1482":"l","gc1460":"s","gc1459":"xs","gc1458":"s","gc1438":"s","gc1463":"s","gc1625":"xs","gc1480":"m","gc1483":"l","gc1623":"s","gc1473":"m","gc1437":"s","gc1470":"m","gc1472":"m","gc1461":"xs","gc1601":"s","gc1457":"s","gc0293":"m","gc0292":"s","gc1628":"l","gc1616":"s","gc0290":"s","gc0289":"s","gc1627":"l","gc0291":"s","gc0288":"s","gc0286":"s","gc0287":"s","gc0938":"l","gc0936":"m","gc1476":"s","gc1874":"s","gc0939":"s","gc1875":"s","gc1876":"s","gc1879":"m","gc1877":"m","gc0244":"s","gc0243":"s","gc1858":"s","gc0240":"s","gc0242":"s","gc0241":"s","gc0246":"s","gc0247":"s","gc1598":"s","gc0248":"m","gc0245":"s","gc0946":"m","gc0254":"s","gc0253":"s","gc0256":"s","gc0255":"s","gc0252":"s","gc0257":"m","gc0258":"m","gc0251":"s","gc0250":"s","gc0249":"s","gc0947":"s","gc0948":"m","gc1475":"xs","gc0949":"s","gc1474":"s","gc0922":"s","gc0301":"s","gc0298":"m","gc0296":"m","gc0294":"m","gc2466":"m","gc0295":"m","gc0297":"m","gc1434":"m","gc1435":"m","gc0302":"s","gc1617":"s","gc0942":"s","gc0941":"s","gc1620":"s","gc0943":"s","gc1618":"xs","gc1619":"s","gc0944":"m","gc0282":"m","gc0285":"m","gc0279":"s","gc0280":"m","gc0278":"m","gc0277":"s","gc0281":"m","gc0912":"m","gc1599":"s","gc0283":"m","gc0284":"m","gc1440":"m","gc1002":"m","gc1003":"m","gc1014":"s","gc1015":"s","gc1025":"s","gc1023":"s","gc1026":"s","gc1024":"m","gc1022":"s","gc1021":"s","gc0743":"s","gc0759":"m","gc0754":"s","gc0737":"s","gc0741":"s","gc0740":"s","gc0744":"s","gc0738":"s","gc0745":"s","gc2246":"s","gc2257":"s","gc2258":"s","gc2259":"m","gc2260":"m","gc2261":"m","gc2262":"s","gc2263":"m","gc2264":"s","gc2265":"s","gc2266":"s","gc2267":"s","gc2268":"s","gc2269":"s","gc2270":"s","gc2271":"s","gc2272":"s","gc2273":"m","gc2274":"s","gc2275":"m","gc2276":"s","gc2277":"s","gc2278":"s","gc2279":"s","gc2280":"s","gc2281":"s","gc2282":"s","gc2283":"s","gc2284":"s","gc2285":"s","gc2286":"m","gc2287":"s","gc2288":"m","gc2289":"s","gc2290":"s","gc2291":"s","gc2292":"s","gc2293":"s","gc0742":"s","gc1000":"s","gc0999":"s","gc1001":"m","gc1009":"m","gc1010":"s","gc1013":"s","gc1012":"s","gc1868":"m","gc1869":"m","gc1872":"m","gc1862":"l","gc1863":"m","gc1859":"l","gc1860":"m","gc1866":"m","gc1867":"m","gc1861":"m","gc1865":"m","gc1864":"l","gc1870":"m","gc1871":"s","gc0758":"s","gc1005":"m","gc1004":"m","gc1008":"xs","gc1007":"m","gc1006":"s","gc1885":"s","gc1880":"m","gc0760":"m","gc1881":"m","gc1882":"m","gc1883":"m","gc1884":"m","gc1886":"m","gc0757":"s","gc0756":"s","gc0746":"xs","gc0750":"s","gc0748":"xs","gc0752":"s","gc0751":"m","gc0753":"s","gc0755":"m","gc0952":"m","gc0951":"m","gc0950":"m","gc0264":"s","gc0265":"s","gc0267":"s","gc0260":"s","gc0261":"s","gc0263":"s","gc0262":"s","gc0259":"m","gc0934":"s","gc0266":"m","gc1608":"m","gc1615":"m","gc0605":"s","gc0601":"s","gc0600":"s","gc0602":"s","gc0603":"s","gc0604":"m","gc0609":"s","gc0608":"s","gc2169":"s","gc0598":"s","gc0599":"s","gc1790":"m","gc1786":"s","gc1787":"s","gc1789":"s","gc1788":"s","gc1791":"s","gc2716":"s","gc2717":"s","gc2718":"s","gc2719":"s","gc2720":"s","gc2721":"s","gc2722":"s","gc2723":"s","gc2724":"s","gc2725":"s","gc2726":"s","gc2727":"s","gc2728":"s","gc2729":"s","gc2730":"s","gc2731":"s","gc2732":"m","gc2733":"s","gc2734":"s","gc2735":"s","gc2736":"s","gc0637":"s","gc0636":"s","gc0638":"xs","gc1778":"xs","gc0618":"xs","gc0616":"xs","gc0617":"xs","gc0614":"xs","gc0615":"xs","gc0619":"xs","gc0620":"xs","gc2212":"xs","gc0621":"xs","gc0622":"xs","gc0612":"xs","gc2211":"xs","gc0613":"xs","gc1773":"xs","gc2213":"xs","gc2074":"xs","gc1774":"xs","gc1779":"xs","gc1777":"xs","gc1775":"xs","gc1776":"xs","gc1784":"xs","gc1785":"xs","gc0629":"xs","gc2210":"xs","gc0628":"xs","gc2214":"xs","gc0630":"xs","gc0627":"xs","gc2215":"xs","gc1772":"xs","gc2072":"xs","gc0623":"xs","gc0624":"xs","gc0625":"xs","gc2216":"xs","gc2073":"xs","gc0626":"xs","gc1780":"m","gc1783":"l","gc1782":"l","gc1781":"xs","gc0632":"xs","gc2217":"xs","gc0631":"xs","gc0633":"xs","gc0634":"xs","gc2218":"xs","gc0635":"xs","gc0587":"m","gc0586":"m","gc0588":"m","gc0589":"m","gc1771":"m","gc1770":"m","gc1769":"xs","gc1768":"s","gc1763":"s","gc1764":"s","gc1765":"s","gc1762":"s","gc1767":"m","gc0568":"s","gc0570":"s","gc0569":"s","gc0567":"s","gc1734":"s","gc0564":"s","gc2209":"s","gc0561":"s","gc0565":"s","gc0566":"s","gc0562":"s","gc0563":"s","gc0559":"s","gc0560":"s","gc1759":"m","gc1760":"l","gc1752":"m","gc1751":"m","gc1750":"m","gc1756":"m","gc1753":"m","gc1754":"m","gc1755":"m","gc1758":"l","gc1757":"m","gc1747":"l","gc1749":"l","gc1748":"l","gc1745":"m","gc1746":"m","gc1797":"m","gc1798":"m","gc0593":"m","gc1799":"s","gc0594":"s","gc0595":"s","gc1812":"m","gc0597":"m","gc1800":"m","gc1803":"m","gc1814":"m","gc1813":"m","gc1978":"s","gc1977":"s","gc1979":"s","gc1811":"s","gc1806":"s","gc0591":"s","gc0592":"m","gc1980":"s","gc1802":"m","gc1807":"m","gc1801":"m","gc0596":"m","gc1808":"m","gc1976":"m","gc1984":"m","gc1981":"m","gc1792":"m","gc1810":"m","gc1794":"m","gc1809":"m","gc1804":"m","gc1793":"m","gc1795":"m","gc1796":"m","gc1805":"m","gc1816":"s","gc1982":"m","gc1815":"m","gc0580":"m","gc1744":"l","gc0579":"m","gc0576":"m","gc0578":"m","gc0577":"m","gc1739":"m","gc1741":"m","gc1740":"m","gc1742":"m","gc1743":"m","gc0575":"m","gc0574":"m","gc0573":"m","gc0571":"m","gc0572":"m","gc2071":"m","gc0584":"m","gc0585":"m","gc0581":"m","gc0582":"m","gc0583":"m","gc1738":"m","gc1735":"m","gc1737":"m","gc1736":"m","gc2177":"s","gc2219":"s","gc2221":"s","gc2222":"s","gc2229":"s","gc2231":"xs","gc2232":"s","gc2233":"s","gc2234":"s","gc2235":"s","gc2236":"s","gc2349":"s","gc2350":"s","gc2423":"l","gc2454":"l","gc2455":"m","gc2410":"xs","gc2411":"s","gc2412":"s","gc2413":"xs","gc2414":"xs","gc2415":"s","gc2416":"xs","gc2417":"xs","gc2418":"s","gc2446":"l","gc2447":"m","gc2448":"m","gc2449":"l","gc2453":"l","gc2456":"s","gc2457":"xs","gc2458":"s","gc2459":"s","gc2460":"s","gc2469":"s","gc2472":"xl","gc2473":"xl","gc2474":"l","gc2475":"l","gc2480":"m","gc2481":"m","gc2482":"m","gc2483":"m","gc2484":"m","gc2485":"m","gc2486":"m","gc2487":"s","gc2488":"s","gc2489":"m","gc2490":"s","gc2491":"xs","gc2492":"xs","gc2493":"xs","gc2494":"s","gc2495":"s","gc2505":"s","gc2506":"m","gc2507":"m","gc2508":"m","gc2509":"m","gc2510":"m","gc2511":"m","gc2512":"m","gc2513":"m","gc2514":"m","gc2515":"s","gc2516":"xs","gc2517":"m","gc2518":"m","gc2519":"xs","gc2520":"m","gc2521":"m","gc2522":"s","gc2523":"s","gc2524":"m","gc2525":"m","gc2526":"xs","gc2527":"s","gc2528":"s","gc2529":"m","gc2530":"s","gc2531":"m","gc2539":"s","gc2541":"xs","gc2546":"s","gc2547":"m","gc2549":"s","gc2550":"s","gc2551":"s","gc2552":"s","gc2553":"m","gc2554":"s","gc2555":"m","gc2556":"m","gc2557":"xs","gc2558":"xs","gc2559":"xs","gc2560":"s","gc2561":"s","gc2564":"s","gc2565":"s","gc2566":"s","gc2567":"m","gc2570":"s","gc2571":"s","gc2572":"s","gc2601":"s","gc2602":"s","gc2603":"xs","gc2604":"xs","gc2616":"m","gc2634":"m","gc2635":"s","gc2683":"m","gc2684":"m","gc2685":"s","gc2686":"m","gc2687":"m","gc2688":"l","gc2689":"l","gc2690":"s","gc2691":"l","gc2692":"s","gc2693":"xs","gc2694":"m","gc2695":"s","gc2696":"l","gc2698":"s","gc2699":"s","gc2700":"m","gc2701":"s","gc2702":"s","gc2703":"s","gc2704":"s","gc2737":"s","gc2738":"xs","gc2739":"s","gc2740":"m","gc2741":"s","gc2742":"xs","gc2743":"s","gc2744":"s","gc2746":"s","gc2747":"m","gc2748":"m","gc2749":"s","gc2750":"s","gc2751":"m","gc2752":"m","gc2753":"s","gc2754":"s","gc2755":"m","gc2756":"s","gc2760":"m","gc2761":"xs","gc2762":"s","gc2763":"s","gc2855":"xs","gc2856":"xs","gc2857":"xl","gc2858":"xl","gc2859":"xxl","gc2860":"xxl","gc2861":"l","gc2770":"xs","gc2771":"xs","gc2772":"s","gc2773":"s","gc2774":"xs","gc2775":"s","gc2776":"m","gc2777":"m","gc2778":"s","gc2780":"m","gc2781":"m","gc2782":"s","gc2783":"s","gc2784":"m","gc2785":"s","gc2786":"s","gc2787":"s","gc2788":"s","gc2790":"s","gc2791":"s","gc2792":"m","gc2793":"s","gc2794":"m","gc2795":"s","gc2796":"s","gc2797":"m","gc2798":"s","gc2813":"s","gc2814":"s","gc2815":"s","gc2816":"s","gc2817":"s","gc2818":"s","gc2819":"s","gc2820":"s","gc2821":"s","gc2822":"s","gc2394":"l","gc2396":"l","gc2419":"m","gc2420":"l","gc2421":"l","gc2422":"xl","gc0073":"l"});
+  const GEAR_SURFACE_CLASS_BY_ID = Object.freeze({"gc0819":"s","gc0820":"xs","gc0818":"s","gc0817":"s","gc0816":"m","gc0832":"s","gc0823":"m","gc0821":"s","gc0822":"m","gc0824":"s","gc0831":"s","gc1299":"xs","gc1292":"s","gc1304":"xs","gc1305":"xs","gc1293":"s","gc1300":"s","gc0813":"m","gc0812":"m","gc0814":"m","gc0815":"xs","gc1034":"s","gc1035":"s","gc1036":"s","gc0826":"s","gc0825":"s","gc1295":"xs","gc1297":"xs","gc0827":"m","gc1294":"xs","gc1296":"xs","gc1555":"s","gc1301":"s","gc1985":"s","gc1298":"s","gc1939":"s","gc1941":"s","gc1935":"s","gc1936":"s","gc1940":"xs","gc1937":"s","gc1946":"s","gc1950":"s","gc1945":"m","gc1943":"s","gc1949":"m","gc1948":"m","gc0975":"m","gc0979":"m","gc0974":"m","gc1996":"m","gc0978":"m","gc0977":"s","gc0976":"s","gc0981":"m","gc0984":"m","gc0983":"s","gc0982":"s","gc1998":"m","gc0985":"m","gc0992":"m","gc1986":"m","gc1987":"m","gc2000":"m","gc2001":"m","gc2002":"m","gc0994":"m","gc1988":"m","gc0988":"m","gc2004":"m","gc2003":"l","gc0989":"l","gc0986":"m","gc0993":"s","gc2005":"m","gc0987":"m","gc1989":"s","gc1990":"m","gc1991":"m","gc2006":"m","gc2007":"s","gc2009":"m","gc1993":"s","gc2008":"m","gc1994":"m","gc0991":"m","gc2010":"m","gc1995":"m","gc2011":"m","gc0990":"m","gc0997":"m","gc1997":"m","gc0998":"m","gc0835":"s","gc0836":"s","gc0837":"s","gc0834":"s","gc2181":"xs","gc0833":"m","gc2182":"xs","gc0134":"m","gc0133":"m","gc0132":"m","gc0135":"m","gc0136":"m","gc1028":"m","gc1107":"s","gc1102":"s","gc1103":"s","gc1104":"m","gc1105":"xs","gc1108":"m","gc1114":"xs","gc1082":"s","gc1076":"s","gc1078":"s","gc1077":"s","gc1079":"s","gc1084":"xs","gc1083":"s","gc0658":"m","gc0659":"m","gc0648":"s","gc0649":"s","gc1367":"s","gc0646":"xs","gc0645":"s","gc0644":"s","gc0647":"s","gc2094":"s","gc0640":"m","gc0639":"m","gc0641":"m","gc1040":"m","gc0643":"m","gc0642":"m","gc0655":"m","gc0654":"m","gc0652":"s","gc0651":"m","gc0650":"m","gc1610":"s","gc1609":"s","gc0218":"s","gc1315":"m","gc1314":"s","gc1316":"m","gc1313":"m","gc1308":"s","gc0219":"s","gc1319":"s","gc1318":"s","gc1317":"m","gc1320":"m","gc1307":"s","gc1306":"s","gc2205":"s","gc2203":"s","gc2204":"s","gc2206":"s","gc2207":"s","gc0980":"m","gc0200":"s","gc0197":"s","gc0198":"s","gc0199":"m","gc0196":"s","gc0192":"s","gc0195":"m","gc0193":"s","gc0194":"m","gc0202":"m","gc0201":"m","gc2187":"s","gc1018":"m","gc2186":"s","gc2184":"s","gc2201":"s","gc2198":"s","gc0232":"s","gc0233":"s","gc2195":"s","gc2193":"s","gc2194":"s","gc2189":"s","gc0190":"s","gc2192":"s","gc2191":"xs","gc2190":"xs","gc0191":"xs","gc2166":"l","gc2164":"m","gc2165":"l","gc0188":"s","gc1911":"s","gc0185":"m","gc0186":"m","gc0184":"m","gc0187":"m","gc1311":"m","gc1310":"m","gc1309":"s","gc1039":"m","gc1927":"m","gc1038":"m","gc1312":"s","gc1919":"xs","gc1910":"s","gc1914":"s","gc1913":"s","gc1922":"m","gc1921":"s","gc1928":"m","gc1017":"s","gc1902":"xs","gc1915":"s","gc1918":"s","gc1912":"s","gc1016":"s","gc2248":"m","gc2249":"m","gc2250":"m","gc2251":"m","gc2252":"s","gc2253":"m","gc2254":"s","gc2255":"m","gc1906":"s","gc1924":"s","gc1905":"s","gc1904":"s","gc1903":"xs","gc1923":"xs","gc1917":"s","gc1909":"s","gc1920":"xs","gc1019":"s","gc1925":"s","gc1916":"s","gc1926":"s","gc1020":"s","gc1908":"s","gc1929":"s","gc1907":"s","gc1700":"m","gc1694":"m","gc1695":"m","gc1698":"m","gc1696":"m","gc1699":"m","gc1693":"m","gc0761":"m","gc1817":"m","gc1701":"m","gc1697":"m","gc1629":"s","gc0762":"s","gc0221":"s","gc0220":"s","gc0166":"xs","gc0223":"s","gc0224":"m","gc0167":"s","gc1630":"m","gc0216":"s","gc1588":"s","gc0211":"s","gc1611":"m","gc0215":"s","gc0212":"s","gc0213":"s","gc0214":"s","gc0205":"s","gc0206":"m","gc1825":"s","gc2168":"xs","gc0208":"s","gc0207":"s","gc1819":"m","gc1822":"m","gc1821":"m","gc1823":"m","gc0210":"s","gc1820":"s","gc1824":"m","gc0209":"s","gc0183":"s","gc0180":"s","gc0177":"s","gc0179":"s","gc0178":"s","gc0182":"m","gc0181":"m","gc0239":"xs","gc2175":"xs","gc0236":"xs","gc0237":"xs","gc2173":"xs","gc0238":"xs","gc2176":"xs","gc2174":"xs","gc1417":"l","gc1416":"m","gc0234":"m","gc0235":"m","gc0226":"s","gc0227":"s","gc0228":"s","gc0225":"s","gc1419":"m","gc1418":"m","gc0231":"s","gc0229":"s","gc0230":"s","gc1934":"m","gc1931":"m","gc1933":"l","gc1932":"m","gc1828":"xs","gc1829":"xs","gc1830":"s","gc1835":"s","gc2237":"s","gc2238":"s","gc2239":"s","gc1930":"m","gc1832":"s","gc1831":"s","gc1833":"s","gc2256":"s","gc1834":"s","gc1849":"xs","gc1826":"s","gc1827":"s","gc1839":"s","gc1837":"m","gc1841":"m","gc1836":"m","gc1847":"m","gc1842":"m","gc1838":"s","gc1840":"s","gc1848":"s","gc1843":"s","gc1850":"s","gc1846":"m","gc1851":"m","gc1845":"s","gc2100":"s","gc2102":"s","gc2101":"xs","gc0152":"s","gc0151":"s","gc1505":"s","gc1515":"s","gc1514":"s","gc1492":"xs","gc1496":"s","gc1498":"s","gc1499":"s","gc1502":"s","gc1504":"m","gc1495":"m","gc1497":"xs","gc1501":"s","gc1513":"m","gc1646":"xs","gc1648":"xs","gc1649":"s","gc1644":"xs","gc1645":"xs","gc1642":"s","gc1641":"s","gc1647":"xs","gc1643":"xs","gc1636":"s","gc1637":"s","gc1634":"xs","gc1635":"s","gc1633":"s","gc1638":"s","gc1639":"xs","gc1640":"s","gc1651":"xs","gc1650":"xs","gc1032":"m","gc1654":"xs","gc1656":"xs","gc1655":"s","gc1686":"s","gc1685":"s","gc1554":"xs","gc1553":"xs","gc1667":"s","gc1672":"s","gc1673":"s","gc1670":"s","gc1671":"s","gc1669":"s","gc1668":"s","gc0170":"s","gc1674":"s","gc1030":"s","gc1031":"s","gc1029":"m","gc1677":"s","gc1675":"s","gc0171":"s","gc1676":"m","gc1683":"s","gc1682":"xs","gc1684":"xs","gc0172":"xs","gc1681":"xs","gc1680":"s","gc1679":"s","gc1662":"s","gc1664":"s","gc1658":"s","gc1659":"s","gc1661":"s","gc1660":"s","gc1665":"s","gc1666":"s","gc1033":"m","gc0169":"s","gc0173":"xs","gc0147":"s","gc0148":"s","gc0145":"s","gc0146":"s","gc0150":"s","gc0149":"s","gc1602":"s","gc0162":"xs","gc0163":"xs","gc0164":"s","gc1818":"s","gc0168":"xs","gc0793":"s","gc0796":"s","gc1376":"s","gc0806":"s","gc0805":"s","gc0797":"s","gc0798":"s","gc0795":"s","gc0794":"s","gc0799":"s","gc0792":"s","gc0807":"xs","gc0790":"xs","gc0791":"s","gc0787":"s","gc0786":"s","gc0789":"s","gc0788":"s","gc0810":"s","gc1532":"s","gc1535":"xs","gc1530":"s","gc1536":"s","gc1539":"xs","gc1533":"xs","gc1529":"xs","gc1534":"xs","gc1531":"s","gc1538":"xs","gc1528":"xs","gc2104":"xs","gc2105":"s","gc2103":"s","gc2119":"xs","gc2120":"xs","gc2112":"xs","gc2111":"xs","gc2113":"s","gc2128":"m","gc2125":"s","gc2124":"s","gc2127":"xs","gc2129":"xs","gc2130":"xs","gc2126":"s","gc2116":"xs","gc2114":"xs","gc2117":"xs","gc2115":"s","gc2118":"s","gc2121":"s","gc2106":"xs","gc2107":"xs","gc2109":"xs","gc2108":"xs","gc2110":"xs","gc2122":"xs","gc1562":"s","gc1561":"xs","gc1566":"s","gc1565":"xs","gc1564":"s","gc0143":"xs","gc0142":"xs","gc0140":"xs","gc0139":"xs","gc1549":"s","gc0144":"xs","gc1280":"s","gc1272":"s","gc1281":"s","gc1363":"s","gc1364":"xs","gc1277":"s","gc1274":"s","gc1278":"s","gc1279":"s","gc1276":"s","gc1275":"s","gc1273":"xs","gc1557":"s","gc1556":"s","gc1559":"s","gc1560":"s","gc1558":"s","gc1372":"s","gc0532":"m","gc0533":"m","gc0529":"m","gc0530":"m","gc0531":"m","gc0534":"m","gc0537":"m","gc0536":"s","gc0535":"s","gc1567":"s","gc0883":"s","gc0887":"s","gc0885":"s","gc1568":"s","gc0886":"s","gc0879":"s","gc0880":"s","gc0888":"s","gc0881":"m","gc0882":"m","gc1690":"m","gc1687":"s","gc1688":"m","gc1692":"s","gc2228":"s","gc1689":"s","gc0546":"s","gc1479":"m","gc0545":"s","gc0543":"s","gc0544":"s","gc1477":"m","gc1478":"l","gc0540":"s","gc0541":"s","gc0539":"s","gc0538":"s","gc0542":"s","gc0558":"s","gc0556":"m","gc0555":"m","gc0551":"s","gc0553":"s","gc0552":"s","gc0549":"s","gc0550":"s","gc1974":"s","gc0547":"s","gc0548":"s","gc1370":"s","gc1371":"s","gc0557":"s","gc0516":"s","gc0518":"s","gc0517":"s","gc0515":"s","gc0514":"s","gc1357":"s","gc1358":"s","gc0522":"m","gc1360":"s","gc0519":"s","gc0520":"s","gc0521":"s","gc0528":"xs","gc1361":"s","gc1362":"xs","gc0524":"s","gc0525":"s","gc0523":"s","gc0527":"xs","gc0526":"s","gc2424":"l","gc2425":"m","gc2426":"m","gc2450":"l","gc2451":"m","gc1242":"s","gc0778":"s","gc1243":"s","gc0781":"xs","gc0785":"s","gc1241":"s","gc0780":"s","gc1238":"s","gc0783":"s","gc1240":"s","gc1239":"s","gc0767":"s","gc0768":"l","gc1237":"m","gc1236":"l","gc1205":"s","gc1206":"m","gc1428":"m","gc1422":"m","gc1420":"s","gc1427":"l","gc1246":"s","gc1592":"m","gc0763":"m","gc1590":"m","gc1426":"m","gc1439":"m","gc1425":"l","gc1414":"l","gc1415":"xl","gc1424":"m","gc1596":"m","gc1421":"s","gc1423":"m","gc1215":"m","gc0775":"s","gc1220":"s","gc1219":"s","gc1222":"s","gc1211":"s","gc1207":"s","gc1208":"s","gc1204":"m","gc1245":"s","gc1203":"m","gc1209":"xs","gc1210":"m","gc1543":"xs","gc0730":"xs","gc0731":"s","gc0732":"s","gc0733":"m","gc0729":"xs","gc0734":"s","gc0735":"s","gc0728":"xs","gc0727":"s","gc2178":"xs","gc1303":"s","gc2170":"s","gc0161":"xs","gc0159":"xs","gc0156":"xs","gc0157":"xs","gc0158":"xs","gc0160":"xs","gc1569":"xs","gc1572":"xs","gc1573":"xs","gc1578":"m","gc1232":"m","gc1234":"m","gc1233":"m","gc0890":"s","gc0889":"s","gc0891":"s","gc0893":"xs","gc0895":"s","gc0894":"xs","gc0896":"s","gc2179":"xs","gc0892":"xs","gc0906":"xs","gc0907":"s","gc0905":"xs","gc2208":"m","gc0897":"m","gc0898":"m","gc0425":"s","gc0423":"s","gc0431":"xs","gc0428":"s","gc0426":"s","gc0430":"s","gc0427":"xs","gc0446":"xs","gc0452":"xs","gc0445":"xs","gc0448":"xs","gc0451":"xs","gc0447":"xs","gc0450":"xs","gc0449":"xs","gc0439":"xs","gc0440":"xs","gc0444":"xs","gc0443":"xs","gc0441":"xs","gc0442":"xs","gc0511":"xs","gc0510":"xs","gc0513":"xs","gc0512":"xs","gc0495":"xs","gc0498":"xs","gc0497":"xs","gc0493":"xs","gc0494":"xs","gc0496":"xs","gc0499":"xs","gc0505":"s","gc0504":"xs","gc0503":"s","gc0501":"xs","gc0500":"xs","gc2132":"s","gc0502":"xs","gc0459":"xs","gc0454":"xs","gc0455":"xs","gc0461":"xs","gc0456":"xs","gc0453":"xs","gc0462":"xs","gc0457":"xs","gc0458":"s","gc0460":"xs","gc0469":"xs","gc0470":"xs","gc0471":"xs","gc0473":"xs","gc0474":"xs","gc0472":"xs","gc0475":"xs","gc0481":"xs","gc0476":"xs","gc0478":"xs","gc2180":"xs","gc0479":"xs","gc0480":"xs","gc0477":"xs","gc0488":"xs","gc0492":"xs","gc0485":"xs","gc0486":"xs","gc0490":"xs","gc0484":"xs","gc0483":"xs","gc0487":"xs","gc0489":"xs","gc0491":"xs","gc0482":"xs","gc0506":"s","gc0508":"s","gc0507":"s","gc0509":"s","gc0466":"s","gc0464":"s","gc0463":"s","gc0468":"s","gc0465":"s","gc0467":"s","gc2294":"xs","gc2295":"xs","gc2296":"xs","gc2297":"xs","gc2298":"xs","gc2299":"xs","gc2300":"xs","gc2301":"s","gc2302":"s","gc2303":"s","gc2304":"xs","gc2305":"xs","gc2306":"xs","gc2307":"xs","gc2308":"xs","gc2309":"xs","gc2310":"xs","gc2311":"xs","gc2312":"s","gc2313":"xs","gc2314":"s","gc2315":"s","gc2316":"s","gc2317":"xs","gc2318":"xs","gc2319":"xs","gc2320":"xs","gc2321":"xs","gc2332":"xs","gc2335":"xs","gc1582":"m","gc1581":"m","gc1587":"xs","gc1586":"m","gc1583":"l","gc1580":"s","gc0902":"xs","gc0903":"xs","gc0900":"xs","gc0899":"xs","gc0901":"xs","gc0904":"s","gc0417":"s","gc2336":"s","gc0409":"xs","gc2078":"xs","gc0408":"xs","gc0411":"s","gc0399":"xs","gc2084":"xs","gc2079":"xs","gc2080":"s","gc0955":"m","gc1889":"s","gc1890":"s","gc1897":"xs","gc1878":"m","gc1873":"s","gc1891":"s","gc1898":"xs","gc1900":"s","gc1899":"m","gc1901":"m","gc0388":"s","gc0382":"s","gc0385":"s","gc0383":"m","gc0389":"s","gc1983":"m","gc1354":"xs","gc0384":"s","gc0387":"s","gc2340":"xs","gc2342":"xs","gc2344":"s","gc0368":"s","gc1339":"xs","gc0364":"s","gc0367":"s","gc1369":"s","gc1410":"s","gc1341":"s","gc1612":"s","gc1613":"s","gc0369":"s","gc0363":"s","gc1368":"m","gc0365":"xs","gc1340":"s","gc1338":"xs","gc0366":"s","gc0370":"s","gc1342":"s","gc0375":"s","gc1344":"s","gc0371":"s","gc0374":"xs","gc1603":"s","gc1366":"s","gc0373":"s","gc1343":"s","gc0965":"s","gc0961":"m","gc0960":"m","gc0964":"m","gc0962":"m","gc0394":"m","gc0391":"m","gc0392":"m","gc0393":"m","gc1346":"s","gc1347":"m","gc1345":"s","gc1351":"m","gc1350":"m","gc1355":"m","gc1349":"m","gc0350":"s","gc0351":"s","gc1352":"s","gc1353":"s","gc1348":"s","gc0352":"m","gc0348":"s","gc0349":"s","gc0355":"s","gc0967":"s","gc0968":"s","gc2013":"m","gc0356":"s","gc0357":"s","gc1375":"s","gc1374":"s","gc1356":"s","gc1328":"s","gc1335":"s","gc1966":"s","gc0969":"m","gc0970":"m","gc1408":"s","gc1400":"s","gc1403":"l","gc1404":"m","gc1413":"m","gc1402":"l","gc1412":"s","gc1401":"s","gc1604":"s","gc0971":"m","gc1200":"s","gc1199":"m","gc1201":"s","gc1189":"m","gc1191":"s","gc1190":"m","gc1192":"s","gc1180":"s","gc1177":"m","gc1178":"s","gc1181":"m","gc1186":"s","gc1179":"s","gc1185":"s","gc2070":"s","gc1182":"m","gc1183":"s","gc1171":"s","gc1173":"s","gc1169":"m","gc1175":"s","gc1170":"s","gc1174":"xs","gc2063":"xs","gc1197":"m","gc1196":"m","gc1198":"s","gc1193":"m","gc1195":"m","gc2064":"m","gc1187":"m","gc0958":"m","gc2322":"xs","gc2323":"xs","gc2324":"xs","gc2325":"xs","gc2326":"xs","gc2327":"xs","gc2328":"xs","gc2329":"xs","gc2330":"xs","gc2331":"s","gc2333":"xs","gc2334":"xs","gc0853":"m","gc2172":"m","gc0858":"m","gc1049":"m","gc1047":"s","gc1046":"s","gc0870":"s","gc0872":"m","gc0868":"m","gc0849":"s","gc0857":"s","gc1045":"m","gc0845":"s","gc0840":"m","gc0846":"m","gc0838":"s","gc0843":"m","gc0844":"l","gc0839":"s","gc0864":"s","gc1161":"s","gc1101":"s","gc1160":"s","gc1162":"s","gc1131":"s","gc0869":"s","gc1387":"s","gc0874":"s","gc0873":"m","gc0875":"m","gc2099":"xs","gc0876":"s","gc1122":"s","gc1120":"m","gc1121":"m","gc1124":"s","gc1125":"s","gc1123":"m","gc1116":"m","gc1127":"s","gc1097":"s","gc1096":"s","gc1143":"m","gc1142":"s","gc2075":"s","gc2076":"s","gc2077":"s","gc1147":"s","gc1146":"s","gc1145":"s","gc2338":"m","gc1156":"xs","gc1155":"s","gc1099":"m","gc1098":"s","gc1133":"m","gc1153":"s","gc2019":"s","gc1152":"s","gc1151":"xs","gc1154":"xs","gc1149":"s","gc2339":"xs","gc1136":"m","gc1135":"m","gc1134":"s","gc1159":"s","gc1959":"s","gc1955":"s","gc1963":"xs","gc1960":"xs","gc1954":"s","gc1952":"s","gc1956":"xs","gc1953":"s","gc1962":"s","gc1961":"s","gc1957":"s","gc1965":"s","gc1958":"s","gc1964":"xs","gc1951":"s","gc1165":"m","gc1141":"m","gc1140":"m","gc1139":"m","gc1100":"s","gc1138":"s","gc1137":"m","gc2196":"m","gc0189":"s","gc2197":"m","gc2092":"m","gc2438":"m","gc2439":"m","gc2440":"m","gc2441":"m","gc2445":"m","gc0707":"m","gc0715":"s","gc1441":"s","gc0711":"s","gc0710":"s","gc2247":"s","gc0709":"s","gc0708":"s","gc0713":"m","gc0712":"s","gc1442":"s","gc0714":"m","gc1444":"m","gc1449":"s","gc2162":"s","gc2163":"s","gc2158":"s","gc0705":"s","gc0699":"s","gc0701":"m","gc0702":"m","gc0703":"m","gc2160":"s","gc1624":"m","gc2161":"s","gc0704":"s","gc0700":"m","gc2159":"s","gc1446":"s","gc2157":"s","gc0706":"s","gc0688":"m","gc0691":"m","gc0687":"l","gc0686":"m","gc0935":"l","gc0690":"s","gc0689":"s","gc0692":"m","gc0698":"m","gc0695":"s","gc0696":"m","gc1443":"m","gc1450":"l","gc0693":"m","gc0697":"m","gc1451":"m","gc1448":"xs","gc1447":"s","gc0679":"m","gc0678":"m","gc0685":"l","gc0682":"m","gc0683":"s","gc0681":"s","gc0680":"s","gc1445":"m","gc0684":"xs","gc0313":"s","gc0312":"s","gc2183":"xs","gc1455":"xs","gc0305":"s","gc0306":"s","gc0303":"m","gc0304":"m","gc1456":"xs","gc1452":"xs","gc1454":"xs","gc0307":"s","gc0314":"m","gc1466":"m","gc1464":"s","gc1453":"xs","gc0309":"xs","gc0308":"xs","gc0911":"s","gc1468":"m","gc1467":"m","gc0910":"m","gc0909":"s","gc0908":"s","gc0916":"m","gc0914":"m","gc0913":"m","gc0915":"l","gc0917":"s","gc1857":"m","gc0918":"s","gc0919":"s","gc0920":"m","gc0921":"m","gc0269":"s","gc1614":"l","gc0275":"m","gc0276":"m","gc0268":"s","gc0274":"s","gc0271":"s","gc0272":"s","gc0273":"s","gc0270":"m","gc0923":"xs","gc0924":"s","gc0925":"s","gc0930":"l","gc1485":"m","gc0929":"m","gc1487":"m","gc0928":"m","gc1490":"m","gc0927":"m","gc1484":"m","gc0926":"s","gc1486":"xs","gc1488":"m","gc1489":"l","gc1852":"s","gc0766":"s","gc1853":"s","gc1854":"s","gc0931":"s","gc0765":"s","gc1856":"s","gc1855":"s","gc0933":"s","gc0932":"s","gc1471":"m","gc1482":"l","gc1460":"s","gc1459":"xs","gc1458":"s","gc1438":"s","gc1463":"s","gc1625":"xs","gc1480":"m","gc1483":"l","gc1623":"s","gc1473":"m","gc1437":"s","gc1470":"m","gc1472":"m","gc1461":"xs","gc1601":"s","gc1457":"s","gc0293":"m","gc0292":"s","gc1628":"l","gc1616":"s","gc0290":"s","gc0289":"s","gc1627":"l","gc0291":"s","gc0288":"s","gc0286":"s","gc0287":"s","gc0938":"l","gc0936":"m","gc1476":"s","gc1874":"s","gc0939":"s","gc1875":"s","gc1876":"s","gc1879":"m","gc1877":"m","gc0244":"s","gc0243":"s","gc1858":"s","gc0240":"s","gc0242":"s","gc0241":"s","gc0246":"s","gc0247":"s","gc1598":"s","gc0248":"m","gc0245":"s","gc0946":"m","gc0254":"s","gc0253":"s","gc0256":"s","gc0255":"s","gc0252":"s","gc0257":"m","gc0258":"m","gc0251":"s","gc0250":"s","gc0249":"s","gc0947":"s","gc0948":"m","gc1475":"xs","gc0949":"s","gc1474":"s","gc0922":"s","gc0301":"s","gc0298":"m","gc0296":"m","gc0294":"m","gc2466":"m","gc0295":"m","gc0297":"m","gc1434":"m","gc1435":"m","gc0302":"s","gc1617":"s","gc0942":"s","gc0941":"s","gc1620":"s","gc0943":"s","gc1618":"xs","gc1619":"s","gc0944":"m","gc0282":"m","gc0285":"m","gc0279":"s","gc0280":"m","gc0278":"m","gc0277":"s","gc0281":"m","gc0912":"m","gc1599":"s","gc0283":"m","gc0284":"m","gc1440":"m","gc1002":"m","gc1003":"m","gc1014":"s","gc1015":"s","gc1025":"s","gc1023":"s","gc1026":"s","gc1024":"m","gc1022":"s","gc1021":"s","gc0743":"s","gc0759":"m","gc0754":"s","gc0737":"s","gc0741":"s","gc0740":"s","gc0744":"s","gc0738":"s","gc0745":"s","gc2246":"s","gc2257":"s","gc2258":"s","gc2259":"m","gc2260":"m","gc2261":"m","gc2262":"s","gc2263":"m","gc2264":"s","gc2265":"s","gc2266":"s","gc2267":"s","gc2268":"s","gc2269":"s","gc2270":"s","gc2271":"s","gc2272":"s","gc2273":"m","gc2274":"s","gc2275":"m","gc2276":"s","gc2277":"s","gc2278":"s","gc2279":"s","gc2280":"s","gc2281":"s","gc2282":"s","gc2283":"s","gc2284":"s","gc2285":"s","gc2286":"m","gc2287":"s","gc2288":"m","gc2289":"s","gc2290":"s","gc2291":"s","gc2292":"s","gc2293":"s","gc0742":"s","gc1000":"s","gc0999":"s","gc1001":"m","gc1009":"m","gc1010":"s","gc1013":"s","gc1012":"s","gc1868":"m","gc1869":"m","gc1872":"m","gc1862":"l","gc1863":"m","gc1859":"l","gc1860":"m","gc1866":"m","gc1867":"m","gc1861":"m","gc1865":"m","gc1864":"l","gc1870":"m","gc1871":"s","gc0758":"s","gc1005":"m","gc1004":"m","gc1008":"xs","gc1007":"m","gc1006":"s","gc1885":"s","gc1880":"m","gc0760":"m","gc1881":"m","gc1882":"m","gc1883":"m","gc1884":"m","gc1886":"m","gc0757":"s","gc0756":"s","gc0746":"xs","gc0750":"s","gc0748":"xs","gc0752":"s","gc0751":"m","gc0753":"s","gc0755":"m","gc0952":"m","gc0951":"m","gc0950":"m","gc0264":"s","gc0265":"s","gc0267":"s","gc0260":"s","gc0261":"s","gc0263":"s","gc0262":"s","gc0259":"m","gc0934":"s","gc0266":"m","gc1608":"m","gc1615":"m","gc0605":"s","gc0601":"s","gc0600":"s","gc0602":"s","gc0603":"s","gc0604":"m","gc0609":"s","gc0608":"s","gc2169":"s","gc0598":"s","gc0599":"s","gc1790":"m","gc1786":"s","gc1787":"s","gc1789":"s","gc1788":"s","gc1791":"s","gc2716":"s","gc2717":"s","gc2718":"s","gc2719":"s","gc2720":"s","gc2721":"s","gc2722":"s","gc2723":"s","gc2724":"s","gc2725":"s","gc2726":"s","gc2727":"s","gc2728":"s","gc2729":"s","gc2730":"s","gc2731":"s","gc2732":"m","gc2733":"s","gc2734":"s","gc2735":"s","gc2736":"s","gc0637":"s","gc0636":"s","gc0638":"xs","gc1778":"xs","gc0618":"xs","gc0616":"xs","gc0617":"xs","gc0614":"xs","gc0615":"xs","gc0619":"xs","gc0620":"xs","gc2212":"xs","gc0621":"xs","gc0622":"xs","gc0612":"xs","gc2211":"xs","gc0613":"xs","gc1773":"xs","gc2213":"xs","gc2074":"xs","gc1774":"xs","gc1779":"xs","gc1777":"xs","gc1775":"xs","gc1776":"xs","gc1784":"xs","gc1785":"xs","gc0629":"xs","gc2210":"xs","gc0628":"xs","gc2214":"xs","gc0630":"xs","gc0627":"xs","gc2215":"xs","gc1772":"xs","gc2072":"xs","gc0623":"xs","gc0624":"xs","gc0625":"xs","gc2216":"xs","gc2073":"xs","gc0626":"xs","gc1780":"m","gc1783":"l","gc1782":"l","gc1781":"xs","gc0632":"xs","gc2217":"xs","gc0631":"xs","gc0633":"xs","gc0634":"xs","gc2218":"xs","gc0635":"xs","gc0587":"m","gc0586":"m","gc0588":"m","gc0589":"m","gc1771":"m","gc1770":"m","gc1769":"xs","gc1768":"s","gc1763":"s","gc1764":"s","gc1765":"s","gc1762":"s","gc1767":"m","gc0568":"s","gc0570":"s","gc0569":"s","gc0567":"s","gc1734":"s","gc0564":"s","gc2209":"s","gc0561":"s","gc0565":"s","gc0566":"s","gc0562":"s","gc0563":"s","gc0559":"s","gc0560":"s","gc1759":"m","gc1760":"l","gc1752":"m","gc1751":"m","gc1750":"m","gc1756":"m","gc1753":"m","gc1754":"m","gc1755":"m","gc1758":"l","gc1757":"m","gc1747":"l","gc1749":"l","gc1748":"l","gc1745":"m","gc1746":"m","gc1797":"m","gc1798":"m","gc0593":"m","gc1799":"s","gc0594":"s","gc0595":"s","gc1812":"m","gc0597":"m","gc1800":"m","gc1803":"m","gc1814":"m","gc1813":"m","gc1978":"s","gc1977":"s","gc1979":"s","gc1811":"s","gc1806":"s","gc0591":"s","gc0592":"m","gc1980":"s","gc1802":"m","gc1807":"m","gc1801":"m","gc0596":"m","gc1808":"m","gc1976":"m","gc1984":"m","gc1981":"m","gc1792":"m","gc1810":"m","gc1794":"m","gc1809":"m","gc1804":"m","gc1793":"m","gc1795":"m","gc1796":"m","gc1805":"m","gc1816":"s","gc1982":"m","gc1815":"m","gc0580":"m","gc1744":"l","gc0579":"m","gc0576":"m","gc0578":"m","gc0577":"m","gc1739":"m","gc1741":"m","gc1740":"m","gc1742":"m","gc1743":"m","gc0575":"m","gc0574":"m","gc0573":"m","gc0571":"m","gc0572":"m","gc2071":"m","gc0584":"m","gc0585":"m","gc0581":"m","gc0582":"m","gc0583":"m","gc1738":"m","gc1735":"m","gc1737":"m","gc1736":"m","gc2177":"s","gc2219":"s","gc2221":"s","gc2222":"s","gc2229":"s","gc2231":"xs","gc2232":"s","gc2233":"s","gc2234":"s","gc2235":"s","gc2236":"s","gc2349":"s","gc2350":"s","gc2423":"l","gc2454":"l","gc2455":"m","gc2410":"xs","gc2411":"s","gc2412":"s","gc2413":"xs","gc2414":"xs","gc2415":"s","gc2416":"xs","gc2417":"xs","gc2418":"s","gc2446":"l","gc2447":"m","gc2448":"m","gc2449":"l","gc2453":"l","gc2456":"s","gc2457":"xs","gc2458":"s","gc2459":"s","gc2460":"s","gc2469":"s","gc2472":"xl","gc2473":"xl","gc2474":"l","gc2475":"l","gc2480":"m","gc2481":"m","gc2482":"m","gc2483":"m","gc2484":"m","gc2485":"m","gc2486":"m","gc2487":"s","gc2488":"s","gc2489":"m","gc2490":"s","gc2491":"xs","gc2492":"xs","gc2493":"xs","gc2494":"s","gc2495":"s","gc2505":"s","gc2506":"m","gc2507":"m","gc2508":"m","gc2509":"m","gc2510":"m","gc2511":"m","gc2512":"m","gc2513":"m","gc2514":"m","gc2515":"s","gc2516":"xs","gc2517":"m","gc2518":"m","gc2519":"xs","gc2520":"m","gc2521":"m","gc2522":"s","gc2523":"s","gc2524":"m","gc2525":"m","gc2526":"xs","gc2527":"s","gc2528":"s","gc2529":"m","gc2530":"s","gc2531":"m","gc2539":"s","gc2541":"xs","gc2546":"s","gc2547":"m","gc2549":"s","gc2550":"s","gc2551":"s","gc2552":"s","gc2553":"m","gc2554":"s","gc2555":"m","gc2556":"m","gc2557":"xs","gc2558":"xs","gc2559":"xs","gc2560":"s","gc2561":"s","gc2564":"s","gc2565":"s","gc2566":"s","gc2567":"m","gc2570":"s","gc2571":"s","gc2572":"s","gc2601":"s","gc2602":"s","gc2603":"xs","gc2604":"xs","gc2616":"m","gc2634":"m","gc2635":"s","gc2683":"m","gc2684":"m","gc2685":"s","gc2686":"m","gc2687":"m","gc2688":"l","gc2689":"l","gc2690":"s","gc2691":"l","gc2692":"s","gc2693":"xs","gc2694":"m","gc2695":"s","gc2696":"l","gc2698":"s","gc2699":"s","gc2700":"m","gc2701":"s","gc2702":"s","gc2703":"s","gc2704":"s","gc2737":"s","gc2738":"xs","gc2739":"s","gc2740":"m","gc2741":"s","gc2742":"xs","gc2743":"s","gc2744":"s","gc2746":"s","gc2747":"m","gc2748":"m","gc2749":"s","gc2750":"s","gc2751":"m","gc2752":"m","gc2753":"s","gc2754":"s","gc2755":"m","gc2756":"s","gc2760":"m","gc2761":"xs","gc2762":"s","gc2763":"s","gc2855":"xs","gc2856":"xs","gc2857":"xl","gc2858":"xl","gc2859":"xxl","gc2860":"xxl","gc2861":"l","gc2770":"xs","gc2771":"xs","gc2772":"s","gc2773":"s","gc2774":"xs","gc2775":"s","gc2776":"m","gc2777":"m","gc2778":"s","gc2780":"m","gc2781":"m","gc2782":"s","gc2783":"s","gc2784":"m","gc2785":"s","gc2786":"s","gc2787":"s","gc2788":"s","gc2790":"s","gc2791":"s","gc2792":"m","gc2793":"s","gc2794":"m","gc2795":"s","gc2796":"s","gc2797":"m","gc2798":"s","gc2813":"s","gc2814":"s","gc2815":"s","gc2816":"s","gc2817":"s","gc2818":"s","gc2819":"s","gc2820":"s","gc2821":"s","gc2822":"s","gc2394":"l","gc2396":"l","gc2419":"m","gc2420":"l","gc2421":"l","gc2422":"xl","gc0073":"l","gc1703":"l","gc1704":"l","gc2712":"m","gc2713":"m","gc2714":"m","gc2715":"m"});
   const GEAR_HIGH_COMBINED_RETENTION_IDS = new Set(["gc0073","gc0685","gc2394","gc2396","gc2419","gc2420","gc2421","gc2422","gc2859","gc2860"]);
   for (const catalogItem of GEAR_CATALOG) {
     const surfaceClass = GEAR_SURFACE_CLASS_BY_ID[catalogItem.id];
@@ -11954,7 +12032,878 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
   }
 
+
+  // v670: Power organization, direct-AC power-station recharge, and inverter catalog pass.
+  // "Power" is split into four gameplay-facing subcategories. Portable power stations use
+  // their included AC charging lead for wall charging; the lead is intentionally abstracted
+  // with the unit instead of tracked as separate Gear.
+  {
+    const powerGroups = Object.freeze({
+      'Cells & Battery Packs': [
+        'gc0239','gc2175','gc0236','gc0237','gc2173','gc0238','gc2176','gc2174','gc2855','gc2856','gc2505'
+      ],
+      'Chargers & Adapters': [
+        'gc0229','gc0230','gc0231','gc2864','gc2865','gc2506','gc2457'
+      ],
+      'Portable Power': [
+        'gc0225','gc0226','gc0227','gc0228','gc1416','gc1417','gc0234','gc0235','gc1418'
+      ],
+      'Distribution & Conversion': [
+        'gc1419'
+      ]
+    });
+    for (const [group, ids] of Object.entries(powerGroups)) {
+      for (const id of ids) {
+        const item = GEAR_CATALOG.find(entry => entry.id === id);
+        if (!item) continue;
+        item.category = 'Electronics & Communications';
+        item.subcategory = `Power > ${group}`;
+      }
+    }
+
+    const station500 = GEAR_CATALOG.find(entry => entry.id === 'gc1416');
+    if (station500) {
+      station500.wallAcChargeInputW = 660;
+      station500.specs = 'Portable rechargeable power station around 500 Wh · AC output: 120 V pure sine wave, ~500 W continuous · Wall charging: 100–120 V AC, up to ~660 W via included AC charging cable (abstracted with the unit) · USB-C input/output: up to 100 W · Solar/DC charging supported on representative units';
+    }
+    const station1000 = GEAR_CATALOG.find(entry => entry.id === 'gc1417');
+    if (station1000) {
+      station1000.wallAcChargeInputW = 1200;
+      station1000.specs = 'Portable rechargeable power station around 1,000 Wh · AC output: 120 V pure sine wave, ~1,000 W continuous · Wall charging: 100–120 V AC, up to ~1,200 W via included AC charging cable (abstracted with the unit) · USB-C input/output: up to 100 W · Solar/DC charging supported on representative units';
+    }
+
+    GEAR_CATALOG.push(
+      {
+        id:'gc2867', name:'Vehicle Power Inverter, 150 W', category:'Electronics & Communications', subcategory:'Power > Distribution & Conversion',
+        weight:2.8, price:100.0, availability:'Common', colors:['Black','Gray'],
+        specs:'Compact pure-sine-wave vehicle inverter · Input: 12 V DC via accessory socket / detachable vehicle plug · Output: 120 V AC, 150 W continuous, ~300 W surge · Representative efficiency near 90% · Intended for laptops, chargers, and other small AC loads',
+        aliases:['150W inverter','150 W inverter','12V inverter','12 V inverter','cigarette lighter inverter','vehicle inverter','car inverter']
+      },
+      {
+        id:'gc2868', name:'Power Inverter, 1,000 W (specific)', category:'Electronics & Communications', subcategory:'Power > Distribution & Conversion',
+        weight:6.0, price:180.0, availability:'Specialty', colors:['Black','Gray'],
+        specs:'Pure-sine-wave DC-to-AC inverter · Specify battery-system input voltage (commonly 12 V or 24 V DC); inverter must match the source system · Output: 120 V AC, 1,000 W continuous, ~2,000 W surge · Direct battery/hardwire connection · Representative efficiency >90%',
+        aliases:['1000W inverter','1,000 W inverter','1kW inverter','1 kW inverter','pure sine inverter','DC AC inverter']
+      },
+      {
+        id:'gc2869', name:'Power Inverter, 2,000 W (specific)', category:'Electronics & Communications', subcategory:'Power > Distribution & Conversion',
+        weight:10.1, price:340.0, availability:'Specialty', colors:['Black','Gray'],
+        specs:'Pure-sine-wave DC-to-AC inverter · Specify battery-system input voltage (commonly 12 V or 24 V DC); inverter must match the source system · Output: 120 V AC, 2,000 W continuous, ~4,000 W surge · Direct battery/hardwire connection · Representative efficiency about 90%+',
+        aliases:['2000W inverter','2,000 W inverter','2kW inverter','2 kW inverter','pure sine inverter','DC AC inverter']
+      }
+    );
+  }
+
+  // v671: Primitive/projectile weapon catalog expansion and availability audit.
+  // Adds slingshots, blowguns, atlatls, airguns, spearguns, bolas, throwing spears,
+  // and non-returning hunting throwsticks, with separately tracked projectiles/consumables.
+  // Availability intentionally distinguishes mainstream sporting goods from niche historical gear.
+  {
+    const traditionalSling = GEAR_CATALOG.find(entry => entry.id === 'gc0590');
+    if (traditionalSling) traditionalSling.subcategory = 'Primitive Ranged';
+
+    GEAR_CATALOG.push(
+      {
+        id:'gc2870', name:'Slingshot, Wrist-Braced', category:'Weapons', subcategory:'Primitive Ranged',
+        weight:1.0, price:30.0, availability:'Common', colors:['Black','Gray'],
+        specs:'Modern wrist-braced slingshot with adjustable yoke and elastic band set · Representative 1 lb class · Commonly uses 3/8 in steel shot or similar round ammunition',
+        aliases:['slingshot','sling shot','wrist rocket','wrist-braced slingshot','catapult']
+      },
+      {
+        id:'gc2871', name:'Slingshot Shot, Steel, 3/8 in', category:'Weapons', subcategory:'Ammunition > Primitive Ranged',
+        weight:0.0078, price:0.07, availability:'Common', colors:['Silver'],
+        specs:'Catalog quantity unit: 1 steel ball · 3/8 in diameter slingshot shot · Representative mass about 3.5 g · Bulk Add quantity: 100',
+        aliases:['slingshot ammo','slingshot ammunition','steel shot','3/8 slingshot ammo','wrist rocket ammo'], unit:'ball', defaultQuantity:100
+      },
+      {
+        id:'gc2872', name:'Blowgun, .625 Caliber, 4 ft', category:'Weapons', subcategory:'Primitive Ranged',
+        weight:1.2, price:40.0, availability:'Specialty', colors:['Black'],
+        specs:'Four-foot large-bore blowgun · Representative .625-caliber commercial class with mouthpiece, ferrule and dart quiver · Typical effective target range about 20 yd or more with practice',
+        aliases:['blowgun','blow gun','blowpipe','.625 blowgun','big bore blowgun']
+      },
+      {
+        id:'gc2873', name:'Blowgun Dart, .625 Caliber', category:'Weapons', subcategory:'Ammunition > Primitive Ranged',
+        weight:0.008, price:0.50, availability:'Specialty', colors:['Black','Silver'],
+        specs:'Catalog quantity unit: 1 dart · .625-caliber blowgun projectile; representative commercial dart class · Bulk Add quantity: 50',
+        aliases:['blowgun dart','blow gun dart','blowpipe dart','.625 dart'], unit:'dart', defaultQuantity:50
+      },
+      {
+        id:'gc2874', name:'Atlatl / Spear Thrower', category:'Weapons', subcategory:'Primitive Ranged',
+        weight:0.5, price:60.0, availability:'Limited', colors:['Brown'],
+        specs:'Handheld spear-throwing lever for launching long flexible darts · Representative handcrafted hardwood atlatl; modern examples are primarily sold by dedicated primitive-technology makers rather than general sporting-goods stores',
+        aliases:['atlatl','spear thrower','spear-thrower','dart thrower']
+      },
+      {
+        id:'gc2875', name:'Atlatl Dart, 6 ft', category:'Weapons', subcategory:'Ammunition > Primitive Ranged',
+        weight:0.35, price:18.0, availability:'Limited', colors:['Brown','Tan'],
+        specs:'Catalog quantity unit: 1 dart · Flexible six-foot atlatl dart, representative wood/cane/fiberglass class · Typical large traditional-style darts are roughly 5–6 oz · Bulk Add quantity: 3',
+        aliases:['atlatl dart','spear thrower dart','spear-thrower dart','atlatl spear'], unit:'dart', defaultQuantity:3
+      },
+      {
+        id:'gc2876', name:'Air Rifle, Break-Barrel, .177 Pellet', category:'Weapons', subcategory:'Airguns',
+        weight:6.0, price:130.0, availability:'Common', colors:['Black','Gray','Brown'],
+        specs:'Single-shot .177-caliber break-barrel pellet rifle · Representative nitro/gas-piston sporting class with rifled steel barrel · About 6 lb · Up to roughly 1,200 fps depending on pellet',
+        aliases:['air rifle','pellet rifle','pellet gun','.177 air rifle','break barrel air rifle','break-barrel air rifle']
+      },
+      {
+        id:'gc2877', name:'Air Pistol, CO2, .177 Pellet/BB', category:'Weapons', subcategory:'Airguns',
+        weight:2.44, price:130.0, availability:'Common', colors:['Black','Tan'],
+        specs:'Full-size CO2-powered .177 air pistol capable of firing lead pellets or steel BBs · Representative blowback trainer class · Uses one 12 g CO2 cartridge · About 16-round dual-rotary magazine · About 2.44 lb',
+        aliases:['air pistol','pellet pistol','BB pistol','BB gun','.177 air pistol','CO2 air pistol','CO2 pellet pistol']
+      },
+      {
+        id:'gc2878', name:'Airgun Pellet, .177', category:'Weapons', subcategory:'Ammunition > Airgun',
+        weight:0.0011, price:0.023, availability:'Common', colors:['Gray','Silver'],
+        specs:'Catalog quantity unit: 1 pellet · .177 cal / 4.5 mm lead airgun pellet · Representative target/plinking pellet around 7–8 gr · Bulk Add quantity: 300',
+        aliases:['.177 pellet','airgun pellet','air gun pellet','pellet ammo','pellet ammunition'], unit:'pellet', defaultQuantity:300
+      },
+      {
+        id:'gc2879', name:'Airgun BB, Steel, .177', category:'Weapons', subcategory:'Ammunition > Airgun',
+        weight:0.00073, price:0.0027, availability:'Common', colors:['Silver'],
+        specs:'Catalog quantity unit: 1 BB · .177 cal / 4.5 mm steel airgun BB · Representative mass about 5 gr · Bulk Add quantity: 1,500',
+        aliases:['.177 BB','steel BB','airgun BB','air gun BB','BB ammo','BB ammunition'], unit:'BB', defaultQuantity:1500
+      },
+      {
+        id:'gc2880', name:'CO2 Cartridge, 12 g', category:'Weapons', subcategory:'Accessories > Airguns',
+        weight:0.09, price:0.67, availability:'Common', colors:['Silver'],
+        specs:'Single disposable 12 g CO2 powerlet/cartridge for compatible air pistols, rifles and related equipment · Representative gross cartridge weight about 0.09 lb · Bulk Add quantity: 30',
+        aliases:['12g CO2','12 g CO2','CO2 powerlet','CO2 cylinder','airgun CO2','air gun CO2'], unit:'cartridge', defaultQuantity:30
+      },
+      {
+        id:'gc2881', name:'Speargun, Band-Powered, 75 cm', category:'Weapons', subcategory:'Spearfishing',
+        weight:2.0, price:135.0, availability:'Specialty', colors:['Black','Gray','Blue'],
+        specs:'Band-powered aluminum speargun around 75 cm for underwater spearfishing · Representative entry-level class with sealed aluminum barrel, molded handle, replaceable band and removable steel flopper shaft',
+        aliases:['speargun','spear gun','band speargun','rubber speargun','75 cm speargun']
+      },
+      {
+        id:'gc2882', name:'Speargun Shaft, 105 cm', category:'Weapons', subcategory:'Ammunition > Spearfishing',
+        weight:0.55, price:40.0, availability:'Specialty', colors:['Silver'],
+        specs:'Catalog quantity unit: 1 shaft · Replacement steel shaft around 105 cm for a representative 75 cm band-powered speargun · Approximately 6.5–7 mm diameter with threaded/flopper-tip class hardware',
+        aliases:['speargun shaft','spear gun shaft','speargun spear','speargun arrow'], unit:'shaft', defaultQuantity:1
+      },
+      {
+        id:'gc2883', name:'Bolas / Boleadoras', category:'Weapons', subcategory:'Melee > Thrown',
+        weight:1.5, price:180.0, availability:'Limited', colors:['Brown','Black'],
+        specs:'Traditional three-weight throwing implement with braided cords, intended to wrap or entangle a target · Functional modern examples are mainly handcrafted specialty or cultural-artisan goods rather than mass-market sporting equipment',
+        aliases:['bolas','bola','boleadoras','boleadora','throwing bolas']
+      },
+      {
+        id:'gc2884', name:'Spear, Throwing / Javelin', category:'Weapons', subcategory:'Melee > Thrown',
+        weight:2.5, price:75.0, availability:'Limited', colors:['Brown','Black','Silver'],
+        specs:'Purpose-built long throwing spear/javelin with wood shaft and steel head · Representative modern weapon-style class around 7 ft and 2.5 lb · Distinct from a track-and-field competition javelin and from heavier thrusting spears',
+        aliases:['javelin','throwing spear','throwing javelin','weapon javelin','Samburu spear']
+      },
+      {
+        id:'gc2885', name:'Hunting Throwstick / Boomerang', category:'Weapons', subcategory:'Melee > Thrown',
+        weight:0.8, price:90.0, availability:'Limited', colors:['Brown','Black'],
+        specs:'Non-returning hunting throwstick designed for straight, level flight rather than returning sport flight · Representative modern specialist class around 10–15 oz; handmade/tuned examples commonly occupy roughly the $70–$125 range',
+        aliases:['hunting boomerang','throwing stick','throwstick','rabbit stick','hunting throwstick','kylie']
+      }
+    );
+  }
+
+  // v672: Blood collection bags, typed whole-blood units, and donor collection workflow.
+  // Standard 450 mL CPDA-1 collection bags are modeled as specialized single-use medical
+  // systems with integral needle/tubing. Filled bags cover all eight common ABO/Rh types
+  // plus an Untyped state for field/scavenged collections.
+  {
+    GEAR_CATALOG.push(
+      {
+        id:'gc2886', name:'Whole Blood, O−', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.337, price:0, availability:'Rare', colors:['Red'], internalOnly:true,
+        specs:'Internal whole-blood liquid resource; representative density ~1.06 g/mL; not directly purchasable as Gear',
+        aliases:["o\u2212 blood", "O\u2212 blood", "type O\u2212 blood"], unit:'L',
+        liquidFamily:'blood-o-negative', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2887', name:'Whole Blood, O+', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.337, price:0, availability:'Rare', colors:['Red'], internalOnly:true,
+        specs:'Internal whole-blood liquid resource; representative density ~1.06 g/mL; not directly purchasable as Gear',
+        aliases:["o+ blood", "O+ blood", "type O+ blood"], unit:'L',
+        liquidFamily:'blood-o-positive', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2888', name:'Whole Blood, A−', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.337, price:0, availability:'Rare', colors:['Red'], internalOnly:true,
+        specs:'Internal whole-blood liquid resource; representative density ~1.06 g/mL; not directly purchasable as Gear',
+        aliases:["a\u2212 blood", "A\u2212 blood", "type A\u2212 blood"], unit:'L',
+        liquidFamily:'blood-a-negative', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2889', name:'Whole Blood, A+', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.337, price:0, availability:'Rare', colors:['Red'], internalOnly:true,
+        specs:'Internal whole-blood liquid resource; representative density ~1.06 g/mL; not directly purchasable as Gear',
+        aliases:["a+ blood", "A+ blood", "type A+ blood"], unit:'L',
+        liquidFamily:'blood-a-positive', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2890', name:'Whole Blood, B−', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.337, price:0, availability:'Rare', colors:['Red'], internalOnly:true,
+        specs:'Internal whole-blood liquid resource; representative density ~1.06 g/mL; not directly purchasable as Gear',
+        aliases:["b\u2212 blood", "B\u2212 blood", "type B\u2212 blood"], unit:'L',
+        liquidFamily:'blood-b-negative', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2891', name:'Whole Blood, B+', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.337, price:0, availability:'Rare', colors:['Red'], internalOnly:true,
+        specs:'Internal whole-blood liquid resource; representative density ~1.06 g/mL; not directly purchasable as Gear',
+        aliases:["b+ blood", "B+ blood", "type B+ blood"], unit:'L',
+        liquidFamily:'blood-b-positive', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2892', name:'Whole Blood, AB−', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.337, price:0, availability:'Rare', colors:['Red'], internalOnly:true,
+        specs:'Internal whole-blood liquid resource; representative density ~1.06 g/mL; not directly purchasable as Gear',
+        aliases:["ab\u2212 blood", "AB\u2212 blood", "type AB\u2212 blood"], unit:'L',
+        liquidFamily:'blood-ab-negative', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2893', name:'Whole Blood, AB+', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.337, price:0, availability:'Rare', colors:['Red'], internalOnly:true,
+        specs:'Internal whole-blood liquid resource; representative density ~1.06 g/mL; not directly purchasable as Gear',
+        aliases:["ab+ blood", "AB+ blood", "type AB+ blood"], unit:'L',
+        liquidFamily:'blood-ab-positive', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2894', name:'Whole Blood, Untyped', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.337, price:0, availability:'Rare', colors:['Red'], internalOnly:true,
+        specs:'Internal whole-blood liquid resource; representative density ~1.06 g/mL; not directly purchasable as Gear',
+        aliases:["untyped blood", "Untyped blood", "type Untyped blood"], unit:'L',
+        liquidFamily:'blood-untyped', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2895', name:'Blood Collection Bag, 450 mL, Empty', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.30, price:24.0, availability:'Limited', colors:['Clear'], unit:'bag',
+        specs:'Sterile single-use 450 mL whole-blood collection system, empty of donor blood but preloaded with approximately 63 mL CPDA-1 anticoagulant · Integrated roughly 16-gauge donor needle and collection tubing · Intended to collect one standard whole-blood unit; unopened sterile system only',
+        aliases:['empty blood bag','blood collection bag','donor blood bag','whole blood bag empty','CPDA-1 blood bag','450 mL blood bag'],
+        liquidCapacityLiters:0.45, liquidAllowedFamilies:["blood-o-negative", "blood-o-positive", "blood-a-negative", "blood-a-positive", "blood-b-negative", "blood-b-positive", "blood-ab-negative", "blood-ab-positive", "blood-untyped"], liquidPreferredUnit:'L', liquidUsedProfile:'blood',
+        bloodCollectionBag:true
+      },
+      {
+        id:'gc2897', name:'Whole Blood Bag, 450 mL, O−', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.30, price:270.0, availability:'Rare', colors:['Red'], unit:'bag',
+        specs:'450 mL whole-blood unit collected into a CPDA-1 blood-pack system · Donor type: O− · Representative filled system adds about 1.05 lb of donor blood to the approximately 0.30 lb collection pack · Requires proper blood-bank testing, labeling, refrigerated storage and compatibility assessment; those clinical safeguards are not automated by Gear',
+        aliases:['O− blood bag','type O− blood','whole blood O−','donor blood O−'],
+        liquidCapacityLiters:0.45, liquidAllowedFamilies:['blood-o-negative'], liquidPreferredUnit:'L', liquidUsedProfile:'blood',
+        prefilledLiquidCatalogId:'gc2886', prefilledLiquidFamily:'blood-o-negative', prefilledLiquidLiters:0.45,
+        bloodCollectionBag:true, bloodTypeLabel:'O−', bloodFamily:'blood-o-negative'
+      },
+      {
+        id:'gc2898', name:'Whole Blood Bag, 450 mL, O+', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.30, price:270.0, availability:'Rare', colors:['Red'], unit:'bag',
+        specs:'450 mL whole-blood unit collected into a CPDA-1 blood-pack system · Donor type: O+ · Representative filled system adds about 1.05 lb of donor blood to the approximately 0.30 lb collection pack · Requires proper blood-bank testing, labeling, refrigerated storage and compatibility assessment; those clinical safeguards are not automated by Gear',
+        aliases:['O+ blood bag','type O+ blood','whole blood O+','donor blood O+'],
+        liquidCapacityLiters:0.45, liquidAllowedFamilies:['blood-o-positive'], liquidPreferredUnit:'L', liquidUsedProfile:'blood',
+        prefilledLiquidCatalogId:'gc2887', prefilledLiquidFamily:'blood-o-positive', prefilledLiquidLiters:0.45,
+        bloodCollectionBag:true, bloodTypeLabel:'O+', bloodFamily:'blood-o-positive'
+      },
+      {
+        id:'gc2899', name:'Whole Blood Bag, 450 mL, A−', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.30, price:270.0, availability:'Rare', colors:['Red'], unit:'bag',
+        specs:'450 mL whole-blood unit collected into a CPDA-1 blood-pack system · Donor type: A− · Representative filled system adds about 1.05 lb of donor blood to the approximately 0.30 lb collection pack · Requires proper blood-bank testing, labeling, refrigerated storage and compatibility assessment; those clinical safeguards are not automated by Gear',
+        aliases:['A− blood bag','type A− blood','whole blood A−','donor blood A−'],
+        liquidCapacityLiters:0.45, liquidAllowedFamilies:['blood-a-negative'], liquidPreferredUnit:'L', liquidUsedProfile:'blood',
+        prefilledLiquidCatalogId:'gc2888', prefilledLiquidFamily:'blood-a-negative', prefilledLiquidLiters:0.45,
+        bloodCollectionBag:true, bloodTypeLabel:'A−', bloodFamily:'blood-a-negative'
+      },
+      {
+        id:'gc2900', name:'Whole Blood Bag, 450 mL, A+', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.30, price:270.0, availability:'Rare', colors:['Red'], unit:'bag',
+        specs:'450 mL whole-blood unit collected into a CPDA-1 blood-pack system · Donor type: A+ · Representative filled system adds about 1.05 lb of donor blood to the approximately 0.30 lb collection pack · Requires proper blood-bank testing, labeling, refrigerated storage and compatibility assessment; those clinical safeguards are not automated by Gear',
+        aliases:['A+ blood bag','type A+ blood','whole blood A+','donor blood A+'],
+        liquidCapacityLiters:0.45, liquidAllowedFamilies:['blood-a-positive'], liquidPreferredUnit:'L', liquidUsedProfile:'blood',
+        prefilledLiquidCatalogId:'gc2889', prefilledLiquidFamily:'blood-a-positive', prefilledLiquidLiters:0.45,
+        bloodCollectionBag:true, bloodTypeLabel:'A+', bloodFamily:'blood-a-positive'
+      },
+      {
+        id:'gc2901', name:'Whole Blood Bag, 450 mL, B−', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.30, price:270.0, availability:'Rare', colors:['Red'], unit:'bag',
+        specs:'450 mL whole-blood unit collected into a CPDA-1 blood-pack system · Donor type: B− · Representative filled system adds about 1.05 lb of donor blood to the approximately 0.30 lb collection pack · Requires proper blood-bank testing, labeling, refrigerated storage and compatibility assessment; those clinical safeguards are not automated by Gear',
+        aliases:['B− blood bag','type B− blood','whole blood B−','donor blood B−'],
+        liquidCapacityLiters:0.45, liquidAllowedFamilies:['blood-b-negative'], liquidPreferredUnit:'L', liquidUsedProfile:'blood',
+        prefilledLiquidCatalogId:'gc2890', prefilledLiquidFamily:'blood-b-negative', prefilledLiquidLiters:0.45,
+        bloodCollectionBag:true, bloodTypeLabel:'B−', bloodFamily:'blood-b-negative'
+      },
+      {
+        id:'gc2902', name:'Whole Blood Bag, 450 mL, B+', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.30, price:270.0, availability:'Rare', colors:['Red'], unit:'bag',
+        specs:'450 mL whole-blood unit collected into a CPDA-1 blood-pack system · Donor type: B+ · Representative filled system adds about 1.05 lb of donor blood to the approximately 0.30 lb collection pack · Requires proper blood-bank testing, labeling, refrigerated storage and compatibility assessment; those clinical safeguards are not automated by Gear',
+        aliases:['B+ blood bag','type B+ blood','whole blood B+','donor blood B+'],
+        liquidCapacityLiters:0.45, liquidAllowedFamilies:['blood-b-positive'], liquidPreferredUnit:'L', liquidUsedProfile:'blood',
+        prefilledLiquidCatalogId:'gc2891', prefilledLiquidFamily:'blood-b-positive', prefilledLiquidLiters:0.45,
+        bloodCollectionBag:true, bloodTypeLabel:'B+', bloodFamily:'blood-b-positive'
+      },
+      {
+        id:'gc2903', name:'Whole Blood Bag, 450 mL, AB−', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.30, price:270.0, availability:'Rare', colors:['Red'], unit:'bag',
+        specs:'450 mL whole-blood unit collected into a CPDA-1 blood-pack system · Donor type: AB− · Representative filled system adds about 1.05 lb of donor blood to the approximately 0.30 lb collection pack · Requires proper blood-bank testing, labeling, refrigerated storage and compatibility assessment; those clinical safeguards are not automated by Gear',
+        aliases:['AB− blood bag','type AB− blood','whole blood AB−','donor blood AB−'],
+        liquidCapacityLiters:0.45, liquidAllowedFamilies:['blood-ab-negative'], liquidPreferredUnit:'L', liquidUsedProfile:'blood',
+        prefilledLiquidCatalogId:'gc2892', prefilledLiquidFamily:'blood-ab-negative', prefilledLiquidLiters:0.45,
+        bloodCollectionBag:true, bloodTypeLabel:'AB−', bloodFamily:'blood-ab-negative'
+      },
+      {
+        id:'gc2904', name:'Whole Blood Bag, 450 mL, AB+', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.30, price:270.0, availability:'Rare', colors:['Red'], unit:'bag',
+        specs:'450 mL whole-blood unit collected into a CPDA-1 blood-pack system · Donor type: AB+ · Representative filled system adds about 1.05 lb of donor blood to the approximately 0.30 lb collection pack · Requires proper blood-bank testing, labeling, refrigerated storage and compatibility assessment; those clinical safeguards are not automated by Gear',
+        aliases:['AB+ blood bag','type AB+ blood','whole blood AB+','donor blood AB+'],
+        liquidCapacityLiters:0.45, liquidAllowedFamilies:['blood-ab-positive'], liquidPreferredUnit:'L', liquidUsedProfile:'blood',
+        prefilledLiquidCatalogId:'gc2893', prefilledLiquidFamily:'blood-ab-positive', prefilledLiquidLiters:0.45,
+        bloodCollectionBag:true, bloodTypeLabel:'AB+', bloodFamily:'blood-ab-positive'
+      },
+      {
+        id:'gc2896', name:'Whole Blood Bag, 450 mL, Untyped', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.30, price:270.0, availability:'Rare', colors:['Red'], unit:'bag',
+        specs:'450 mL whole-blood unit collected into a CPDA-1 blood-pack system · Donor type: Untyped · Representative filled system adds about 1.05 lb of donor blood to the approximately 0.30 lb collection pack · Requires proper blood-bank testing, labeling, refrigerated storage and compatibility assessment; those clinical safeguards are not automated by Gear',
+        aliases:['Untyped blood bag','type Untyped blood','whole blood Untyped','donor blood Untyped'],
+        liquidCapacityLiters:0.45, liquidAllowedFamilies:['blood-untyped'], liquidPreferredUnit:'L', liquidUsedProfile:'blood',
+        prefilledLiquidCatalogId:'gc2894', prefilledLiquidFamily:'blood-untyped', prefilledLiquidLiters:0.45,
+        bloodCollectionBag:true, bloodTypeLabel:'Untyped', bloodFamily:'blood-untyped'
+      },
+      {
+        id:'gc2905', name:'Blood Typing Test Kit, ABO/Rh', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.10, price:15.0, availability:'Specialty', colors:['White','Clear'], unit:'test', defaultQuantity:5,
+        specs:'Single-use rapid ABO/Rh blood-typing card or Eldon-card-style test for determining the common A/B/O group and Rh(D) positive/negative status from a small blood sample · Gear records the test kit only; interpretation and transfusion compatibility remain clinical/GM decisions',
+        aliases:['blood type test','blood typing kit','ABO test','Rh test','blood group test','Eldon card']
+      }
+    );
+  }
+
+
+  // v673: Medical-liquid integration pass.
+  // Human blood products and IV fluids use the same embedded-liquid architecture as other
+  // physical liquid packages: contents contribute weight, may be partially transferred,
+  // moved into compatible containers, decremented, or poured out while the container remains.
+  // Animal blood is one (specific) 500 mL laboratory-style product so the player can name the
+  // species without multiplying the catalog into dozens of nearly identical entries.
+  {
+    // Human blood collection/filled units are institutionally controlled medical products.
+    for (const id of ['gc2895','gc2896','gc2897','gc2898','gc2899','gc2900','gc2901','gc2902','gc2903','gc2904']) {
+      const item = GEAR_CATALOG.find(entry => entry.id === id);
+      if (item) item.accessStatus = 'Restricted';
+    }
+
+    // Replace the old generic crystalloid bag in place so legacy saves using gc0896/gc2854
+    // transparently become normal saline rather than leaving a duplicate generic IV-fluid item.
+    const salineLiquid = GEAR_CATALOG.find(entry => entry.id === 'gc2854');
+    if (salineLiquid) Object.assign(salineLiquid, {
+      name:'Liquid: Normal Saline 0.9%',
+      weight:2.20,
+      specs:'Internal 0.9% sodium-chloride IV solution; not directly purchasable as loose Gear',
+      aliases:['normal saline','0.9% saline','0.9 sodium chloride','sodium chloride IV fluid'],
+      liquidFamily:'normal-saline', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+    });
+    const salineBag = GEAR_CATALOG.find(entry => entry.id === 'gc0896');
+    if (salineBag) Object.assign(salineBag, {
+      name:'Normal Saline IV Fluid, 1 L',
+      category:'Medical & First Aid', subcategory:'Clinical Supplies > IV Therapy',
+      weight:0.20, price:10.0, availability:'Specialty', medicationStatus:'Rx', colors:['Clear'], unit:'bag',
+      specs:'1 L sterile IV bag of 0.9% sodium chloride (normal saline) for intravenous fluid/electrolyte replacement and compatible clinical uses · Contents are modeled as transferable liquid; the flexible IV bag remains when emptied',
+      aliases:['normal saline','saline IV','saline bag','0.9% saline','0.9% sodium chloride','sodium chloride IV','IV Fluid Bag, 1 L'],
+      liquidCapacityLiters:1.0, liquidAllowedFamilies:['normal-saline'], liquidPreferredUnit:'L', liquidUsedProfile:'medical',
+      prefilledLiquidCatalogId:'gc2854', prefilledLiquidFamily:'normal-saline', prefilledLiquidLiters:1.0
+    });
+
+    GEAR_CATALOG.push(
+      {
+        id:'gc2906', name:'Liquid: Balanced Electrolyte IV Fluid', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.20, price:0, availability:'Ubiquitous', colors:['Clear'], internalOnly:true, unit:'L',
+        specs:'Internal balanced isotonic crystalloid IV solution; not directly purchasable as loose Gear',
+        aliases:["Lactated Ringer's",'Lactated Ringers','LR','Ringer lactate'],
+        liquidFamily:'balanced-electrolyte-iv', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2907', name:'Balanced Electrolyte IV Fluid, 1 L', category:'Medical & First Aid', subcategory:'Clinical Supplies > IV Therapy',
+        weight:0.20, price:12.0, availability:'Specialty', medicationStatus:'Rx', colors:['Clear'], unit:'bag',
+        specs:'1 L sterile balanced isotonic electrolyte IV solution used for intravenous fluid/electrolyte replacement · Contents are modeled as transferable liquid; the flexible IV bag remains when emptied',
+        aliases:["Lactated Ringer's",'Lactated Ringers','LR','Ringer lactate','balanced crystalloid','balanced IV fluid','electrolyte IV fluid'],
+        liquidCapacityLiters:1.0, liquidAllowedFamilies:['balanced-electrolyte-iv'], liquidPreferredUnit:'L', liquidUsedProfile:'medical',
+        prefilledLiquidCatalogId:'gc2906', prefilledLiquidFamily:'balanced-electrolyte-iv', prefilledLiquidLiters:1.0
+      },
+      {
+        id:'gc2908', name:'Liquid: Plasma', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.26, price:0, availability:'Rare', colors:['Yellow'], internalOnly:true, unit:'L',
+        specs:'Internal human-donor plasma resource; representative density approximately 1.025 kg/L; not directly purchasable as loose Gear',
+        aliases:['blood plasma','human plasma'],
+        liquidFamily:'plasma', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2909', name:'Plasma, 1 Unit', category:'Medical & First Aid', subcategory:'Clinical Supplies > Blood & Transfusion',
+        weight:0.08, price:100.0, availability:'Rare', accessStatus:'Restricted', colors:['Yellow'], unit:'unit',
+        specs:'Single human-donor plasma unit abstracted as approximately 250 mL in its transfusion bag · Provides plasma/clotting-factor replacement rather than red-cell oxygen-carrying capacity · Storage state/temperature is intentionally treated as condition/storage detail rather than separate Gear items · Requires appropriate blood-bank handling and clinical compatibility assessment',
+        aliases:['blood plasma','plasma bag','plasma transfusion','human plasma','fresh frozen plasma','FFP','thawed plasma','liquid plasma'],
+        liquidCapacityLiters:0.25, liquidAllowedFamilies:['plasma'], liquidPreferredUnit:'L', liquidUsedProfile:'medical',
+        prefilledLiquidCatalogId:'gc2908', prefilledLiquidFamily:'plasma', prefilledLiquidLiters:0.25
+      },
+      {
+        id:'gc2910', name:'Liquid: Animal Blood', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.337, price:0, availability:'Limited', colors:['Red'], internalOnly:true, unit:'L',
+        specs:'Internal species-specific animal whole-blood resource; representative whole-blood density approximately 1.06 g/mL; not directly purchasable as loose Gear',
+        aliases:['animal whole blood','veterinary blood','research animal blood'],
+        liquidFamily:'animal-blood', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2911', name:'Animal Blood, (specific)', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Laboratory',
+        weight:0.10, price:200.0, availability:'Limited', colors:['Red'], unit:'bottle',
+        specs:'500 mL bottle of animal whole blood for laboratory, veterinary, food-processing, training, or other legitimate species-dependent uses · Replace “(specific)” with the species/source when known (for example pig, cattle, sheep, horse, rabbit, rat, dog, chicken, or another available species) · Commercial access, processing/anticoagulant, and price vary substantially by species and supplier',
+        aliases:['animal blood','animal whole blood','pig blood','porcine blood','cow blood','cattle blood','bovine blood','sheep blood','ovine blood','horse blood','equine blood','rabbit blood','rat blood','mouse blood','dog blood','canine blood','chicken blood','avian blood','research animal blood'],
+        liquidCapacityLiters:0.50, liquidAllowedFamilies:['animal-blood'], liquidPreferredUnit:'L', liquidUsedProfile:'medical',
+        prefilledLiquidCatalogId:'gc2910', prefilledLiquidFamily:'animal-blood', prefilledLiquidLiters:0.50,
+        animalBloodSpecific:true
+      }
+    );
+
+    // Ordinary open/general containers can hold these medical liquids just like other app
+    // liquids. Dedicated IV/blood/plasma packages remain family-locked to their intended fluid.
+    const medicalTransferFamilies = [
+      'normal-saline','balanced-electrolyte-iv','plasma','animal-blood',
+      'blood-untyped','blood-o-negative','blood-o-positive','blood-a-negative','blood-a-positive',
+      'blood-b-negative','blood-b-positive','blood-ab-negative','blood-ab-positive'
+    ];
+    for (const item of GEAR_CATALOG) {
+      if (!(Number(item.liquidCapacityLiters) > 0)) continue;
+      if (/\b(?:Bucket|Canning Jar|Specimen Jar|Sample Bottle)\b/i.test(String(item.name || ''))) {
+        item.liquidAllowedFamilies = Array.from(new Set([...(item.liquidAllowedFamilies || []), ...medicalTransferFamilies]));
+      }
+    }
+  }
+
+  // v674: Dangerous-substance catalog pass.
+  // Adds high-recognition toxic chemicals, biological toxins/agents, and chemical-warfare agents
+  // as inventory/hazard objects. Specs intentionally describe mechanism, major effects, and
+  // lethality without lethal-dose, preparation, cultivation, dissemination, or weaponization detail.
+  {
+    GEAR_CATALOG.push(
+      {
+        id:'gc2912', name:'Cyanide Compound', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Poisons & Toxins',
+        weight:0.05, price:100.0, availability:'Limited', accessStatus:'Restricted', colors:['White'], unit:'sample',
+        specs:'Highly toxic cyanide chemical represented as a sealed hazardous sample · Cyanide prevents cells from using oxygen normally, rapidly injuring the brain, heart and other oxygen-sensitive organs · Severe exposure can cause seizures, cardiovascular collapse, respiratory arrest and rapid death · Exact compound, concentration and toxic dose are intentionally not modeled',
+        aliases:['cyanide','cyanide salt','sodium cyanide','potassium cyanide','cyanide poison']
+      },
+      {
+        id:'gc2913', name:'Arsenic Compound', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Toxic Metals',
+        weight:0.05, price:80.0, availability:'Limited', accessStatus:'Restricted', colors:['White','Gray'], unit:'sample',
+        specs:'Highly toxic arsenic compound represented as a sealed hazardous sample · Acute inorganic-arsenic poisoning can cause severe gastrointestinal injury, dehydration, low blood pressure, cardiovascular collapse and multi-organ dysfunction · Severe exposure can be fatal · Exact compound, concentration and toxic dose are intentionally not modeled',
+        aliases:['arsenic','arsenic poison','arsenic trioxide','inorganic arsenic']
+      },
+      {
+        id:'gc2914', name:'Strychnine', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Poisons & Toxins',
+        weight:0.05, price:150.0, availability:'Rare', accessStatus:'Restricted', colors:['White'], unit:'sample',
+        specs:'Powerful toxic alkaloid represented as a sealed hazardous sample · Blocks normal inhibitory nerve signaling that acts as an “off switch” for muscles, producing severe painful generalized spasms and stimulus-triggered convulsions · Severe poisoning can cause respiratory failure, cardiac arrest, brain injury and death · Exact concentration and toxic dose are intentionally not modeled',
+        aliases:['strychnine poison','strychnine alkaloid','nux-vomica toxin']
+      },
+      {
+        id:'gc2915', name:'Ricin', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Poisons & Toxins',
+        weight:0.05, price:0.0, availability:'Rare', accessStatus:'Restricted', colors:['White','Tan'], unit:'sample',
+        specs:'Potent plant-derived toxin associated with castor-bean material, represented as a controlled sealed sample · Disables ribosomes and prevents cells from making essential proteins, causing progressive cell and organ injury · Severe exposure can cause respiratory failure, shock, multi-organ failure and death; there is no specific antidote · Exact concentration and toxic dose are intentionally not modeled',
+        aliases:['ricin toxin','castor bean toxin','castor-bean toxin']
+      },
+      {
+        id:'gc2917', name:'Botulinum Toxin', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Poisons & Toxins',
+        weight:0.05, price:0.0, availability:'Rare', accessStatus:'Restricted', colors:['Clear','White'], unit:'sample',
+        specs:'Extremely potent bacterial neurotoxin represented as a controlled sealed sample · Blocks acetylcholine release at neuromuscular junctions, producing descending flaccid paralysis · Severe poisoning can paralyze breathing muscles, cause respiratory failure and death · Exact preparation, concentration and toxic dose are intentionally not modeled',
+        aliases:['botulinum neurotoxin','BoNT','botulism toxin','botulinum poison']
+      },
+      {
+        id:'gc2918', name:'Tetrodotoxin', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Poisons & Toxins',
+        weight:0.05, price:300.0, availability:'Rare', accessStatus:'Restricted', colors:['White'], unit:'sample',
+        specs:'Potent neurotoxin associated with pufferfish and several other animals, represented as a controlled sealed sample · Blocks voltage-gated sodium channels and prevents normal nerve and muscle signaling · Severe poisoning can cause progressive paralysis, respiratory arrest and death · Exact concentration and toxic dose are intentionally not modeled',
+        aliases:['TTX','pufferfish toxin','puffer fish toxin','tetrodotoxin poison']
+      },
+      {
+        id:'gc2919', name:'Aconitine', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Poisons & Toxins',
+        weight:0.05, price:150.0, availability:'Limited', accessStatus:'Restricted', colors:['White'], unit:'sample',
+        specs:'Highly toxic plant alkaloid associated with aconite/monkshood/wolfsbane, represented as a sealed hazardous sample · Disrupts voltage-gated sodium-channel function in nerves and the heart · Severe poisoning can produce dangerous ventricular arrhythmias, cardiovascular collapse, cardiac arrest and death · Exact concentration and toxic dose are intentionally not modeled',
+        aliases:['aconite toxin','monkshood toxin','wolfsbane toxin','aconitine poison']
+      },
+      {
+        id:'gc2920', name:'Thallium Compound', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Toxic Metals',
+        weight:0.05, price:120.0, availability:'Limited', accessStatus:'Restricted', colors:['White','Clear'], unit:'sample',
+        specs:'Highly toxic thallium compound represented as a sealed hazardous sample · Poisoning can affect the gastrointestinal tract, nervous system and multiple organs; neurological injury and delayed hair loss are characteristic clues · Severe poisoning can progress to respiratory paralysis/failure and death · Exact compound, concentration and toxic dose are intentionally not modeled',
+        aliases:['thallium','thallium poison','thallium salt','thallium sulfate']
+      },
+      {
+        id:'gc2921', name:'Organophosphate Poison', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Poisons & Toxins',
+        weight:0.10, price:75.0, availability:'Limited', accessStatus:'Restricted', colors:['Clear','White','Tan'], unit:'sample',
+        specs:'Specific highly toxic organophosphate compound or concentrated formulation represented as a sealed hazardous sample · Inhibits acetylcholinesterase, causing excessive cholinergic nerve activity with sweating, secretions, vomiting/diarrhea, pinpoint pupils, muscle twitching/weakness, confusion or seizures · Severe poisoning can cause paralysis, respiratory failure and death · Exact compound, concentration and toxic dose are intentionally not modeled; legal access varies by the specific pesticide/chemical',
+        aliases:['organophosphate','organophosphate poison','organophosphate pesticide','cholinesterase inhibitor poison','parathion','malathion']
+      },
+    );
+  }
+
+
+  // v675: Hazardous-material taxonomy completion.
+  // Active hazardous-material browse taxonomy now contains three gameplay-facing groups:
+  // Poisons & Toxins, Toxic Metals, and Toxic Gases. Empty former warfare-agent branches are
+  // intentionally absent because the browse tree is generated only from existing catalog items.
+  {
+    GEAR_CATALOG.push(
+      {
+        id:'gc2923', name:'Liquid: Methanol', category:'Internal', subcategory:'Liquid Contents',
+        weight:1.75, price:0, availability:'Ubiquitous', colors:['Clear'], unit:'L', internalOnly:true,
+        specs:'Internal methanol liquid-content resource; not directly purchasable as Gear',
+        aliases:[], liquidFamily:'methanol', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2924', name:'Methanol, 1 L Bottle', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Poisons & Toxins',
+        weight:0.10, price:18.0, availability:'Specialty', colors:['Clear'], unit:'bottle',
+        specs:'One-liter bottle of methanol / methyl alcohol · Flammable toxic alcohol whose metabolic products can cause severe metabolic acidosis and optic-nerve injury · Serious poisoning can cause blindness, coma, respiratory/cardiovascular failure and death · Toxic dose is intentionally not modeled',
+        aliases:['methanol','methyl alcohol','wood alcohol'],
+        liquidCapacityLiters:1.0, liquidAllowedFamilies:['methanol'], liquidPreferredUnit:'L', liquidUsedProfile:'retail',
+        prefilledLiquidCatalogId:'gc2923', prefilledLiquidFamily:'methanol', prefilledLiquidLiters:1.0
+      },
+      {
+        id:'gc2925', name:'Liquid: Ethylene Glycol', category:'Internal', subcategory:'Liquid Contents',
+        weight:2.45, price:0, availability:'Ubiquitous', colors:['Clear'], unit:'L', internalOnly:true,
+        specs:'Internal ethylene-glycol liquid-content resource; not directly purchasable as Gear',
+        aliases:[], liquidFamily:'ethylene-glycol', liquidVolumeLitersPerUnit:1.0, liquidDisplayUnit:'L'
+      },
+      {
+        id:'gc2926', name:'Ethylene Glycol, 1 L Bottle', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Poisons & Toxins',
+        weight:0.10, price:20.0, availability:'Specialty', colors:['Clear'], unit:'bottle',
+        specs:'One-liter bottle of ethylene glycol · Toxic alcohol used industrially and as a major antifreeze/coolant ingredient · Metabolism produces acidic compounds that can cause metabolic acidosis, cardiopulmonary injury and kidney failure · Untreated severe poisoning can be fatal · Toxic dose is intentionally not modeled',
+        aliases:['ethylene glycol','glycol','antifreeze chemical'],
+        liquidCapacityLiters:1.0, liquidAllowedFamilies:['ethylene-glycol'], liquidPreferredUnit:'L', liquidUsedProfile:'retail',
+        prefilledLiquidCatalogId:'gc2925', prefilledLiquidFamily:'ethylene-glycol', prefilledLiquidLiters:1.0
+      },
+      {
+        id:'gc2927', name:'Oleandrin', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Poisons & Toxins',
+        weight:0.05, price:250.0, availability:'Rare', accessStatus:'Restricted', colors:['White'], unit:'sample',
+        specs:'Potent cardiac glycoside associated with oleander plants, represented as a controlled sealed sample · Disrupts normal sodium/potassium transport in heart cells and can produce dangerous rhythm disturbances · Severe poisoning can cause profound bradycardia or ventricular arrhythmias, cardiovascular collapse and death · Exact concentration and toxic dose are intentionally not modeled',
+        aliases:['oleandrin toxin','oleander toxin','oleander poison','cardiac glycoside poison']
+      },
+      {
+        id:'gc2928', name:'Mercury Compound', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Toxic Metals',
+        weight:0.10, price:100.0, availability:'Specialty', accessStatus:'Restricted', colors:['White','Gray','Clear'], unit:'sample',
+        specs:'Toxic mercury compound represented as a sealed hazardous sample · Depending on chemical form and exposure route, mercury can injure the nervous system, kidneys and other organs · Severe acute or prolonged poisoning can cause major neurologic/systemic injury and can be fatal · Exact compound, concentration and toxic dose are intentionally not modeled',
+        aliases:['mercury poison','mercury salt','mercuric compound','methylmercury']
+      },
+      {
+        id:'gc2929', name:'Lead Compound', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Toxic Metals',
+        weight:0.10, price:50.0, availability:'Specialty', accessStatus:'Restricted', colors:['White','Gray'], unit:'sample',
+        specs:'Toxic lead compound represented as a sealed hazardous sample · Lead is a cumulative systemic poison that can damage the nervous system, blood-forming tissues, kidneys and other organs · Severe poisoning can cause encephalopathy, seizures, coma and death · Exact compound, concentration and toxic dose are intentionally not modeled',
+        aliases:['lead poison','lead salt','lead compound','lead acetate']
+      },
+      {
+        id:'gc2930', name:'Carbon Monoxide, Compressed Gas Cylinder', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Toxic Gases',
+        weight:3.0, price:180.0, availability:'Specialty', accessStatus:'Restricted', colors:['Gray','Silver'], unit:'cylinder',
+        specs:'Small compressed-gas cylinder containing carbon monoxide for controlled laboratory/calibration use · Carbon monoxide binds hemoglobin and impairs oxygen delivery to tissues · Dangerous exposure can cause headache, confusion, loss of consciousness, brain/heart injury and death · Gas concentration, pressure and lethal exposure levels are intentionally not modeled',
+        aliases:['carbon monoxide','CO gas','compressed carbon monoxide','carbon monoxide calibration gas']
+      },
+      {
+        id:'gc2931', name:'Hydrogen Sulfide, Compressed Gas Cylinder', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Hazardous Materials > Toxic Gases',
+        weight:3.0, price:250.0, availability:'Limited', accessStatus:'Restricted', colors:['Gray','Silver'], unit:'cylinder',
+        specs:'Small compressed-gas cylinder containing hydrogen sulfide for controlled industrial/laboratory use · Highly toxic inhalation hazard that can rapidly impair the nervous and respiratory systems; the characteristic rotten-egg odor is not a reliable warning at dangerous exposure · Severe exposure can cause sudden collapse, respiratory arrest and death · Gas concentration, pressure and lethal exposure levels are intentionally not modeled',
+        aliases:['hydrogen sulfide','H2S','sewer gas','sour gas','hydrogen sulfide calibration gas']
+      },
+    );
+
+    // Ordinary open/general containers may receive the two newly modeled hazardous liquids.
+    const v675HazardousLiquidFamilies = ['methanol','ethylene-glycol'];
+    for (const item of GEAR_CATALOG) {
+      if (!(Number(item.liquidCapacityLiters) > 0)) continue;
+      if (/\b(?:Bucket|Canning Jar|Specimen Jar|Sample Bottle)\b/i.test(String(item.name || ''))) {
+        item.liquidAllowedFamilies = Array.from(new Set([...(item.liquidAllowedFamilies || []), ...v675HazardousLiquidFamilies]));
+      }
+    }
+  }
+
+  // v676: .50 BMG incendiary-ammunition gap + incendiary-grenade realism pass.
+  // Adds current API/API-T .50 BMG variants without duplicating the existing ball/AP entries,
+  // and upgrades the generic incendiary grenade to a representative military thermate class.
+  {
+    const incendiaryGrenade = GEAR_CATALOG.find(item => item.id === 'gc1765');
+    if (incendiaryGrenade) {
+      incendiaryGrenade.weight = 2.0;
+      incendiaryGrenade.price = 100.0;
+      incendiaryGrenade.availability = 'Rare';
+      incendiaryGrenade.accessStatus = 'Restricted';
+      incendiaryGrenade.specs = 'Military thermate-class hand incendiary grenade · About 2 lb · Designed to destroy equipment or start fires rather than produce fragmentation · Thermate filler burns for roughly 30–45 seconds at approximately 4,000 °F and can damage or immobilize vehicles, weapons systems, shelters and munitions';
+      incendiaryGrenade.aliases = Array.from(new Set([...(incendiaryGrenade.aliases || []), 'thermate grenade', 'thermite grenade', 'AN-M14', 'AN-M14 TH3', 'M14 incendiary grenade']));
+    }
+
+    const existing50Ap = GEAR_CATALOG.find(item => item.id === 'gc2074');
+    if (existing50Ap) {
+      existing50Ap.specs = 'Dedicated armor-piercing .50 BMG cartridge without an incendiary or tracer effect · Catalog quantity unit: 1 round · Bulk Add quantity: 10';
+    }
+
+    GEAR_CATALOG.push(
+      {
+        id:'gc2935', name:'.50 BMG Armor-Piercing Incendiary Cartridge', category:'Weapons', subcategory:'Ammunition > Heavy Weapons',
+        weight:0.25, price:10.0, availability:'Limited', colors:['Multicolor'], unit:'round', defaultQuantity:10, ammoFamily:'50-bmg',
+        specs:'Armor-piercing incendiary .50 BMG cartridge · Combines penetration of light armor/hard targets with an incendiary effect behind or at the target · Representative military M8 API class · Catalog quantity unit: 1 round · Bulk Add quantity: 10',
+        aliases:['.50 BMG API','50 BMG API','M8 API','M8 armor-piercing incendiary','.50 caliber armor-piercing incendiary']
+      },
+      {
+        id:'gc2936', name:'.50 BMG Armor-Piercing Incendiary Tracer Cartridge', category:'Weapons', subcategory:'Ammunition > Heavy Weapons',
+        weight:0.25, price:12.0, availability:'Limited', colors:['Multicolor'], unit:'round', defaultQuantity:10, ammoFamily:'50-bmg',
+        specs:'Armor-piercing incendiary tracer .50 BMG cartridge · Adds a visible tracer to the armor-piercing/incendiary effect for trajectory observation · Representative military M20 API-T class · Catalog quantity unit: 1 round · Bulk Add quantity: 10',
+        aliases:['.50 BMG API-T','50 BMG API-T','50 BMG APIT','M20 API-T','M20 armor-piercing incendiary tracer','.50 caliber armor-piercing incendiary tracer']
+      }
+    );
+  }
+
+
+  // v678: hazardous-material access-status and pricing audit.
+  // Availability remains a scarcity/procurement axis; Access Status is reserved for
+  // meaningful legal/institutional controls rather than ordinary hazardous handling.
+  // Generic hazardous "sample" entries intentionally use no catalog price because
+  // compound, purity, concentration, quantity and institutional sourcing are unspecified.
+  {
+    const noRetailPriceIds = new Set([
+      'gc2912','gc2913','gc2914','gc2915','gc2917','gc2918','gc2919','gc2920','gc2921',
+      'gc2927','gc2928','gc2929',
+    ]);
+    for (const id of noRetailPriceIds) {
+      const item = GEAR_CATALOG.find(entry => entry.id === id);
+      if (item) item.price = null;
+    }
+
+    for (const id of ['gc2928','gc2929','gc2930','gc2931']) {
+      const item = GEAR_CATALOG.find(entry => entry.id === id);
+      if (item) delete item.accessStatus;
+    }
+
+    const organophosphate = GEAR_CATALOG.find(entry => entry.id === 'gc2921');
+    if (organophosphate) {
+      delete organophosphate.accessStatus;
+      if (!/Legal access varies/i.test(String(organophosphate.specs || ''))) {
+        organophosphate.specs = `${String(organophosphate.specs || '').trim()} · Legal access varies substantially with the specific compound, concentration and formulation`;
+      }
+    }
+  }
+
+  // v681: explosives / heavy-weapons access-status consistency audit.
+  // Keeps actual explosive materials, destructive devices, machine guns, launchers, mines and heavy munitions
+  // Restricted, while separating non-explosive demolition support hardware from that legal/access status.
+  {
+    const demolitionWire = GEAR_CATALOG.find(item => item.id === 'gc2781');
+    if (demolitionWire) {
+      delete demolitionWire.accessStatus;
+      demolitionWire.availability = 'Limited';
+      demolitionWire.specs = 'Purpose-made insulated military demolition firing-wire class on a field spool · Representative 100 ft length · Wire/spool only; not itself an explosive material or destructive device';
+    }
+
+    const firingDevice = GEAR_CATALOG.find(item => item.id === 'gc2782');
+    if (firingDevice) {
+      delete firingDevice.accessStatus;
+      firingDevice.availability = 'Limited';
+      firingDevice.specs = 'Handheld military electrical firing-generator class used with authorized demolition initiating systems · Representative M57-class unit · The firing device itself contains no explosive charge; explosive initiators and charges remain separately Restricted';
+    }
+
+    const csGrenade = GEAR_CATALOG.find(item => item.id === 'gc1764');
+    if (csGrenade) {
+      csGrenade.specs = 'Hand-thrown CS irritant-agent grenade for riot-control or authorized training roles · The grenade/device remains Restricted; use of riot-control agents as a method of warfare is prohibited under the Chemical Weapons Convention';
+      csGrenade.aliases = Array.from(new Set([...(csGrenade.aliases || []), 'CS riot-control grenade', 'riot control grenade']));
+    }
+
+    const apBlastMine = GEAR_CATALOG.find(item => item.id === 'gc2778');
+    if (apBlastMine) {
+      apBlastMine.specs = 'Compact anti-personnel blast-mine class · Representative legacy M14-class military mine · Rare + Restricted; conventional pressure-fired anti-personnel mines are not representative of routine current U.S. field issue outside exceptional policy contexts';
+    }
+
+    const boundingMine = GEAR_CATALOG.find(item => item.id === 'gc2779');
+    if (boundingMine) {
+      boundingMine.specs = 'Bounding fragmentation anti-personnel mine class · Representative legacy M16-class military mine · Rare + Restricted; retained as a globally/historically plausible unit-level munition rather than routine current U.S. issue';
+    }
+  }
+
+
+  // v682: commercial/industrial blasting + agricultural explosive pest-control pass.
+  // Adds representative licensed commercial blasting materials without modeling formulation,
+  // mixing, blast design, placement, timing sequences, or other operational procedures.
+  {
+    const electricBlastingDetonator = GEAR_CATALOG.find(item => item.id === 'gc1769');
+    if (electricBlastingDetonator) {
+      electricBlastingDetonator.name = 'Electric Blasting Detonator';
+      electricBlastingDetonator.subcategory = 'Explosives & Grenades > Industrial Blasting';
+      electricBlastingDetonator.weight = 0.07;
+      electricBlastingDetonator.price = 20.0;
+      electricBlastingDetonator.availability = 'Limited';
+      electricBlastingDetonator.accessStatus = 'Restricted';
+      electricBlastingDetonator.specs = 'Commercial electric blasting-detonator / blasting-cap class used in regulated mining, quarrying, construction and demolition work · Licensed/permitted explosive initiator; initiation procedure and timing details are intentionally not modeled';
+      electricBlastingDetonator.aliases = Array.from(new Set([...(electricBlastingDetonator.aliases || []), 'Detonator, Electric', 'electric detonator', 'electric blasting cap', 'blasting cap', 'M6 electric blasting cap', 'M130 blasting cap']));
+    }
+
+    GEAR_CATALOG.push(
+      {
+        id:'gc2937', name:'ANFO Blasting Agent', category:'Weapons', subcategory:'Explosives & Grenades > Industrial Blasting',
+        weight:1.0, price:1.50, availability:'Limited', accessStatus:'Restricted', colors:['White','Gray'], unit:'lb', defaultQuantity:50,
+        specs:'Commercial bulk blasting-agent class widely used in regulated quarrying, mining and construction blasting · Catalog quantity unit: 1 lb; typical jobs use bulk quantities · Licensed/permitted explosive material; formulation, mixing, loading and blast-design procedures are intentionally not modeled',
+        aliases:['ANFO','ammonium nitrate fuel oil blasting agent','quarry blasting agent','mining blasting agent']
+      },
+      {
+        id:'gc2938', name:'Emulsion Explosive', category:'Weapons', subcategory:'Explosives & Grenades > Industrial Blasting',
+        weight:1.0, price:3.00, availability:'Limited', accessStatus:'Restricted', colors:['White','Gray','Tan'], unit:'lb', defaultQuantity:25,
+        specs:'Modern commercial emulsion-explosive class used in mining, quarrying and civil blasting · Represents both bulk/pumped and packaged forms without splitting them into separate Gear entries · Catalog quantity unit: 1 lb · Licensed/permitted explosive material; formulation, loading and blast-design procedures are intentionally not modeled',
+        aliases:['bulk emulsion explosive','packaged emulsion explosive','blasting emulsion','quarry emulsion explosive']
+      },
+      {
+        id:'gc2939', name:'Dynamite Cartridge', category:'Weapons', subcategory:'Explosives & Grenades > Industrial Blasting',
+        weight:0.50, price:8.00, availability:'Limited', accessStatus:'Restricted', colors:['Red','Brown','Tan'], unit:'cartridge', defaultQuantity:10,
+        specs:'Commercial packaged dynamite-class blasting cartridge used in regulated mining, quarrying, construction and demolition work · Representative half-pound cartridge class · Licensed/permitted high explosive; formulation and blasting procedures are intentionally not modeled',
+        aliases:['dynamite','dynamite stick','blasting dynamite','dynamite cartridge']
+      },
+      {
+        id:'gc2940', name:'Blasting Booster', category:'Weapons', subcategory:'Explosives & Grenades > Industrial Blasting',
+        weight:0.90, price:18.00, availability:'Limited', accessStatus:'Restricted', colors:['Red','Orange','Yellow'], unit:'booster', defaultQuantity:5,
+        specs:'Commercial high-energy blasting-booster class used with regulated bulk or packaged blasting explosives · Represents the booster as an inventory component without modeling initiation arrangements, placement or blast design',
+        aliases:['explosive booster','cast booster','blasting primer booster','quarry blasting booster']
+      },
+      {
+        id:'gc2941', name:'Non-Electric Blasting Detonator', category:'Weapons', subcategory:'Explosives & Grenades > Industrial Blasting',
+        weight:0.05, price:12.00, availability:'Limited', accessStatus:'Restricted', colors:['Silver','Multicolor'], unit:'detonator', defaultQuantity:10,
+        specs:'Commercial non-electric blasting-detonator class used in regulated mining, quarrying and civil blasting · Uses a non-electrical initiation system rather than firing-wire current · Licensed/permitted explosive initiator; tubing, delays, connections and firing procedures are intentionally not modeled',
+        aliases:['non-electric detonator','non electric blasting cap','shock-tube detonator','shock tube detonator','blasting cap non-electric']
+      },
+      {
+        id:'gc2942', name:'Explosive Pest-Control Device', category:'Tools & Hardware', subcategory:'Pest Control',
+        weight:0.12, price:5.00, availability:'Limited', accessStatus:'Restricted', colors:['Multicolor'], unit:'device', defaultQuantity:10, weightEditable:true,
+        specs:'Agricultural/aquacultural explosive or pyrotechnic pest-deterrent device class used to frighten birds or other nuisance animals · Includes bird-bomb / shell-cracker type devices as search examples · Many such devices are federally regulated explosives, although some finished products may qualify for specific pyrotechnic exemptions; exact device construction and use procedure are intentionally not modeled',
+        aliases:['bird bomb','bird bombs','shell cracker','shell crackers','explosive bird deterrent','explosive pest control device','EPCD','whistler pest control']
+      },
+      {
+        id:'gc2943', name:'Burrowing-Rodent Gas Cartridge', category:'Tools & Hardware', subcategory:'Pest Control',
+        weight:0.20, price:4.00, availability:'Specialty', colors:['Gray','Brown','White'], unit:'cartridge', defaultQuantity:4,
+        specs:'EPA-registered smoke/gas-cartridge pesticide class for controlling certain burrowing rodents in permitted outdoor settings · Agricultural/rangeland pest-control item rather than a quarry-blasting explosive · Use is label- and location-restricted; fumigant chemistry and application procedure are intentionally not modeled',
+        aliases:['rodent gas cartridge','gopher gas cartridge','burrow fumigation cartridge','burrowing animal gas cartridge','smoke cartridge pest control']
+      }
+    );
+  }
+
+
+
+  // v684: controlled structural-demolition support pass.
+  // Adds one specialized steel-cutting explosive and two commercial blast-safety/monitoring tools.
+  // Specs intentionally omit charge sizing, placement, sequencing, structural-collapse planning,
+  // and other procedural demolition instructions.
+  {
+    GEAR_CATALOG.push(
+      {
+        id:'gc2944', name:'Linear Shaped Charge, Demolition', category:'Weapons', subcategory:'Explosives & Grenades > Demolitions',
+        weight:1.5, price:null, availability:'Limited', accessStatus:'Restricted', colors:['Copper','Gray'], unit:'charge', defaultQuantity:1,
+        specs:'Specialized commercial/engineered linear shaped-charge assembly used for precision cutting of structural steel and similar demolition work · Representative portable charge class; exact length, explosive loading, cutting capacity, charge sizing and placement are intentionally not modeled',
+        aliases:['linear shaped charge','LSC','demolition shaped charge','steel cutting charge','linear cutting charge']
+      },
+
+      {
+        id:'gc2946', name:'Blasting Seismograph / Vibration Monitor', category:'Tools & Hardware', subcategory:'Scientific & Field Equipment > Geophysics & Subsurface',
+        weight:7.0, price:4750.0, availability:'Limited', colors:['Black','Gray'], unit:'kit', defaultQuantity:1,
+        specs:'Portable professional blast-monitoring kit with vibration recorder, triaxial geophone, carrying case and field accessories · Used to document ground vibration and air overpressure from blasting, demolition, piling and construction · Representative professional kit around 7 lb and roughly $4,750',
+        aliases:['blasting seismograph','blast seismograph','vibration monitor','blast vibration monitor','ground vibration monitor','construction vibration monitor'],
+        rechargeable:true, batteryRuntimeHours:240.0, batteryRuntimeBasis:'representative continuous blast-monitoring operation on internal rechargeable battery', batteryRuntimeReference:'professional portable blasting-seismograph class'
+      }
+    );
+  }
+
   const GEAR_CATALOG_BY_ID = new Map(GEAR_CATALOG.map(item => [item.id, item]));
+  const V672_BLOOD_FAMILY_TO_RESOURCE_ID = Object.freeze({
+    'blood-o-negative':'gc2886',
+    'blood-o-positive':'gc2887',
+    'blood-a-negative':'gc2888',
+    'blood-a-positive':'gc2889',
+    'blood-b-negative':'gc2890',
+    'blood-b-positive':'gc2891',
+    'blood-ab-negative':'gc2892',
+    'blood-ab-positive':'gc2893',
+    'blood-untyped':'gc2894'
+  });
+  const V672_BLOOD_FAMILY_TO_BAG_ID = Object.freeze({
+    'blood-untyped':'gc2896',
+    'blood-o-negative':'gc2897',
+    'blood-o-positive':'gc2898',
+    'blood-a-negative':'gc2899',
+    'blood-a-positive':'gc2900',
+    'blood-b-negative':'gc2901',
+    'blood-b-positive':'gc2902',
+    'blood-ab-negative':'gc2903',
+    'blood-ab-positive':'gc2904'
+  });
+  const V672_BLOOD_TYPE_CHOICES = Object.freeze([
+    ['blood-untyped','Untyped / Unknown'],
+    ['blood-o-negative','O−'],
+    ['blood-o-positive','O+'],
+    ['blood-a-negative','A−'],
+    ['blood-a-positive','A+'],
+    ['blood-b-negative','B−'],
+    ['blood-b-positive','B+'],
+    ['blood-ab-negative','AB−'],
+    ['blood-ab-positive','AB+']
+  ]);
+  const V672_BLOOD_BAG_CATALOG_IDS = new Set(['gc2895','gc2896','gc2897','gc2898','gc2899','gc2900','gc2901','gc2902','gc2903','gc2904']);
+
+  function catalogIsBloodBag(catalog) {
+    return Boolean(catalog?.bloodCollectionBag || V672_BLOOD_BAG_CATALOG_IDS.has(String(catalog?.id || '')));
+  }
+
+  function syncBloodBagCatalogToContents(item) {
+    if (!item) return false;
+    const currentCatalog = catalogForGearInstance(item);
+    if (!catalogIsBloodBag(currentCatalog)) return false;
+    const family = embeddedLiquidFamily(item);
+    let targetId = family ? V672_BLOOD_FAMILY_TO_BAG_ID[family] : 'gc2895';
+    if (!targetId) return false;
+    const targetCatalog = GEAR_CATALOG_BY_ID.get(targetId);
+    if (!targetCatalog) return false;
+    const becomingEmpty = !family;
+    const alreadyTarget = String(item.catalogId || '') === targetId;
+    if (becomingEmpty) item.bloodCollectionUsed = Boolean(item.bloodCollectionUsed || String(currentCatalog.id || '') !== 'gc2895');
+    if (alreadyTarget) {
+      if (becomingEmpty && item.bloodCollectionUsed && !/\(Used\)$/i.test(String(item.item || ''))) item.item = `${targetCatalog.name} (Used)`;
+      return false;
+    }
+    item.catalogId = targetId;
+    item.item = becomingEmpty && item.bloodCollectionUsed ? `${targetCatalog.name} (Used)` : targetCatalog.name;
+    item.weight = targetCatalog.weight;
+    item.color = Array.isArray(targetCatalog.colors) && targetCatalog.colors.length === 1 ? targetCatalog.colors[0] : (item.color || '');
+    // The contents already exist; never let changing catalog identity trigger the
+    // prefilled-package initializer and duplicate the collected/transferred blood.
+    item.prefilledLiquidInitialized = true;
+    return true;
+  }
+
+  function canCollectBloodIntoBag(item) {
+    if (!item || String(item.catalogId || '') !== 'gc2895') return false;
+    const catalog = catalogForGearInstance(item);
+    if (!catalogIsBloodBag(catalog) || embeddedLiquidLiters(item) > 1e-9 || item.bloodCollectionUsed) return false;
+    return true;
+  }
+
+  function collectBloodIntoBag(item, family) {
+    if (!canCollectBloodIntoBag(item) || !V672_BLOOD_FAMILY_TO_RESOURCE_ID[family]) return false;
+    item = isolateLiquidContainerUnit(item);
+    if (!item || !canCollectBloodIntoBag(item)) return false;
+    const resource = GEAR_CATALOG_BY_ID.get(V672_BLOOD_FAMILY_TO_RESOURCE_ID[family]);
+    if (!resource) return false;
+    createGeneratedEmbeddedConsumable(item, resource, 0.45);
+    item.bloodCollectionUsed = true;
+    item.prefilledLiquidInitialized = true;
+    syncBloodBagCatalogToContents(item);
+    closeGearItemActionMenu();
+    clearGearSortState();
+    renderGear();
+    calculate();
+    queueSave();
+    return true;
+  }
+
+  function renderBloodCollectionTypeMenu(item) {
+    const menu = document.getElementById('gearItemActionMenu');
+    if (!menu || !canCollectBloodIntoBag(item)) return;
+    const options = V672_BLOOD_TYPE_CHOICES.map(([family, label]) =>
+      `<button type="button" class="gear-item-action-option" data-blood-collection-family="${esc(family)}" role="menuitem"><span>${esc(label)}</span><span>450 mL</span></button>`
+    ).join('');
+    menu.innerHTML = `<div class="gear-item-action-heading"><button type="button" class="gear-item-action-back" data-gear-item-action-back aria-label="Back to item actions">‹</button><span>Collect donor blood</span></div><div class="gear-item-action-empty" style="padding-bottom:6px">Uses the bag's integral collection needle/tubing. Choose the donor's known ABO/Rh type, or Untyped / Unknown.</div>${options}`;
+    menu.querySelector('[data-gear-item-action-back]')?.addEventListener('click', () => {
+      renderGearItemActionRoot(item);
+      requestAnimationFrame(() => positionGearItemActionMenu(activeGearItemActionButton));
+    });
+    menu.querySelectorAll('[data-blood-collection-family]').forEach(button => {
+      button.addEventListener('click', () => collectBloodIntoBag(item, button.dataset.bloodCollectionFamily));
+    });
+    requestAnimationFrame(() => positionGearItemActionMenu(activeGearItemActionButton));
+  }
+
   const GEAR_CATALOG_ID_MIGRATIONS = Object.freeze({
     gc1112:'gc1111',
     gc2199:'gc2201', gc2200:'gc2201', gc2185:'gc2201', gc2202:'gc2201',
@@ -14863,7 +15812,20 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (family === 'latex-paint') return 'Interior Latex Paint';
     if (family === 'paint-thinner') return 'Paint Thinner';
     if (family === 'bubble-solution') return 'Bubble Solution';
-    if (family === 'iv-fluid') return 'IV Fluid';
+    if (family === 'iv-fluid') return 'IV Fluid'; // legacy save fallback
+    if (family === 'normal-saline') return 'Normal Saline';
+    if (family === 'balanced-electrolyte-iv') return 'Balanced Electrolyte IV Fluid';
+    if (family === 'plasma') return 'Plasma';
+    if (family === 'animal-blood') return 'Animal Blood';
+    if (family === 'blood-untyped') return 'Whole Blood — Untyped';
+    if (family === 'blood-o-negative') return 'Whole Blood — O−';
+    if (family === 'blood-o-positive') return 'Whole Blood — O+';
+    if (family === 'blood-a-negative') return 'Whole Blood — A−';
+    if (family === 'blood-a-positive') return 'Whole Blood — A+';
+    if (family === 'blood-b-negative') return 'Whole Blood — B−';
+    if (family === 'blood-b-positive') return 'Whole Blood — B+';
+    if (family === 'blood-ab-negative') return 'Whole Blood — AB−';
+    if (family === 'blood-ab-positive') return 'Whole Blood — AB+';
     if (family === 'herbicide') return 'Herbicide';
     if (family === 'insecticide') return 'Insecticide';
     if (family === 'urine-human') return 'Human Urine';
@@ -14988,6 +15950,28 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return first ? String(catalogForGearInstance(first)?.liquidFamily || '') : '';
   }
 
+  function animalBloodSpecificLabelFromContainer(container) {
+    if (!container || String(container.catalogId || '') !== 'gc2911') return '';
+    const name = String(container.item || '').trim();
+    const match = name.match(/^Animal Blood,\s*(.+)$/i);
+    const specific = String(match?.[1] || '').trim();
+    return specific && specific.toLowerCase() !== '(specific)' ? specific : '';
+  }
+
+  function embeddedLiquidSpecificLabel(container, family=embeddedLiquidFamily(container)) {
+    if (family !== 'animal-blood') return '';
+    const declared = animalBloodSpecificLabelFromContainer(container);
+    if (declared) return declared;
+    return String(embeddedLiquidItems(container)[0]?.liquidSpecificLabel || '').trim();
+  }
+
+  function syncSpecificLiquidMetadataFromContainer(container) {
+    if (!container || embeddedLiquidFamily(container) !== 'animal-blood') return;
+    const label = animalBloodSpecificLabelFromContainer(container);
+    if (!label) return;
+    for (const child of embeddedLiquidItems(container)) child.liquidSpecificLabel = label;
+  }
+
   function embeddedLiquidLiters(container) {
     return embeddedLiquidItems(container).reduce((sum, item) => sum + liquidVolumeLiters(item), 0);
   }
@@ -15009,7 +15993,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       weight:container.weight === '' ? '' : Number(container.weight),
       wet:Boolean(container.wet), dirty:Boolean(container.dirty), carried:container.carried !== false,
       locationId:String(container.locationId || ''), embeddedInGearId:String(container.embeddedInGearId || ''),
-      liquidDisplayUnit:String(container.liquidDisplayUnit || ''), compatibilityKey:String(container.compatibilityKey || '')
+      liquidDisplayUnit:String(container.liquidDisplayUnit || ''), compatibilityKey:String(container.compatibilityKey || ''),
+      bloodCollectionUsed:Boolean(container.bloodCollectionUsed)
     });
   }
 
@@ -15165,6 +16150,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       return liters > 1e-9 ? {family:String(catalog.liquidFamily || ''), liters, items:[source], sourceKind:'bulk'} : null;
     }
     if (catalogIsLiquidContainer(catalog)) {
+      syncSpecificLiquidMetadataFromContainer(source);
       const items = embeddedLiquidItems(source);
       const first = items[0];
       const firstCatalog = catalogForGearInstance(first);
@@ -15235,6 +16221,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!liquidContainerAcceptsFamily(target, targetCatalog, sourceInfo.family)) return null;
     const existingFamily = embeddedLiquidFamily(target);
     if (existingFamily && existingFamily !== sourceInfo.family) return null;
+    if (sourceInfo.family === 'animal-blood') {
+      const sourceSpecific = embeddedLiquidSpecificLabel(source, sourceInfo.family);
+      const targetSpecific = embeddedLiquidSpecificLabel(target, existingFamily || sourceInfo.family);
+      const targetDeclared = animalBloodSpecificLabelFromContainer(target);
+      if (sourceSpecific && targetSpecific && sourceSpecific.toLocaleLowerCase() !== targetSpecific.toLocaleLowerCase()) return null;
+      if (sourceSpecific && targetDeclared && sourceSpecific.toLocaleLowerCase() !== targetDeclared.toLocaleLowerCase()) return null;
+    }
     const roomLiters = Math.max(0, Number(targetCatalog.liquidCapacityLiters) - liquidContainerPerUnitLiters(target));
     const liters = Math.min(sourceInfo.liters, roomLiters);
     return liters > 1e-9 ? {kind:'liquid-transfer', family:sourceInfo.family, liters, roomLiters, availableLiters:sourceInfo.liters} : null;
@@ -15263,8 +16256,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       remainingLiters -= takeLiters;
     }
     clampLiquidContainerContents(workingTarget);
-    if (catalogIsLiquidContainer(catalogForGearInstance(workingSource)) && embeddedLiquidLiters(workingSource) <= 1e-9) {
-      mergeEmptyLiquidContainerWithEquivalent(workingSource);
+    syncBloodBagCatalogToContents(workingTarget);
+    if (catalogIsLiquidContainer(catalogForGearInstance(workingSource))) {
+      syncBloodBagCatalogToContents(workingSource);
+      if (embeddedLiquidLiters(workingSource) <= 1e-9) mergeEmptyLiquidContainerWithEquivalent(workingSource);
     }
     clearGearSortState();
     renderGear();
@@ -15299,8 +16294,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       remainingLiters -= takeLiters;
       consumed += takeLiters;
     }
-    if (catalogIsLiquidContainer(catalogForGearInstance(source)) && embeddedLiquidLiters(source) <= 1e-9) {
-      mergeEmptyLiquidContainerWithEquivalent(source);
+    if (catalogIsLiquidContainer(catalogForGearInstance(source))) {
+      syncBloodBagCatalogToContents(source);
+      if (embeddedLiquidLiters(source) <= 1e-9) mergeEmptyLiquidContainerWithEquivalent(source);
     }
     return consumed;
   }
@@ -15756,6 +16752,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       compatibility = canEmbedGearItem(source, target);
       if (!compatibility || compatibility.kind !== 'liquid') return false;
       splitOrMoveIntoEmbeddedParent(source, target, Math.min(gearItemQuantity(source), compatibility.quantity));
+      syncBloodBagCatalogToContents(target);
     } else if (compatibility.kind === 'battery-pack') {
       const packCatalog = batteryPackCatalogForItem(source);
       ensureGearBatteryState(source, packCatalog);
@@ -15823,7 +16820,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const icon = fuelFamily ? '⛽' : '💧';
     const reading = `${formatLiquidVolume(liters, unit)}/${formatLiquidVolume(capacity, unit)}`;
     const stackSuffix = stackCount > 1 ? ` ×${stackCount}` : '';
-    const familyLabel = liquidFamilyLabel(family);
+    const specificLiquidLabel = embeddedLiquidSpecificLabel(item, family);
+    const familyLabel = family === 'animal-blood' && specificLiquidLabel ? `Animal Blood — ${specificLiquidLabel}` : liquidFamilyLabel(family);
     const unitMarkup = waterContainer
       ? `<button type="button" class="gear-liquid-unit-toggle" data-liquid-container-unit-toggle="${esc(item.id)}" aria-label="Switch water volume between liters and US gallons" title="Switch between liters and US gallons">${esc(unit)}</button>`
       : `<span>${esc(unit)}</span>`;
@@ -16605,6 +17603,25 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return current;
   }
 
+
+  function gearItemPhysicalLocationLabel(item) {
+    if (!item) return 'another Gear location';
+    const root = gearLocationRoot(item.locationId);
+    const direct = state.gearLocations.find(entry => String(entry?.id || '') === String(item.locationId || ''));
+    return String(root?.name || direct?.name || 'another Gear location').trim() || 'another Gear location';
+  }
+
+  function gearItemLocationReason(label, item) {
+    return `${String(label || gearInstanceLabel(item) || 'Item')} is in ${gearItemPhysicalLocationLabel(item)}.`;
+  }
+
+  function gearItemsLocationReason(label, items) {
+    const locations = Array.from(new Set((items || []).filter(Boolean).map(gearItemPhysicalLocationLabel)));
+    if (!locations.length) return `${label} is in another Gear location.`;
+    if (locations.length === 1) return `${label} is in ${locations[0]}.`;
+    return `${label} options are in ${formatHumanList(locations)}.`;
+  }
+
   function gearItemIsInSetDownContext(item) {
     if (!item) return false;
     return isSetDownGearLocation(gearLocationRoot(item.locationId));
@@ -16730,8 +17747,22 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const powerW = Math.min(targetProfile.maxInputW, sourceW, cableW);
     let reason = '';
     if (!targetInVehicle) reason = `Device is not inside ${String(vehicleLocation.name || vehicleCatalog.name || 'this passenger vehicle')}.`;
-    else if (!cable) reason = 'Requires a USB-C to USB-C cable inside this vehicle.';
-    else if (isLaptop && !carCharger) reason = 'Built-in vehicle USB is limited to about 15 W; a Car Charger, 12 V USB is required for laptop charging.';
+    else if (!cable) {
+      const ownedCables = ownedUsbCCables();
+      reason = ownedCables.length ? gearItemsLocationReason('USB-C cable', ownedCables) : 'Requires a USB-C to USB-C cable inside this vehicle.';
+    }
+    else if (catalogIsPersonalElectricVehicle(targetCatalog) && !carCharger) {
+      const ownedCarChargers = ownedGearInstancesByCatalogId('gc2457');
+      reason = ownedCarChargers.length
+        ? `Built-in vehicle USB is limited to about 15 W and is only modeled for low-power electronics. ${gearItemsLocationReason('Car Charger, 12 V USB', ownedCarChargers)}`
+        : 'Built-in vehicle USB is limited to about 15 W and is only modeled for low-power electronics; a Car Charger, 12 V USB is required for personal-electric vehicle charging.';
+    }
+    else if (isLaptop && !carCharger) {
+      const ownedCarChargers = ownedGearInstancesByCatalogId('gc2457');
+      reason = ownedCarChargers.length
+        ? `Built-in vehicle USB is limited to about 15 W. ${gearItemsLocationReason('Car Charger, 12 V USB', ownedCarChargers)}`
+        : 'Built-in vehicle USB is limited to about 15 W; a Car Charger, 12 V USB is required for laptop charging.';
+    }
     else if (!(powerW > 0)) reason = 'Vehicle USB charging power is unavailable.';
     return {
       active:!reason, reason, vehicleLocation, vehicleCatalog, targetProfile, cable, carCharger, powerW,
@@ -16855,12 +17886,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
     const reachableCables = cables.filter(item => wallChargeAccessoryCanMeetTarget(targetItem, item));
     const reachableChargers = chargers.filter(item => wallChargeAccessoryCanMeetTarget(targetItem, item));
-    const blocked = [];
-    if (!reachableCables.length) blocked.push('USB-C cable');
-    if (!reachableChargers.length) blocked.push('USB-C wall charger');
-    if (blocked.length) {
-      const noun = blocked.length === 1 ? 'is' : 'are';
-      return {active:false, reason:`Your ${formatHumanList(blocked)} ${noun} owned but in a different physical Gear location.`, profile, accessories:[]};
+    const blockedReasons = [];
+    if (!reachableCables.length) blockedReasons.push(gearItemsLocationReason('USB-C cable', cables));
+    if (!reachableChargers.length) blockedReasons.push(gearItemsLocationReason('USB-C wall charger', chargers));
+    if (blockedReasons.length) {
+      return {active:false, reason:blockedReasons.join(' '), profile, accessories:[]};
     }
 
     let best = null;
@@ -16874,11 +17904,20 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   function wallRechargeSetup(targetItem, targetCatalog) {
     const profile = chargingTargetProfile(targetCatalog);
     if (!profile) return {active:true, legacy:true, profile:null, powerW:null, accessories:[], reason:'Dedicated charging hardware is not separately modeled for this device.'};
+
+    const stationWallW = Math.max(0, Number(targetCatalog?.wallAcChargeInputW) || 0);
+    if (stationWallW > 0 && portableEnergyCapacityWh(targetCatalog) != null) {
+      return {
+        active:true, profile, powerW:stationWallW, accessories:[], integratedAcCord:true,
+        reason:'Uses the power station’s included AC charging cable; the cord is abstracted with the unit.'
+      };
+    }
+
     if (profile.kind === 'power-tool') {
       const chargers = ownedGearInstancesByCatalogId('gc2506');
       if (!chargers.length) return {active:false, profile, reason:'Requires Power Tool Battery Charger, 18–20 V.', accessories:[]};
       const reachable = chargers.filter(item => wallChargeAccessoryCanMeetTarget(targetItem, item));
-      if (!reachable.length) return {active:false, profile, reason:'Power Tool Battery Charger, 18–20 V is owned but in a different physical Gear location.', accessories:[]};
+      if (!reachable.length) return {active:false, profile, reason:gearItemsLocationReason('Power Tool Battery Charger, 18–20 V', chargers), accessories:[]};
       const charger = reachable[0];
       return {active:true, profile, powerW:Math.min(profile.maxInputW, 120), charger, accessories:[charger]};
     }
@@ -16902,15 +17941,25 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (targetProfile.kind === 'usb-c' && outputs.includes('usb-c')) {
       outputKind = 'usb-c';
       if (contextReachable) accessory = reachableUsbCCable(sourceItem, targetItem);
-      if (!contextReachable) reason = 'Power source is owned but is in a different physical Gear location.';
-      else if (!accessory) reason = 'Requires a USB-C to USB-C cable in the same carried/Set Down context or location tree.';
+      if (!contextReachable) reason = gearItemLocationReason(gearInstanceLabel(sourceItem, sourceCatalog), sourceItem);
+      else if (!accessory) {
+        const ownedCables = ownedUsbCCables();
+        reason = ownedCables.length
+          ? gearItemsLocationReason('USB-C cable', ownedCables)
+          : 'Requires a USB-C to USB-C cable in the same carried/Set Down context or location tree.';
+      }
       const cableW = accessory ? usbCToUsbCCablePowerW(accessory) : Infinity;
       powerW = Math.min(targetProfile.maxInputW, portableSourcePowerW(sourceCatalog, 'usb-c') || targetProfile.maxInputW, cableW);
     } else if (targetProfile.kind === 'power-tool' && outputs.includes('ac')) {
       outputKind = 'ac';
       if (contextReachable) accessory = reachablePowerToolCharger(sourceItem, targetItem);
-      if (!contextReachable) reason = 'Power source is owned but is in a different physical Gear location.';
-      else if (!accessory) reason = 'Requires Power Tool Battery Charger, 18–20 V in the same carried/Set Down context or location tree.';
+      if (!contextReachable) reason = gearItemLocationReason(gearInstanceLabel(sourceItem, sourceCatalog), sourceItem);
+      else if (!accessory) {
+        const ownedChargers = ownedGearInstancesByCatalogId('gc2506');
+        reason = ownedChargers.length
+          ? gearItemsLocationReason('Power Tool Battery Charger, 18–20 V', ownedChargers)
+          : 'Requires Power Tool Battery Charger, 18–20 V in the same carried/Set Down context or location tree.';
+      }
       powerW = Math.min(targetProfile.maxInputW, 120, portableSourcePowerW(sourceCatalog, 'ac') || 120);
     } else {
       return null;
@@ -16943,7 +17992,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const contextReachable = gearItemsShareChargingContext(sourceItem, target);
       const quantity = Math.floor(Math.max(1, gearItemQuantity(target)));
       const targetPercent = chargingTargetChargePercent(target, catalog);
-      let reason = contextReachable ? '' : 'Device is owned but is in a different physical Gear location.';
+      let reason = contextReachable ? '' : gearItemLocationReason(gearInstanceLabel(target, catalog), target);
       let accessory = null;
       let powerW = 0;
 
@@ -16951,12 +18000,22 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         if (!reason && quantity > 1) reason = 'Split the battery stack to charge one pack at a time.';
         else if (!reason && target.embeddedInGearId) reason = 'Remove the power-tool battery from the tool before charging it.';
         if (contextReachable) accessory = reachablePowerToolCharger(sourceItem, target);
-        if (!reason && !accessory) reason = 'Requires Power Tool Battery Charger, 18–20 V in the same carried/Set Down context or location tree.';
+        if (!reason && !accessory) {
+          const ownedChargers = ownedGearInstancesByCatalogId('gc2506');
+          reason = ownedChargers.length
+            ? gearItemsLocationReason('Power Tool Battery Charger, 18–20 V', ownedChargers)
+            : 'Requires Power Tool Battery Charger, 18–20 V in the same carried/Set Down context or location tree.';
+        }
         powerW = Math.min(profile.maxInputW, 120, portableSourcePowerW(sourceCatalog, 'ac') || 120);
       } else if (profile.kind === 'usb-c' && outputs.includes('usb-c')) {
         if (!reason && quantity > 1) reason = 'Split stacked devices to charge an individual battery state.';
         if (contextReachable) accessory = reachableUsbCCable(sourceItem, target);
-        if (!reason && !accessory) reason = 'Requires a USB-C to USB-C cable in the same carried/Set Down context or location tree.';
+        if (!reason && !accessory) {
+          const ownedCables = ownedUsbCCables();
+          reason = ownedCables.length
+            ? gearItemsLocationReason('USB-C cable', ownedCables)
+            : 'Requires a USB-C to USB-C cable in the same carried/Set Down context or location tree.';
+        }
         powerW = Math.min(profile.maxInputW, portableSourcePowerW(sourceCatalog, 'usb-c') || profile.maxInputW, accessory ? usbCToUsbCCablePowerW(accessory) : Infinity);
       }
 
@@ -17137,6 +18196,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const power = candidate.active && Number(candidate.powerW) > 0 ? ` · ${Math.round(candidate.powerW)} W` : '';
       let title = candidate.reason || '';
       if (!title && candidate.type === 'wall' && candidate.setup?.legacy) title = candidate.setup.reason || 'Uses the device’s normal dedicated wall charging hardware.';
+      if (!title && candidate.type === 'wall' && candidate.setup?.integratedAcCord) title = 'Uses the power station’s included AC charging cable; the cord is abstracted with the unit.';
       if (!title && candidate.type === 'wall') {
         const accessories = (candidate.setup?.accessories || []).map(item => gearInstanceLabel(item));
         title = accessories.length ? `Uses ${formatHumanList(accessories)}.` : 'Charge from wall power.';
@@ -17447,39 +18507,143 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     dialog.showModal();
   }
 
+  let pendingStoredChargeUse = null;
+
+  function storedChargeUseCandidates(pending=pendingStoredChargeUse) {
+    if (!pending?.item || !pending?.catalog) return [];
+    return portableChargeTargetCandidates(pending.item, pending.catalog);
+  }
+
+  function selectedStoredChargeUseCandidate(pending=pendingStoredChargeUse) {
+    const selectedId = String(pending?.targetItemId || '');
+    if (!selectedId) return null;
+    return storedChargeUseCandidates(pending).find(candidate => String(candidate.item?.id || '') === selectedId) || null;
+  }
+
+  function renderStoredChargeUseDialog(pending=pendingStoredChargeUse) {
+    const grid = document.getElementById('storedChargeUseTargetGrid');
+    const details = document.getElementById('storedChargeUseDetails');
+    const confirm = document.getElementById('storedChargeUseConfirm');
+    if (!grid || !details || !confirm) return;
+    if (!pending?.item || !pending?.catalog) {
+      grid.innerHTML = '';
+      details.textContent = '';
+      confirm.disabled = true;
+      return;
+    }
+
+    const candidates = storedChargeUseCandidates(pending);
+    const selectedId = String(pending.targetItemId || '');
+    if (!candidates.length) {
+      grid.innerHTML = '<div class="stored-charge-target-empty">No compatible rechargeable devices are available for this power source.</div>';
+    } else {
+      grid.innerHTML = candidates.map(candidate => {
+        const selected = selectedId && String(candidate.item?.id || '') === selectedId;
+        const status = candidate.targetPercent >= 100 - 1e-9 ? '100%' : `${Math.round(candidate.targetPercent)}%`;
+        const title = candidate.reason || `Charge ${candidate.label} from ${status} to 100%. Draw from source: ${formatPortableWh(candidate.sourceWh)} including 85% transfer efficiency. Charging will take ${formatChargeDuration(candidate.chargeMinutes)}.`;
+        return `<button type="button" class="stored-charge-target${selected ? ' selected' : ''}" data-stored-charge-use-target="${esc(candidate.item.id)}" aria-disabled="${candidate.active ? 'false' : 'true'}" title="${esc(title)}">${esc(candidate.label)} · ${esc(formatPortableWh(candidate.sourceWh))}</button>`;
+      }).join('');
+      grid.querySelectorAll('[data-stored-charge-use-target]').forEach(button => {
+        button.addEventListener('click', () => selectStoredChargeUseTarget(button.dataset.storedChargeUseTarget));
+      });
+    }
+
+    const selected = selectedStoredChargeUseCandidate(pending);
+    if (!selected) {
+      details.textContent = candidates.length ? 'Choose a device to charge from this battery.' : 'There is currently no compatible charging target.';
+      confirm.disabled = true;
+      confirm.setAttribute('aria-disabled', 'true');
+      confirm.title = 'Choose an available device to charge.';
+      return;
+    }
+    if (!selected.active) {
+      details.textContent = selected.reason || 'That device cannot currently be charged from this battery.';
+      confirm.disabled = true;
+      confirm.setAttribute('aria-disabled', 'true');
+      confirm.title = selected.reason || 'That charging target is unavailable.';
+      return;
+    }
+
+    const sourceCapacity = portableEnergyCapacityWh(pending.catalog);
+    const sourceEnergy = ensureGearBatteryState(pending.item, pending.catalog);
+    const sourcePercent = Math.max(0, Math.min(100, Number(sourceEnergy?.chargePercent) || 0));
+    const usedPercent = sourceCapacity > 0 ? 100 * selected.sourceWh / sourceCapacity : 0;
+    const remainingPercent = Math.max(0, sourcePercent - usedPercent);
+    details.innerHTML = `Charge <strong>${esc(selected.label)}</strong> from <strong>${Math.round(selected.targetPercent)}%</strong> to <strong>100%</strong> · ${esc(formatPortableWh(selected.sourceWh))} from source · source ${Math.round(sourcePercent)}% → ${Math.round(remainingPercent)}% · <strong>${esc(formatChargeDuration(selected.chargeMinutes))}</strong>.`;
+    confirm.disabled = false;
+    confirm.setAttribute('aria-disabled', 'false');
+    confirm.removeAttribute('title');
+  }
+
+  function selectStoredChargeUseTarget(targetId) {
+    const pending = pendingStoredChargeUse;
+    if (!pending) return;
+    const candidate = storedChargeUseCandidates(pending).find(entry => String(entry.item?.id || '') === String(targetId || ''));
+    const error = document.getElementById('storedChargeUseError');
+    if (!candidate) return;
+    if (!candidate.active) {
+      if (error) error.textContent = candidate.reason || 'That device cannot be charged from this battery.';
+      return;
+    }
+    pending.targetItemId = candidate.item.id;
+    if (error) error.textContent = '';
+    renderStoredChargeUseDialog(pending);
+  }
+
   function openGearStoredChargeUseDialog(item, catalog=batteryCatalogForItem(item)) {
     if (!item || !catalog || !gearCanUseStoredCharge(item, catalog)) return;
-    const dialog = document.getElementById('vehicleEnergyDialog');
-    const slider = document.getElementById('vehicleEnergyTarget');
-    if (!dialog || !slider) return;
+    const dialog = document.getElementById('storedChargeUseDialog');
+    if (!dialog) return;
     const energy = ensureGearBatteryState(item, catalog);
     const current = Math.max(0, Math.min(100, Number(energy?.chargePercent) || 0));
     if (!(current > 1e-9)) return;
-    pendingVehicleEnergyAdjust = {kind:'device-discharge', item, catalog, isElectric:true, current, max:current};
-    const fuelTypeWrap = document.getElementById('vehicleEnergyFuelTypeWrap');
-    if (fuelTypeWrap) fuelTypeWrap.hidden = true;
-    const targetLabel = document.getElementById('vehicleEnergyTargetLabel');
-    if (targetLabel) targetLabel.textContent = 'Remaining charge';
-    const confirm = document.getElementById('vehicleEnergyConfirm');
-    if (confirm) confirm.textContent = 'Use';
-    document.getElementById('vehicleEnergyDialogTitle').textContent = `Use ${item.item || catalog.name || 'Battery'}`;
-    document.getElementById('vehicleEnergyDialogSummary').textContent = `Current charge: ${Math.round(current)}% · Record how much stored charge was consumed.`;
-    slider.min = '0';
-    slider.max = String(current);
-    slider.step = 'any';
-    slider.value = String(Math.max(0, current - Math.min(25, current)));
-    const buyWrap = document.getElementById('vehicleEnergyBuyWrap');
-    if (buyWrap) buyWrap.hidden = true;
-    const buy = document.getElementById('vehicleEnergyBuy');
-    if (buy) buy.checked = false;
-    const fields = document.getElementById('vehicleEnergyPurchaseFields');
-    if (fields) fields.hidden = true;
-    document.getElementById('vehicleEnergyError').textContent = '';
-    updateVehicleEnergyDialogUi();
-    renderStoredChargeTargets(pendingVehicleEnergyAdjust);
+    pendingStoredChargeUse = {item, catalog, targetItemId:''};
+    document.getElementById('storedChargeUseDialogTitle').textContent = `Use ${item.item || catalog.name || 'Battery'}`;
+    document.getElementById('storedChargeUseDialogSummary').textContent = `Current charge: ${Math.round(current)}% · Choose what to charge from this battery.`;
+    document.getElementById('storedChargeUseError').textContent = '';
+    renderStoredChargeUseDialog(pendingStoredChargeUse);
     closeGearItemActionMenu();
     if (dialog.open) dialog.close();
     dialog.showModal();
+  }
+
+  function settleStoredChargeUseDialog(commit) {
+    const dialog = document.getElementById('storedChargeUseDialog');
+    const pending = pendingStoredChargeUse;
+    if (!pending) { if (dialog?.open) dialog.close(); return; }
+    if (!commit) {
+      pendingStoredChargeUse = null;
+      if (dialog?.open) dialog.close();
+      return;
+    }
+
+    const error = document.getElementById('storedChargeUseError');
+    const candidate = selectedStoredChargeUseCandidate(pending);
+    if (!candidate?.active) {
+      if (error) error.textContent = candidate?.reason || 'Choose an available device to charge.';
+      renderStoredChargeUseDialog(pending);
+      return;
+    }
+    const sourceCapacity = portableEnergyCapacityWh(pending.catalog);
+    const sourceEnergy = ensureGearBatteryState(pending.item, pending.catalog);
+    if (!sourceEnergy || !(sourceCapacity > 0)) {
+      if (error) error.textContent = 'Source battery state is unavailable.';
+      return;
+    }
+    const availableWh = sourceCapacity * Math.max(0, Math.min(100, Number(sourceEnergy.chargePercent) || 0)) / 100;
+    if (candidate.sourceWh > availableWh + 1e-9) {
+      if (error) error.textContent = `Charging now requires ${formatPortableWh(candidate.sourceWh)}, but the source has ${formatPortableWh(availableWh)} remaining.`;
+      renderStoredChargeUseDialog(pending);
+      return;
+    }
+
+    sourceEnergy.chargePercent = Math.max(0, Number(sourceEnergy.chargePercent) - 100 * candidate.sourceWh / sourceCapacity);
+    setChargingTargetChargePercent(candidate.item, candidate.catalog, 100);
+    pendingStoredChargeUse = null;
+    if (dialog?.open) dialog.close();
+    renderGear();
+    calculate();
+    queueSave();
   }
 
   function energyAdjustmentDetails(pending=pendingVehicleEnergyAdjust) {
@@ -25871,6 +27035,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const fillWaterAction = canFillLiquidContainerWithWater(item)
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-fill-water role="menuitem">Fill with Water</button>'
       : '';
+    const collectBloodAction = canCollectBloodIntoBag(item)
+      ? '<button type="button" class="gear-item-action-option" data-gear-item-action-collect-blood role="menuitem"><span>Collect Blood</span><span aria-hidden="true">›</span></button>'
+      : '';
     const fuelContainerCatalog = catalogForGearInstance(item);
     const fuelContainerAction = canFuelUpLiquidContainer(item, fuelContainerCatalog)
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-fuel-container role="menuitem">Fuel Up</button>'
@@ -25899,6 +27066,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       <button type="button" class="gear-item-action-option" data-gear-item-action-move role="menuitem"><span>Move</span><span aria-hidden="true">›</span></button>
       <button type="button" class="gear-item-action-option" data-gear-item-action-carry role="menuitem">${carryAction}</button>
       ${transferLiquidAction}
+      ${collectBloodAction}
       ${fillWaterAction}
       ${fuelContainerAction}
       ${pourOutLiquidAction}
@@ -25915,6 +27083,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     menu.querySelector('[data-gear-item-action-move]')?.addEventListener('click', () => renderGearItemMoveMenu(item));
     menu.querySelector('[data-gear-item-action-carry]')?.addEventListener('click', () => setDownOrPickUpGearItem(item));
     menu.querySelector('[data-gear-item-action-transfer-liquid]')?.addEventListener('click', () => renderGearItemLiquidTransferMenu(item));
+    menu.querySelector('[data-gear-item-action-collect-blood]')?.addEventListener('click', () => renderBloodCollectionTypeMenu(item));
     menu.querySelector('[data-gear-item-action-fill-water]')?.addEventListener('click', () => fillLiquidContainerWithWater(item));
     menu.querySelector('[data-gear-item-action-fuel-container]')?.addEventListener('click', () => openLiquidContainerFuelDialog(item, fuelContainerCatalog));
     menu.querySelector('[data-gear-item-action-pour-out]')?.addEventListener('click', () => pourOutGearItemLiquid(item));
@@ -29211,6 +30380,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   });
   document.getElementById('vehicleEnergyDialog')?.addEventListener('close', closePortableFuelPicker);
 
+  document.getElementById('storedChargeUseCancel')?.addEventListener('click', () => settleStoredChargeUseDialog(false));
+  document.getElementById('storedChargeUseConfirm')?.addEventListener('click', () => settleStoredChargeUseDialog(true));
+  document.getElementById('storedChargeUseDialog')?.addEventListener('cancel', event => {
+    event.preventDefault();
+    settleStoredChargeUseDialog(false);
+  });
+
   document.querySelectorAll('[data-device-use-step]').forEach(button => {
     bindFocusPreservingStepButton(button, () => adjustDeviceUseMinutes(button.dataset.deviceUseStep), 'deviceUseMinutes');
   });
@@ -30947,6 +32123,112 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - After stored charge is reduced, Recharge appears in the Gear … menu through the existing rechargeable-device flow; it remains absent at 100% charge.
   */
 
+  /* INTERNAL v684 CONTROLLED STRUCTURAL DEMOLITION SUPPORT PASS — NOT USER-FACING
+     - Adds Linear Shaped Charge, Demolition (gc2944) under Weapons > Explosives & Grenades > Demolitions as a Limited + Restricted specialized steel-cutting demolition charge with no modeled charge-sizing/placement mechanics.
+     - Adds Blasting Mat, Rubber, 8 × 12 ft (gc2945) under Tools & Hardware > Industrial Cutting & Demolition; representative ~3,840 lb / $1,785 traditional rubber mat.
+     - Adds Blasting Seismograph / Vibration Monitor (gc2946) under Tools & Hardware > Scientific & Field Equipment > Geophysics & Subsurface; representative ~7 lb / $4,750 professional monitoring kit with rechargeable ~10-day runtime.
+     - No structural-collapse planning, explosive placement, delay sequencing, or blast-design procedures are modeled.
+  */
+
+  /* INTERNAL v682 INDUSTRIAL BLASTING + AGRICULTURAL PEST-CONTROL PASS — NOT USER-FACING
+     - Adds Industrial Blasting under Weapons > Explosives & Grenades with ANFO Blasting Agent, Emulsion Explosive, Dynamite Cartridge, Blasting Booster, and Non-Electric Blasting Detonator.
+     - Renames gc1769 from Detonator, Electric to Electric Blasting Detonator, moves it to Industrial Blasting, and keeps legacy/military blasting-cap aliases.
+     - Adds Explosive Pest-Control Device and Burrowing-Rodent Gas Cartridge under Tools & Hardware > Pest Control.
+     - All regulated explosive materials/initiators use Limited + Restricted. The rodent gas cartridge is Specialty without a blanket Access Status because it is a pesticide product governed primarily by product labeling and local restrictions rather than federal explosives-permit status.
+     - Specs remain intentionally non-procedural: no explosive formulation/mixing, blast design, loading, placement, delay sequencing, or firing instructions are modeled.
+  */
+
+  /* INTERNAL v681 EXPLOSIVES / HEAVY-WEAPONS ACCESS AUDIT — NOT USER-FACING
+     - Removes Access Status: Restricted from non-explosive demolition firing wire and M57-class handheld firing generator; both remain Limited military/surplus support hardware.
+     - Keeps explosive materials, destructive devices, mines, launchers, machine guns and heavy munitions under their existing Restricted tags.
+     - Clarifies the CS grenade as riot-control/training gear and notes the CWC prohibition on riot-control agents as a method of warfare.
+     - Clarifies the M14/M16-class anti-personnel mine entries as legacy/global unit-level representations rather than routine current U.S. field issue.
+     - No military items are cut in this pass; no weapon/ammunition prices are changed because the audit found no toxin-style fake $0/MSRP issue.
+  */
+
+  /* INTERNAL v680 EMPTY HAZARDOUS BRANCH CLEANUP — NOT USER-FACING
+     - Confirms the active Hazardous Materials taxonomy now contains only Poisons & Toxins, Toxic Metals, and Toxic Gases.
+     - Biological Agents and Chemical Warfare Agents are no longer active browse branches after the v679 cuts; the Gear browse tree is item-driven, so empty branches do not render.
+     - Updates the active taxonomy source comment to match the post-v679 catalog. No Gear items, prices, availability, access-status, mechanics, or other taxonomy branches change in this pass.
+  */
+
+  /* INTERNAL v679 NON-UNIT WARFARE-AGENT CUT — NOT USER-FACING
+     - Removes Nerve Agent (gc2922) from normal Gear; modern U.S.-style tactical units do not possess operational chemical-warfare nerve-agent stockpiles.
+     - Removes Anthrax Biological Agent (gc2916), Botulism Biological Agent (gc2932), Plague Biological Agent (gc2933), and Tularemia Biological Agent (gc2934) from normal Gear because select-agent laboratory holdings are not tactical-unit inventory.
+     - Retains the remaining poison/toxin/industrial-hazard entries because they represent materials with legitimate civilian, industrial, medical, or research contexts rather than offensive unit-level warfare stockpiles.
+     - No other availability, access-status, price, weapon, ammunition, or hazardous-material changes are made in this pass.
+  */
+
+  /* INTERNAL v678 HAZARDOUS ACCESS + PRICE AUDIT — NOT USER-FACING
+     - Keeps Availability as the scarcity/procurement axis and removes over-broad Access Status: Restricted from Mercury Compound, Lead Compound, Carbon Monoxide compressed gas, and Hydrogen Sulfide compressed gas.
+     - Organophosphate Poison no longer has a fixed Access Status because legality/access varies by the specified compound and formulation; Specs now say so explicitly.
+     - Generic sealed hazardous-sample entries (poisons/toxins, toxic-metal samples, biological-agent samples, and Nerve Agent, specific) use price: null so the UI displays an em dash instead of fake $0 or arbitrary retail pricing. Commercially defined packages such as methanol/ethylene-glycol bottles and compressed-gas cylinders retain actual prices.
+     - Availability values are otherwise unchanged. Incendiary grenade remains Rare + Restricted; .50 BMG API/API-T remain Limited under the existing heavy-ammunition convention.
+  */
+
+  /* INTERNAL v676 INCENDIARY GRENADE + .50 BMG API/API-T PASS — NOT USER-FACING
+     - Existing Grenade, Incendiary (gc1765) is upgraded in place to a representative military thermate-class hand grenade: ~2.0 lb, Rare + Restricted, ~30–45 s burn around 4,000 °F, intended for equipment destruction/fire-starting rather than fragmentation. Search aliases include thermate/thermite grenade and AN-M14/TH3 terminology.
+     - Existing .50 BMG AP Cartridge (gc2074) is clarified as dedicated AP without incendiary/tracer effects.
+     - Adds .50 BMG Armor-Piercing Incendiary Cartridge (gc2935), representative M8 API class, and .50 BMG Armor-Piercing Incendiary Tracer Cartridge (gc2936), representative M20 API-T class. Both remain compatible with the ordinary 50-bmg ammo family and use the catalog's existing Limited heavy-ammunition availability convention.
+     - No mortar, napalm, chemical-warfare, biological-warfare, or additional incendiary items are added in this pass.
+  */
+
+  /* INTERNAL v675 HAZARDOUS-MATERIAL TAXONOMY COMPLETION — NOT USER-FACING
+     - Reorganizes dangerous substances into Poisons & Toxins, Toxic Metals, Toxic Gases, Biological Agents, and Chemical Warfare Agents.
+     - Completes the previously approved 21-item dangerous-substance set by adding Oleandrin, Mercury Compound, Lead Compound, Methanol, Ethylene Glycol, Carbon Monoxide, Hydrogen Sulfide, Botulism Biological Agent, Plague Biological Agent, and Tularemia Biological Agent.
+     - Methanol and ethylene glycol are implemented as real 1 L liquid bottles using the existing embedded-liquid transfer/pour architecture. Carbon monoxide and hydrogen sulfide are represented as compressed-gas cylinders rather than loose gas.
+     - Hazard Specs explicitly state when severe exposure/disease can be fatal while intentionally omitting toxic-dose, synthesis, culture/propagation, concentration, dissemination, and weaponization mechanics.
+  */
+
+  /* INTERNAL v674 DANGEROUS SUBSTANCES CATALOG PASS — NOT USER-FACING
+     - Adds eleven high-recognition hazardous-substance entries: Cyanide Compound, Arsenic Compound, Strychnine, Ricin, Anthrax Biological Agent (Bacillus anthracis), Botulinum Toxin, Tetrodotoxin, Aconitine, Thallium Compound, Organophosphate Poison (specific), and Nerve Agent (specific).
+     - Specs explicitly identify when severe exposure can be fatal and briefly describe the primary toxic mechanism/effect pattern, while intentionally omitting lethal doses, preparation, culture/propagation, synthesis, concentration recipes, and dissemination/weaponization mechanics.
+     - Availability/access are separated: controlled toxic chemicals and select biological toxins/agents use Limited/Rare plus Restricted; generic chemical-warfare nerve agents use Rare + Prohibited.
+     - No other queued v673 work was found outstanding; the prior blood-access, plasma, IV-fluid, and Animal Blood (specific) queue was already completed in v673.
+  */
+
+  /* INTERNAL v673 MEDICAL LIQUID / BLOOD ACCESS PASS — NOT USER-FACING
+     - Human empty/filled blood bags now use Access Status: Restricted while retaining Limited/Rare availability.
+     - Replaces the old generic IV Fluid Bag, 1 L with Normal Saline IV Fluid, 1 L and adds Balanced Electrolyte IV Fluid, 1 L; “Lactated Ringer's”, “Lactated Ringers”, and “LR” are aliases only. Both IV fluids are Rx and use embedded-liquid contents.
+     - Adds generic Plasma, 1 Unit (~250 mL) as a Restricted/Rare blood product; storage/frozen/thawed state remains a condition/storage detail, not separate Gear.
+     - Adds Animal Blood, (specific) as a 500 mL species-declared laboratory-style bottle with transferable embedded animal-blood contents. Declared species metadata follows the liquid during transfers and prevents mixing two explicitly different species in one container.
+     - All new medical liquids use the ordinary liquid architecture: partial transfer, transfer into compatible containers, decrement, Pour Out, and liquid-derived weight. General open containers (bucket/canning jar/specimen jar/sample bottle) accept them.
+     - Blood-bag relabeling now works in both directions and across menu/drag flows: typed blood transferred into an empty bag changes the bag to that type; an emptied filled bag becomes an Empty (Used) bag and cannot be reused for donor collection or merged into unopened sterile-bag stacks.
+  */
+
+  /* INTERNAL v672 BLOOD COLLECTION / DONOR BLOOD PASS — NOT USER-FACING
+     - Adds a sterile 450 mL CPDA-1 Blood Collection Bag, empty of donor blood but carrying its integral anticoagulant, ~16 ga collection needle and tubing.
+     - Adds filled 450 mL whole-blood bag variants for O−, O+, A−, A+, B−, B+, AB−, AB+, plus Untyped / Unknown.
+     - Adds internal whole-blood liquid families so bag contents participate in the existing container/transfer/weight system without exposing raw blood as directly purchasable Gear.
+     - Empty Blood Collection Bags gain … > Collect Blood, which isolates one bag from a stack and fills one 450 mL unit after selecting the donor's ABO/Rh type or Untyped / Unknown.
+     - Transferring blood into an empty collection bag automatically relabels the bag to the matching blood type while preserving the transferred volume.
+     - Adds Blood Typing Test Kit, ABO/Rh as a specialty clinical supply; clinical testing/compatibility and donor physiological effects remain intentionally unautomated.
+     - Availability: empty collection bags Limited; filled donor blood units Rare; typing kits Specialty.
+  */
+
+  /* INTERNAL v671 PRIMITIVE / PROJECTILE WEAPONS CATALOG PASS — NOT USER-FACING
+     - Adds wrist-braced slingshot + steel shot, .625 blowgun + darts, atlatl + six-foot darts, .177 break-barrel air rifle, .177 CO2 pellet/BB pistol, .177 pellets, .177 steel BBs, 12 g CO2 cartridges, 75 cm band-powered speargun + replacement shaft, bolas/boleadoras, a purpose-built throwing spear/javelin, and a non-returning hunting throwstick/boomerang.
+     - Existing Sling, Traditional moves from Archery to Primitive Ranged so sling/slingshot/blowgun/atlatl equipment groups coherently.
+     - Availability is deliberately tiered by real-world retail access: mainstream slingshots/airguns and consumables are Common; blowguns and spearguns are Specialty; atlatls, bolas, weapon-style throwing spears and hunting throwsticks are Limited.
+     - No staff sling is added.
+     - Visible footer version synchronized to v671 (the v670 source still displayed v668).
+  */
+
+  /* INTERNAL v670 POWER SUBCATEGORIES + LOCATION-AWARE CHARGING + POWER-STATION AC — NOT USER-FACING
+     - Electronics & Communications > Power is split into four nested subcategories: Cells & Battery Packs, Chargers & Adapters, Portable Power, and Distribution & Conversion.
+     - Existing 65 W 12/24 V vehicle USB-C adapter moves from Automotive Accessories into Power > Chargers & Adapters.
+     - Adds three pure-sine-wave inverter classes: 150 W 12 V accessory-socket, 1,000 W (specific input voltage), and 2,000 W (specific input voltage).
+     - Charging-unavailability explanations now name the actual remote Gear location (for example “USB-C wall charger is in Main Battle Tank”) instead of saying only that it is in a different location.
+     - Portable power stations recharge directly from wall AC using their included charging lead, abstracted with the unit: representative ~660 W AC input for the 500 Wh class and ~1,200 W for the 1,000 Wh class. USB-C remains an alternate charging path.
+  */
+
+  /* INTERNAL v669 POWER-SOURCE USE / RECHARGE DIALOG SPLIT — NOT USER-FACING
+     - Power-bank and portable-power-station Use… no longer opens the shared energy/recharge dialog.
+     - Use… now has a dedicated source-side dialog whose only workflow is “Charge a device”: compatible targets, source draw, projected source charge after transfer, and charge-time estimate.
+     - The target-side … → Recharge workflow remains in the existing Recharge dialog with “Charge from” source choices. The two opposite directions of energy flow can no longer appear in the same popup or leak stale source UI between actions.
+     - Removed the generic remaining-charge slider from source-side Use; source depletion is now derived from the selected charging target and the existing 85% transfer-efficiency model.
+  */
+
   /* INTERNAL v668 RECHARGE TARGET VISUAL CLAMP — NOT USER-FACING
      - Managed Recharge keeps the range control on the full charge scale instead of shrinking its HTML max to a portable source's energy ceiling.
      - Selecting a source that can only reach (for example) 40% now places the thumb at the actual 40% position on the full-scale slider while retaining the player's higher intended target separately.
@@ -30980,6 +32262,27 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Portable-source recharge deducts source energy at the existing 85% transfer-efficiency model and limits the target to what the source can actually supply.
      - 18–20 V tool batteries use the owned 18–20 V charger for wall or AC-output power-station charging. Legacy rechargeable devices without explicit charge-capacity/accessory metadata retain wall charging with a transparent time-unavailable message.
   */
+
+  /* INTERNAL v687 PERSONAL-ELECTRIC ENVIRONMENTAL WEIGHT — NOT USER-FACING
+     - Personal Electric vehicle Gear now participates in Wet / Dirty carried-weight adjustments instead of silently leaving weight unchanged.
+     - Electric Bicycle and Electric Scooter use L effective-surface retention; Single-Wheel Board, Electric Longboard, Electric Unicycle, and Self-Balancing Transporter use M.
+     - Uses the existing fixed hard-surface environmental model; no new retention math or full-size vehicle behavior is introduced.
+  */
+
+  /* INTERNAL v686 LOW-POWER VEHICLE USB GUARD — NOT USER-FACING
+     - Passenger-vehicle built-in USB remains a representative ~15 W source for low-power USB-C electronics.
+     - Personal Electric vehicles no longer recharge from built-in vehicle USB. In-vehicle PEV charging now requires the existing 65 W Car Charger, 12 V USB adapter plus a compatible USB-C cable; the 65 W path remains slower than higher-power wall/EPR charging.
+     - Existing laptop restriction on bare built-in vehicle USB is unchanged.
+  */
+
+  /* INTERNAL v685 TABLET GEAR DENSITY PASS — NOT USER-FACING
+     - At 601–900 px tablet widths, Gear Weight now uses the same 70 px column / 56 px stepper footprint as Qty; the location-header grid is kept aligned, and the flexible Item column receives the reclaimed width.
+     - Portable electric-vehicle Gear rows stack charge above remaining range while keeping Ride… beside that two-chip stack.
+     - Replaceable-primary-battery device rows stack coarse battery status above approximate runtime.
+     - Tablet Gear item-name and Condition text are reduced to 12 px; other tablet Gear typography is intentionally unchanged pending visual review.
+     - Phone card layouts and full desktop layouts are unchanged.
+  */
+
 </script>
 </body>
 </html>
