@@ -8925,6 +8925,7 @@
     .water-purification-picker-option[aria-disabled="true"]:hover { background:transparent; }
     .water-purification-picker-option-label { font-size:12px; font-weight:800; line-height:1.25; }
     .water-purification-picker-option-detail { color:var(--muted); font-size:10px; line-height:1.3; white-space:normal; }
+    .water-purification-amount-field { margin-top:14px; }
     @media (hover:none), (pointer:coarse) {
       .water-purification-picker-option:hover:not([aria-selected="true"]),
       .water-purification-picker-option:focus:not([aria-selected="true"]) { background:transparent; outline:none; }
@@ -9994,7 +9995,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v699</div>
+<div class="footer-note no-print">Character Sheet v700</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -10038,9 +10039,8 @@
 <h2>Purify Untreated Freshwater</h2>
 <p class="hint" id="waterPurificationSummary"></p>
 <div class="field"><label id="waterPurificationMethodLabel">Purification method</label><input type="hidden" id="waterPurificationMethod"/><div class="water-purification-picker" data-water-purification-picker="method"><button type="button" class="water-purification-picker-button" id="waterPurificationMethodButton" aria-labelledby="waterPurificationMethodLabel waterPurificationMethodValue" aria-haspopup="listbox" aria-expanded="false"><span class="water-purification-picker-value" id="waterPurificationMethodValue">Choose purification method</span><span class="water-purification-picker-chevron" aria-hidden="true">⌄</span></button><div class="water-purification-picker-menu" id="waterPurificationMethodMenu" role="listbox" hidden></div></div></div>
-<div class="gear-recharge-time" id="waterPurificationMethodNote" aria-live="polite"></div>
 <div class="field"><label id="waterPurificationDestinationLabel">Destination container</label><input type="hidden" id="waterPurificationDestination"/><div class="water-purification-picker" data-water-purification-picker="destination"><button type="button" class="water-purification-picker-button" id="waterPurificationDestinationButton" aria-labelledby="waterPurificationDestinationLabel waterPurificationDestinationValue" aria-haspopup="listbox" aria-expanded="false"><span class="water-purification-picker-value" id="waterPurificationDestinationValue">Choose destination container</span><span class="water-purification-picker-chevron" aria-hidden="true">⌄</span></button><div class="water-purification-picker-menu" id="waterPurificationDestinationMenu" role="listbox" hidden></div></div></div>
-<div class="field"><label for="waterPurificationAmount">Amount</label><div class="step-value-control"><button class="step-value-button" type="button" data-water-purification-step="-1" aria-label="Decrease purification amount">−</button><div class="fund-dialog-amount"><input id="waterPurificationAmount" inputmode="decimal" autocomplete="off"/><span id="waterPurificationUnitLabel">L</span></div><button class="step-value-button" type="button" data-water-purification-step="1" aria-label="Increase purification amount">+</button></div></div>
+<div class="field water-purification-amount-field"><label for="waterPurificationAmount">Amount</label><div class="step-value-control"><button class="step-value-button" type="button" data-water-purification-step="-1" aria-label="Decrease purification amount">−</button><div class="fund-dialog-amount"><input id="waterPurificationAmount" inputmode="decimal" autocomplete="off"/><span id="waterPurificationUnitLabel">L</span></div><button class="step-value-button" type="button" data-water-purification-step="1" aria-label="Increase purification amount">+</button></div></div>
 <div class="gear-recharge-time" id="waterPurificationPreview" aria-live="polite"></div>
 <p class="hint">Treatment times are shown for roleplay; the sheet applies successful purification immediately.</p>
 <div class="fund-dialog-error" id="waterPurificationError" aria-live="polite"></div>
@@ -14805,7 +14805,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const step = unit === 'gal' ? 0.25 : 0.25;
     const direction = Number(button.dataset.waterPurificationStep || 0);
     const max = Number(input.max) || 0;
-    input.value = String(Math.max(0, Math.min(max, (Number(input.value) || 0) + step * direction)));
+    const min = Math.max(0, Number(input.min) || 0);
+    const current = Number(input.value);
+    const base = Number.isFinite(current) ? current : min;
+    input.value = String(Math.max(min, Math.min(max, base + step * direction)));
     updateWaterPurificationDialog(false);
   }));
   document.getElementById('waterPurificationAmount')?.addEventListener('keydown', event => {
@@ -16760,15 +16763,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   const WATER_PURIFICATION_METHODS = Object.freeze({
-    // Representative field rates: squeeze ~1.6 L/min (clean filter), gravity ~1.75 L/min,
-    // pump ~1 L/min; UV 0.5 L / 48 sec or 1 L / 90 sec; iodine 30 min contact;
-    // chlorine dioxide 4 hr maximum contact time for broad purifier-level treatment.
-    'gc0523':{kind:'filter', flowLitersPerMinute:1.6, detail:'0.1 µm hollow-fiber filter · representative clean-filter flow ~1.6 L/min · no salt/chemical removal'},
-    'gc0524':{kind:'filter', flowLitersPerMinute:1.75, detail:'Gravity filter · approximately 4 L dirty-water batch · representative flow ~1.75 L/min · no salt/chemical removal'},
-    'gc0525':{kind:'filter', flowLitersPerMinute:1.0, detail:'Pump microfilter · representative output ~1 L/min · no salt/chemical removal'},
-    'gc0526':{kind:'uv', uvHalfLiterSeconds:48, uvLiterSeconds:90, detail:'UV purification · about 48 sec/0.5 L or 90 sec/1 L · use on clear water; particles can reduce UV effectiveness'},
-    'gc0527':{kind:'tablet', litersPerUnit:0.5, contactSeconds:30*60, detail:'Iodine · 2 tablets/L · about 30 min contact time; not reliable against Cryptosporidium'},
-    'gc0528':{kind:'tablet', litersPerUnit:1.0, contactSeconds:4*60*60, detail:'Chlorine dioxide · 1 tablet/L · allow label contact time, up to about 4 hr'}
+    // v700: roleplay timing represents the whole small field task, not just ideal media throughput.
+    // Physical methods therefore include modest setup/handling overhead before throughput/cycle time.
+    // Squeeze is intentionally conservative: about 30 sec setup plus ~50 sec/L active squeezing.
+    'gc0523':{kind:'filter', setupSeconds:30, secondsPerLiter:50},
+    'gc0524':{kind:'filter', setupSeconds:45, flowLitersPerMinute:1.75},
+    'gc0525':{kind:'filter', setupSeconds:20, flowLitersPerMinute:1.0},
+    'gc0526':{kind:'uv', setupSeconds:10, uvHalfLiterSeconds:48, uvLiterSeconds:90},
+    'gc0527':{kind:'tablet', litersPerUnit:0.5, contactSeconds:30*60},
+    'gc0528':{kind:'tablet', litersPerUnit:1.0, contactSeconds:4*60*60}
   });
 
   function canPurifyUntreatedFreshwater(item) {
@@ -16842,15 +16845,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const amount = Math.max(0, Number(liters) || 0);
     if (!def || !(amount > 0)) return 0;
     if (Number(def.contactSeconds) > 0) return Number(def.contactSeconds);
-    if (Number(def.flowLitersPerMinute) > 0) return amount / Number(def.flowLitersPerMinute) * 60;
+    const setupSeconds = Math.max(0, Number(def.setupSeconds) || 0);
+    if (Number(def.secondsPerLiter) > 0) return setupSeconds + amount * Number(def.secondsPerLiter);
+    if (Number(def.flowLitersPerMinute) > 0) return setupSeconds + amount / Number(def.flowLitersPerMinute) * 60;
     if (def.kind === 'uv') {
       const literSeconds = Math.max(1, Number(def.uvLiterSeconds) || 90);
       const halfSeconds = Math.max(1, Number(def.uvHalfLiterSeconds) || Math.round(literSeconds / 2));
       const fullLiters = Math.floor(amount + 1e-9);
       const remainder = Math.max(0, amount - fullLiters);
-      return fullLiters * literSeconds + (remainder > 1e-9 ? (remainder <= .5 + 1e-9 ? halfSeconds : literSeconds) : 0);
+      return setupSeconds + fullLiters * literSeconds + (remainder > 1e-9 ? (remainder <= .5 + 1e-9 ? halfSeconds : literSeconds) : 0);
     }
-    return 0;
+    return setupSeconds;
   }
 
   let pendingWaterPurification = null;
@@ -16966,10 +16971,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const maxDisplay = litersToLiquidTransferDisplay(maxLiters, unit);
     if (input) {
       input.max = String(maxDisplay);
-      input.min = '0';
+      const minDisplay = maxDisplay > 1e-9 ? Math.min(0.25, maxDisplay) : 0;
+      input.min = String(minDisplay);
       input.step = unit === 'gal' ? '0.01' : '0.05';
       const current = Number(input.value);
-      if (resetAmount || !Number.isFinite(current) || current <= 0 || current > maxDisplay + 1e-9) input.value = maxDisplay > 0 ? String(Number(maxDisplay.toFixed(4))) : '';
+      if (resetAmount || !Number.isFinite(current) || current <= 0 || current > maxDisplay + 1e-9) {
+        input.value = maxDisplay > 0 ? String(Number(maxDisplay.toFixed(4))) : '';
+      } else if (current < minDisplay - 1e-9) {
+        input.value = String(Number(minDisplay.toFixed(4)));
+      }
     }
     const amountDisplay = Number(input?.value);
     const liters = Number.isFinite(amountDisplay) && amountDisplay > 0 ? liquidTransferDisplayToLiters(amountDisplay, unit) : 0;
@@ -16982,14 +16992,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function updateWaterPurificationDialog(resetAmount=false) {
     const details = waterPurificationDialogDetails({resetAmount});
-    const methodNote = document.getElementById('waterPurificationMethodNote');
     const preview = document.getElementById('waterPurificationPreview');
     const confirm = document.getElementById('waterPurificationConfirm');
     if (!details) {
       if (confirm) confirm.disabled = true;
       return;
     }
-    if (methodNote) methodNote.textContent = details.def?.detail || (details.methodEntry?.reason || 'Choose a purification method.');
     if (preview) {
       if (!details.valid) preview.textContent = details.maxLiters > 1e-9 ? `Up to ${formatLiquidVolume(details.maxLiters, details.unit)} ${details.unit} can be purified with the selected setup.` : 'Choose a reachable method and destination container.';
       else {
@@ -33226,5 +33234,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
        - Purify Water now labels its duration preview with the same concise roleplay/immediate-application pattern used for charging.
        - Managed Recharge and portable stored-charge Use dialogs now explicitly state that charging times are in-game roleplay estimates and successful charging is applied immediately by the sheet.
        - The managed-recharge hint lives inside the recharge-only block, so Fuel Up workflows do not show charging-specific guidance. -->
+
+  <!-- INTERNAL v700 PURIFY-WATER POLISH + FIELD-TASK TIMING — NOT USER-FACING
+       - Purify Water no longer displays catalog Specs/detail prose; the workflow stays focused on method, availability, destination, amount, and time.
+       - Adds extra vertical separation between Destination container and Amount.
+       - Amount decrement now clamps at 0.25 display units (or the available maximum when smaller) instead of reaching zero and resetting to the maximum.
+       - Squeeze-filter timing now models the complete field task at about 30 sec setup plus ~50 sec/L active filtration, rather than treating ideal clean-filter flow as total elapsed time.
+       - Gravity, pump, and UV estimates now also include modest setup/handling overhead while retaining their existing representative throughput/cycle times.
+       - Treatment times remain in-game roleplay estimates; successful purification still applies immediately. -->
 </body>
 </html>
