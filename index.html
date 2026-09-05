@@ -10005,7 +10005,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v701</div>
+<div class="footer-note no-print">Character Sheet v702</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -16098,10 +16098,120 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return null;
   }
 
+  function magazineStackCount(item) {
+    return Math.max(1, Math.round(gearItemQuantity(item) || 1));
+  }
+
   function loadedAmmoCount(item, catalog=catalogForGearInstance(item)) {
     const parent = ammoLoadParent(item, catalog);
     if (!parent) return 0;
-    return directLoadedAmmoItems(parent).reduce((sum, ammo) => sum + Math.max(0, Math.floor(Number(ammo.quantity) || 0)), 0);
+    const total = directLoadedAmmoItems(parent).reduce((sum, ammo) => sum + Math.max(0, Math.floor(Number(ammo.quantity) || 0)), 0);
+    const parentCatalog = catalogForGearInstance(parent);
+    return catalogIsMagazine(parentCatalog)
+      ? Math.max(0, Math.floor(total / magazineStackCount(parent)))
+      : total;
+  }
+
+  function splitMagazineStack(magazine, rawAmount=1) {
+    if (!magazine) return null;
+    const catalog = catalogForGearInstance(magazine);
+    if (!catalogIsMagazine(catalog)) return magazine;
+    const total = magazineStackCount(magazine);
+    if (total <= 1) return magazine;
+    let amount = Math.round(Number(rawAmount) || 1);
+    amount = Math.max(1, Math.min(total - 1, amount));
+    const remaining = total - amount;
+    const index = state.gear.findIndex(entry => entry.id === magazine.id);
+    if (index < 0) return magazine;
+
+    const splitItem = JSON.parse(JSON.stringify(magazine));
+    splitItem.id = uid();
+    splitItem.quantity = amount;
+    magazine.quantity = remaining;
+
+    const ratio = amount / total;
+    const newChildren = [];
+    for (const child of [...directLoadedAmmoItems(magazine)]) {
+      const quantity = Math.max(0, Math.floor(gearItemQuantity(child)));
+      const splitQuantity = Math.round(quantity * ratio);
+      const remainQuantity = quantity - splitQuantity;
+      if (splitQuantity > 0) {
+        const splitChild = JSON.parse(JSON.stringify(child));
+        splitChild.id = uid();
+        splitChild.quantity = splitQuantity;
+        splitChild.embeddedInGearId = splitItem.id;
+        splitChild.locationId = splitItem.locationId;
+        newChildren.push(splitChild);
+      }
+      if (remainQuantity <= 0) state.gear = state.gear.filter(entry => entry.id !== child.id);
+      else child.quantity = remainQuantity;
+    }
+
+    state.gear.splice(index + 1, 0, splitItem, ...newChildren);
+    return splitItem;
+  }
+
+  function isolateMagazineUnit(magazine) {
+    return magazineStackCount(magazine) > 1 ? splitMagazineStack(magazine, 1) : magazine;
+  }
+
+  function setMagazineStackQuantity(magazine, rawQuantity) {
+    if (!magazine) return false;
+    const catalog = catalogForGearInstance(magazine);
+    if (!catalogIsMagazine(catalog)) return false;
+    const oldCount = magazineStackCount(magazine);
+    const newCount = Math.max(1, Math.min(9999, Math.round(Number(rawQuantity) || 1)));
+    if (newCount === oldCount) { magazine.quantity = newCount; return true; }
+    const scale = newCount / oldCount;
+    for (const child of directLoadedAmmoItems(magazine)) {
+      child.quantity = Math.max(0, Math.round(gearItemQuantity(child) * scale));
+    }
+    magazine.quantity = newCount;
+    return true;
+  }
+
+  function magazineStackMergeSignature(magazine) {
+    if (!magazine || magazine.embeddedInGearId) return '';
+    const catalog = catalogForGearInstance(magazine);
+    if (!catalogIsMagazine(catalog)) return '';
+    const count = magazineStackCount(magazine);
+    const ammoProfile = directLoadedAmmoItems(magazine).map(child => ({
+      catalogId:String(child.catalogId || ''), item:String(child.item || ''),
+      color:String(child.color || ''), condition:String(child.condition || ''),
+      weight:child.weight === '' ? '' : Number(child.weight), wet:Boolean(child.wet), dirty:Boolean(child.dirty),
+      quantityPerMagazine:Math.max(0, gearItemQuantity(child)) / count
+    }));
+    return JSON.stringify({
+      catalogId:String(magazine.catalogId || ''), item:String(magazine.item || ''),
+      color:String(magazine.color || ''), condition:String(magazine.condition || ''),
+      weight:magazine.weight === '' ? '' : Number(magazine.weight),
+      wet:Boolean(magazine.wet), dirty:Boolean(magazine.dirty), carried:magazine.carried !== false,
+      locationId:String(magazine.locationId || ''), compatibilityKey:String(magazine.compatibilityKey || ''),
+      ammoProfile
+    });
+  }
+
+  function mergeMagazineStackWithEquivalent(magazine) {
+    let current = magazine;
+    while (current) {
+      const signature = magazineStackMergeSignature(current);
+      if (!signature) return current;
+      const match = state.gear.find(candidate =>
+        candidate?.id !== current.id && magazineStackMergeSignature(candidate) === signature
+      );
+      if (!match) return current;
+      const matchChildren = directLoadedAmmoItems(match);
+      const currentChildren = directLoadedAmmoItems(current);
+      if (matchChildren.length !== currentChildren.length) return current;
+      for (let i = 0; i < matchChildren.length; i++) {
+        matchChildren[i].quantity = Math.max(0, gearItemQuantity(matchChildren[i]) + gearItemQuantity(currentChildren[i]));
+      }
+      match.quantity = normalizeGearQuantity(magazineStackCount(match) + magazineStackCount(current));
+      const removeIds = new Set([current.id, ...currentChildren.map(child => child.id)]);
+      state.gear = state.gear.filter(entry => !removeIds.has(entry.id));
+      current = match;
+    }
+    return current;
   }
 
   function looseMatchingAmmo(parent, ammoFamily) {
@@ -16457,6 +16567,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const stored = liquidQuantityStoredValue(rawValue, item, catalog);
     if (catalogIsLiquidContainer(catalog)) {
       setLiquidContainerStackQuantity(item, stored);
+      return gearItemQuantity(item);
+    }
+    if (catalogIsMagazine(catalog)) {
+      setMagazineStackQuantity(item, stored);
       return gearItemQuantity(item);
     }
     item.quantity = stored;
@@ -17158,6 +17272,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       child.locationId = item.locationId;
       syncEmbeddedDescendantLocations(child.id, item.locationId);
     });
+    if (catalogIsMagazine(catalog)) mergeMagazineStackWithEquivalent(item);
     closeGearItemActionMenu();
     clearGearSortState();
     renderGear();
@@ -17182,7 +17297,6 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!sourceCatalog || !targetCatalog) return {applicable:false};
 
     if (catalogIsAmmunition(sourceCatalog) && catalogIsMagazine(targetCatalog)) {
-      if (gearItemQuantity(target) !== 1) return {applicable:true, valid:false, text:'Split magazine to load'};
       if (sourceCatalog.ammoFamily !== targetCatalog.ammoFamily) return {applicable:true, valid:false, text:'Incompatible ammunition'};
       const remaining = Math.max(0, Number(targetCatalog.capacityRounds) - loadedAmmoCount(target, targetCatalog));
       if (remaining < 1) return {applicable:true, valid:false, text:'Magazine Full'};
@@ -17208,7 +17322,6 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (gearItemQuantity(target) !== 1) return {applicable:true, valid:false, text:'Split weapon to load'};
       if (sourceCatalog.magazineFamily !== targetCatalog.magazineFamily) return {applicable:true, valid:false, text:'Incompatible magazine'};
       if (loadedMagazineForWeapon(target, targetCatalog)) return {applicable:true, valid:false, text:'Magazine already installed'};
-      if (gearItemQuantity(source) !== 1 && gearEmbeddedChildren(source.id).length) return {applicable:true, valid:false, text:'Split loaded magazine first'};
       const compatibility = canEmbedGearItem(source, target);
       return {applicable:true, valid:Boolean(compatibility), compatibility, text:'Insert Magazine'};
     }
@@ -17390,7 +17503,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const sourceCatalog = catalogForGearInstance(source);
     const targetCatalog = catalogForGearInstance(target);
     if (!sourceCatalog || !targetCatalog) return null;
-    if (gearItemQuantity(target) !== 1 && !catalogIsLiquidContainer(targetCatalog)) return null;
+    const targetMayAutoIsolate = catalogIsLiquidContainer(targetCatalog)
+      || (catalogIsAmmunition(sourceCatalog) && catalogIsMagazine(targetCatalog));
+    if (gearItemQuantity(target) !== 1 && !targetMayAutoIsolate) return null;
 
     if (catalogIsAmmunition(sourceCatalog)) {
       if (catalogIsMagazine(targetCatalog)) {
@@ -17409,7 +17524,6 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (catalogIsMagazine(sourceCatalog) && catalogIsLoadableWeapon(targetCatalog) && targetCatalog.feedType === 'detachable-magazine') {
       if (sourceCatalog.magazineFamily !== targetCatalog.magazineFamily) return null;
       if (loadedMagazineForWeapon(target, targetCatalog)) return null;
-      if (gearItemQuantity(source) !== 1 && gearEmbeddedChildren(source.id).length) return null;
       return {kind:'magazine', quantity:1};
     }
 
@@ -17465,9 +17579,21 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   function embedGearItem(source, target, compatibility=canEmbedGearItem(source, target)) {
     if (!compatibility) return false;
     if (compatibility.kind === 'magazine') {
+      if (catalogIsMagazine(catalogForGearInstance(source)) && magazineStackCount(source) > 1) {
+        source = isolateMagazineUnit(source);
+        compatibility = canEmbedGearItem(source, target);
+        if (!source || !compatibility || compatibility.kind !== 'magazine') return false;
+      }
       splitOrMoveIntoEmbeddedParent(source, target, 1);
     } else if (compatibility.kind === 'ammo') {
+      const targetCatalog = catalogForGearInstance(target);
+      if (catalogIsMagazine(targetCatalog) && magazineStackCount(target) > 1) {
+        target = isolateMagazineUnit(target);
+        compatibility = canEmbedGearItem(source, target);
+        if (!target || !compatibility || compatibility.kind !== 'ammo') return false;
+      }
       splitOrMoveIntoEmbeddedParent(source, target, Math.min(gearItemQuantity(source), Math.floor(compatibility.quantity)));
+      if (catalogIsMagazine(catalogForGearInstance(target))) mergeMagazineStackWithEquivalent(target);
     } else if (compatibility.kind === 'liquid') {
       target = isolateLiquidContainerUnit(target);
       compatibility = canEmbedGearItem(source, target);
@@ -17490,7 +17616,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function adjustLoadedAmmo(item, delta) {
-    const catalog = catalogForGearInstance(item);
+    let catalog = catalogForGearInstance(item);
+    if (catalogIsMagazine(catalog) && magazineStackCount(item) > 1) {
+      item = isolateMagazineUnit(item);
+      catalog = catalogForGearInstance(item);
+    }
     const parent = ammoLoadParent(item, catalog);
     if (!parent) return false;
     const parentCatalog = catalogForGearInstance(parent);
@@ -17509,6 +17639,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (!source) return false;
       splitOrMoveIntoEmbeddedParent(source, parent, 1);
     } else return false;
+    if (catalogIsMagazine(catalog)) mergeMagazineStackWithEquivalent(item);
     renderGear(); calculate(); queueSave();
     return true;
   }
@@ -17536,7 +17667,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function firearmOrMagazineStatusMarkup(item, catalog) {
     if (!item || (!catalogIsMagazine(catalog) && !catalogIsLoadableWeapon(catalog))) return '';
-    if (gearItemQuantity(item) !== 1) return `<span class="loaded-status-inline no-print"><span class="loaded-ammo-chip empty" title="Split stacked weapons/magazines into individual Gear rows before loading or firing">◉ Split to load</span></span>`;
+    if (!catalogIsMagazine(catalog) && gearItemQuantity(item) !== 1) return `<span class="loaded-status-inline no-print"><span class="loaded-ammo-chip empty" title="Split stacked weapons into individual Gear rows before loading or firing">◉ Split to load</span></span>`;
     const parent = ammoLoadParent(item, catalog);
     const count = loadedAmmoCount(item, catalog);
     const cap = ammoCapacityForParent(item, catalog);
@@ -17545,10 +17676,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const empty = count <= 0 ? ' empty' : '';
 
     if (catalogIsMagazine(catalog)) {
+      const stackCount = magazineStackCount(item);
       const canMinus = Boolean(parent && count > 0);
       const canPlus = Boolean(parent && (!Number.isFinite(cap) || count < cap) && looseMatchingAmmo(parent, family));
-      const title = `${reading} compatible rounds loaded`;
-      return `<span class="loaded-status-inline no-print" data-loaded-ammo-owner="${esc(item.id)}"><span class="loaded-ammo-chip${empty}" title="${esc(title)}"><button type="button" class="vehicle-energy-button" data-loaded-ammo-step="-1" aria-label="Remove one loaded round"${canMinus ? '' : ' disabled aria-disabled="true"'}>−</button><span aria-hidden="true">◉</span><span>${esc(reading)}</span><button type="button" class="vehicle-energy-button" data-loaded-ammo-step="1" aria-label="Load one compatible loose round from this location"${canPlus ? '' : ' disabled aria-disabled="true"'}>+</button></span></span>`;
+      const title = stackCount > 1
+        ? `${reading} compatible rounds loaded per magazine; ${stackCount} identical magazines`
+        : `${reading} compatible rounds loaded`;
+      const stackSuffix = stackCount > 1 ? ` ×${stackCount}` : '';
+      return `<span class="loaded-status-inline no-print" data-loaded-ammo-owner="${esc(item.id)}"><span class="loaded-ammo-chip${empty}" title="${esc(title)}"><button type="button" class="vehicle-energy-button" data-loaded-ammo-step="-1" aria-label="Remove one loaded round from one magazine"${canMinus ? '' : ' disabled aria-disabled="true"'}>−</button><span aria-hidden="true">◉</span><span>${esc(reading)}${esc(stackSuffix)}</span><button type="button" class="vehicle-energy-button" data-loaded-ammo-step="1" aria-label="Load one compatible loose round into one magazine from this location"${canPlus ? '' : ' disabled aria-disabled="true"'}>+</button></span></span>`;
     }
 
     const noMagazine = catalog.feedType === 'detachable-magazine' && !loadedMagazineForWeapon(item, catalog);
@@ -27688,6 +27823,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (catalogIsLiquidContainer(catalog)) {
       splitItem = splitLiquidContainerStack(item, amount);
       if (!splitItem) return;
+    } else if (catalogIsMagazine(catalog)) {
+      splitItem = splitMagazineStack(item, amount);
+      if (!splitItem) return;
     } else {
       splitItem = JSON.parse(JSON.stringify(item));
       splitItem.id = uid();
@@ -33265,5 +33403,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
        - Loaded-ammo chips use a somewhat brighter warm-gold treatment at rest so they no longer read as gray/brown disabled UI.
        - Fire feedback now snaps immediately to a bright-gold flash state, then fades back to the resting ammo-chip treatment; there is no transition into the highlight.
        - The effect remains a short interface cue rather than a literal muzzle-flash animation. -->
+
+
+  <!-- INTERNAL v702 MAGAZINE AUTO-ISOLATE + LOADED-STACK MERGE — NOT USER-FACING
+       - Loading ammunition into a stacked magazine no longer blocks with “Split magazine to load.” The sheet automatically isolates one magazine, loads that unit, and leaves the remainder of the unloaded stack intact.
+       - Magazines with identical physical state and identical per-magazine ammunition load automatically re-merge, so repeated full loads naturally produce (for example) 3 empty + 2 loaded magazines rather than separate identical loaded rows.
+       - Loaded magazine stacks display per-magazine round state with a stack count; +/- ammo adjustments isolate one magazine before changing its load, then re-merge if it becomes identical to another stack.
+       - Manual magazine-stack splits proportionally preserve embedded ammunition, loaded magazine stacks can auto-isolate one unit when inserted into a compatible detachable-magazine weapon, and magazine quantity edits scale their shared per-unit load state consistently. -->
 </body>
 </html>
