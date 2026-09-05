@@ -4293,14 +4293,24 @@
       display:inline-flex; align-items:center; gap:2px; height:23px; padding:0 5px;
       border:1px solid var(--line); border-radius:6px; background:var(--panel);
     }
-    .loaded-ammo-chip { color:#765828; border-color:color-mix(in srgb, #765828 42%, var(--line)); }
-    @keyframes firearm-ammo-feedback {
-      0% { background:color-mix(in srgb, var(--accent) 24%, var(--panel)); box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 52%, transparent); }
-      100% { background:var(--panel); box-shadow:0 0 0 0 transparent; }
+    .loaded-ammo-chip {
+      color:#a87617;
+      border-color:color-mix(in srgb, #c58a17 58%, var(--line));
+      background:color-mix(in srgb, #d8a72b 7%, var(--panel));
     }
-    .loaded-ammo-chip.fire-feedback { animation:firearm-ammo-feedback .42s ease-out; }
+    .loaded-ammo-chip.fire-feedback {
+      background:color-mix(in srgb, #ffd45a 42%, var(--panel));
+      border-color:color-mix(in srgb, #f2b51d 78%, var(--line));
+      box-shadow:0 0 0 2px color-mix(in srgb, #ffc72c 56%, transparent), 0 0 8px color-mix(in srgb, #ffc72c 34%, transparent);
+    }
+    .loaded-ammo-chip.fire-feedback.fire-feedback-fade {
+      background:color-mix(in srgb, #d8a72b 7%, var(--panel));
+      border-color:color-mix(in srgb, #c58a17 58%, var(--line));
+      box-shadow:0 0 0 0 transparent, 0 0 0 transparent;
+      transition:background .38s ease-out, border-color .38s ease-out, box-shadow .38s ease-out;
+    }
     @media (prefers-reduced-motion: reduce) {
-      .loaded-ammo-chip.fire-feedback { animation-duration:.01ms; }
+      .loaded-ammo-chip.fire-feedback.fire-feedback-fade { transition:none; }
     }
     .liquid-volume-chip.water { color:#287d9b; border-color:color-mix(in srgb, #287d9b 42%, var(--line)); }
     .liquid-volume-chip.fuel { color:#9a681b; border-color:color-mix(in srgb, #9a681b 42%, var(--line)); }
@@ -9995,7 +10005,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v700</div>
+<div class="footer-note no-print">Character Sheet v701</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -17509,11 +17519,18 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const owner = document.querySelector(`[data-firearm-owner="${CSS.escape(String(itemId))}"]`);
       const chip = owner?.querySelector('.loaded-ammo-chip');
       if (!chip) return;
-      chip.classList.remove('fire-feedback');
+      chip.classList.remove('fire-feedback', 'fire-feedback-fade');
       void chip.offsetWidth;
+      // Snap to the bright gold state immediately, hold it for one painted frame,
+      // then fade back to the normal ammo-chip treatment. This reads like a quick
+      // action flash rather than a transition into the feedback state.
       chip.classList.add('fire-feedback');
-      chip.addEventListener('animationend', () => chip.classList.remove('fire-feedback'), {once:true});
-      setTimeout(() => chip.isConnected && chip.classList.remove('fire-feedback'), 520);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (chip.isConnected) chip.classList.add('fire-feedback-fade');
+      }));
+      setTimeout(() => {
+        if (chip.isConnected) chip.classList.remove('fire-feedback', 'fire-feedback-fade');
+      }, 470);
     });
   }
 
@@ -33242,5 +33259,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
        - Squeeze-filter timing now models the complete field task at about 30 sec setup plus ~50 sec/L active filtration, rather than treating ideal clean-filter flow as total elapsed time.
        - Gravity, pump, and UV estimates now also include modest setup/handling overhead while retaining their existing representative throughput/cycle times.
        - Treatment times remain in-game roleplay estimates; successful purification still applies immediately. -->
+
+
+  <!-- INTERNAL v701 FIRE-AMMO VISUAL FEEDBACK — NOT USER-FACING
+       - Loaded-ammo chips use a somewhat brighter warm-gold treatment at rest so they no longer read as gray/brown disabled UI.
+       - Fire feedback now snaps immediately to a bright-gold flash state, then fades back to the resting ammo-chip treatment; there is no transition into the highlight.
+       - The effect remains a short interface cue rather than a literal muzzle-flash animation. -->
 </body>
 </html>
