@@ -9808,6 +9808,55 @@
         align-self: stretch !important;
       }
     }
+
+
+    /* v712: compact phone Skills rows. Keep the name and level values one
+       visual type step smaller, and reduce the level-control column from the
+       previous ~74 px to 44 px (about 40% narrower). Desktop/tablet unchanged. */
+    @media screen and (max-width: 600px), screen and (max-height: 520px) and (pointer: coarse) {
+      #skills .skill-column-header,
+      #skills .skill-entry {
+        grid-template-columns: 26px minmax(0, 1fr) 44px 34px;
+      }
+
+      #skills.section-locked .skill-column-header,
+      #skills.section-locked .skill-entry {
+        grid-template-columns: 26px minmax(0, 1fr) 44px;
+      }
+
+      #skills.starter-skills-finished .skill-column-header,
+      #skills.starter-skills-finished .skill-entry {
+        grid-template-columns: 26px minmax(0, 1fr) 44px 30px;
+      }
+
+      #skills.starter-skills-finished.section-locked .skill-column-header,
+      #skills.starter-skills-finished.section-locked .skill-entry {
+        grid-template-columns: 26px minmax(0, 1fr) 44px;
+      }
+
+      #skills .skill-entry .skill-name-highlight-wrap > input,
+      #skills .skill-name-highlight,
+      #skills .skill-level-button,
+      #skills .skill-entry input.skill-level-number {
+        font-size: 15px !important;
+      }
+
+      #skills .skill-level-stepper {
+        grid-template-columns: minmax(0, 1fr) 18px;
+      }
+
+      #skills .skill-level-step-buttons,
+      #skills .skill-level-step-button {
+        width: 18px;
+        min-width: 18px;
+      }
+
+      #skills .skill-entry input.skill-level-number {
+        padding-left: 1px !important;
+        padding-right: 1px !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -10072,7 +10121,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v710</div>
+<div class="footer-note no-print">Character Sheet v712</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -32987,19 +33036,21 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       'Charisma':{current:55,max:55}, 'Creativity':{current:83,max:83}, 'Empathy':{current:55,max:55}, 'Extraversion':{current:50,max:50}, 'Intelligence':{current:92,max:92}, 'Organization':{current:75,max:75}, 'Stability':{current:60,max:60}, 'Will':{current:65,max:65}
     };
     tom.skills = [
-      ['Engineering, Structural',90], ['Engineering, Geotechnical',90], ['Physics, Classical',80], ['Mathematics',75], ['Knowledge, Pretzels',75],
-      ['Geology',70], ['Material Science',70], ['Excavation',70], ['Carpentry',65], ['Masonry',65], ['Mechanic, General',65],
+      ['Engineering, Structural',85], ['Engineering, Geotechnical',85], ['Physics, Classical',80], ['Mathematics',75], ['Knowledge, Pretzels',75],
+      ['Geology',70], ['Material Science',70], ['Excavation',70], ['Carpentry',65], ['Masonry',65], ['Mechanic, General',65], ['Writing, Technical',65],
       ['Mining',60], ['Rigging',60], ['Stress Inoculation (SI), Confined Spaces',60],
       ['Survival, Subterranean',55], ['Surveying',55], ['Metrology',55], ['Mechanic, Heavy/Industrial',55], ['Metalworking, Welding/Joining',55], ['Operate Vehicle, Basic Road Vehicles',55], ['Fishing, Freshwater',55],
-      ['Computers, General Systems',50], ['Electrical',50], ['Cooking',50],
-      ['Plumbing',45], ['Operate Vehicle, Earthmoving Equipment',45], ['Electronics, Communications',45], ['Knowledge, Subterranean Wildlife',45], ['Knowledge, Classic & Alternative Rock',45],
-      ['Operate Vehicle, Off-Road Vehicles',40], ['Instrument, Guitar',40], ['Navigation, Road',40],
-      ['Horticulture',35], ['Gaming, Puzzle',35], ['Language, Spanish',35], ['Medical, Emergency',35], ['Electronics, Repair',35], ['Astronomy',35], ['Knowledge, College Basketball',35],
-      ['Photography',30], ['Swimming',30], ['Knowledge, Midwestern Freshwater Fish',30], ['Knowledge, Amateur Radio',30],
-      ['Singing / Vocal, Rock',25], ['Wildlife Observation, Birds',25], ['Knowledge, Cast-Iron Cookware',25],
-      ['Weapon, Handguns, Revolvers',20],
-      ['Dance, Two-Step',15], ['Gaming, First-Person Shooter',15], ['Knowledge, Bourbon',15],
-      ['Drawing',10], ['Animal Handling, Cats',10], ['Knowledge, Local Railroad History',10], ['Instrument, Piano',5]
+      ['Computers, General Systems',50], ['Electrical',50], ['Cooking',50], ['Business Management, Construction',50],
+      ['Plumbing',45], ['Operate Vehicle, Earthmoving Equipment',45], ['Electronics, Communications',45], ['Knowledge, Subterranean Wildlife',45], ['Knowledge, Classic & Alternative Rock',45], ['Architecture, Tunnels',45], ['Teaching',45], ['Caving',45],
+      ['Operate Vehicle, Off-Road Vehicles',40], ['Instrument, Guitar',40], ['Navigation, Road',40], ['Bureaucracy',40],
+      ['Horticulture',35], ['Gaming, Puzzle',35], ['Language, Spanish',35], ['Medical, Emergency',35], ['Electronics, Repair',35], ['Astronomy',35], ['Knowledge, College Basketball',35], ['Architecture, Historic Preservation',35],
+      ['Photography',30], ['Swimming',30], ['Knowledge, Midwestern Freshwater Fish',30], ['Knowledge, Amateur Radio',30], ['Religion, Christianity',30], ['Logistics',30], ['History, Military',30],
+      ['Singing / Vocal, Rock',25], ['Wildlife Observation, Birds',25], ['Knowledge, Cast-Iron Cookware',25], ['HVAC',25], ['History, Medieval',25],
+      ['Weapon, Handguns, Revolvers',20], ['Sport, Basketball',20], ['Accounting',20], ['Locksmith',20], ['Magic Tricks',20],
+      ['Dance, Two-Step',15], ['Gaming, First-Person Shooter',15], ['Knowledge, Bourbon',15], ['Pest Control',15],
+      ['Drawing',10], ['Animal Handling, Cats',10], ['Knowledge, Local Railroad History',10],
+      ['Gaming, Card Games',35], ['Electronics, Audio',35], ['Knowledge, Local Diners',35], ['Cleaning',30], ['Knowledge, Weather Folklore',25], ['Animal Handling, Dogs',20],
+      ['Instrument, Piano',5], ['Operate Vehicle, Light Fixed-Wing Aircraft',5]
     ].map(([name,level]) => ({id:uid(), name, level:String(level), groupId:''}));
     while (tom.skills.length < 60) tom.skills.push({id:uid(), name:'', level:'', groupId:''});
 
@@ -33808,6 +33859,18 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - The Gear Item column remains flexible and gives up the reclaimed 12 px instead; Condition stays at 112 px and the no-horizontal-scroll tablet fit work remains otherwise unchanged.
   */
 
+
+  /* INTERNAL v712 TOM MERCER FLOATED-LIFE SKILLS + PHONE SKILL COMPACTION — NOT USER-FACING
+     - Tom's Structural and Geotechnical Engineering are reduced from 90 to 85, freeing starter XP while retaining elite specialist proficiency.
+     - Restores all remaining previously-floated life-texture skills: Gaming, Card Games; Animal Handling, Dogs; Knowledge, Local Diners; Electronics, Audio; Knowledge, Weather Folklore; and Cleaning.
+     - On phone/coarse narrow layouts only, Skills name/level values render one type step smaller and the level-control column is about 40% narrower; desktop/tablet layouts are unchanged. */
+
+  /* INTERNAL v711 TOM MERCER LIFE-SKILL AUDIT — NOT USER-FACING
+     - Restores and expands Tom's non-core life experience after auditing the v710 template against the workshop discussion.
+     - Adds Religion, Christianity; Sport, Basketball; Business Management, Construction; Bureaucracy; Accounting; Logistics; Operate Vehicle, Light Fixed-Wing Aircraft; Architecture, Historic Preservation; custom Architecture, Tunnels; Locksmith; Pest Control; Teaching; HVAC; History, Military; History, Medieval; Writing, Technical; Caving; and Magic Tricks.
+     - Ratings intentionally range from 5-point dabbling to 65-point professional technical writing; core world-class underground-engineering ratings are unchanged.
+     - Tom now spends 340.5 of 341.75 starting Skill XP, leaving 1.25 XP unspent.
+  */
   /* INTERNAL v710 TOM MERCER TEMPLATE + PHONE HOLSTER — NOT USER-FACING
      - Adds Survival, Subterranean to Outdoors skills.
      - Adds Cellphone Belt Holster (gc2949), a dedicated carried container restricted to one cellular phone plus up to two slim writing instruments.
