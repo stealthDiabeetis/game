@@ -3462,6 +3462,26 @@
     }
     .gear-item-action-option.danger { color: var(--danger); }
     .gear-item-action-divider { height: 1px; margin: 4px 3px; background: var(--line); }
+    .gear-item-action-menu.weapon-supply-menu {
+      width: min(340px, calc(100vw - 16px));
+      max-height: min(440px, calc(100vh - 16px));
+    }
+    .gear-item-action-section-label {
+      padding: 7px 9px 3px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .055em;
+      text-transform: uppercase;
+    }
+    .gear-item-action-option.weapon-supply-option { align-items: flex-start; }
+    .weapon-supply-name { min-width: 0; overflow-wrap: anywhere; }
+    .weapon-supply-status {
+      flex: 0 0 auto;
+      color: var(--muted);
+      white-space: nowrap;
+      font-size: 10px;
+    }
     .gear-item-action-heading {
       display: flex;
       align-items: center;
@@ -10052,7 +10072,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v706</div>
+<div class="footer-note no-print">Character Sheet v710</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -10322,7 +10342,7 @@
 <dialog id="characterLoadDialog">
 <div class="dialog-inner">
 <h2>Load character</h2>
-<p class="character-library-help">Morgan Vale is built into the app. Other entries are named saves stored only in this browser on this device.</p>
+<p class="character-library-help">Morgan Vale and Tom Mercer are built into the app. Other entries are named saves stored only in this browser on this device.</p>
 <div class="character-library-list" id="characterLibraryList"></div>
 <div class="dialog-actions"><button class="btn" id="characterLoadClose" type="button">Close</button></div>
 </div>
@@ -10626,7 +10646,8 @@
     {key:'mid', label:'Mid-level', levelMin:40, levelMax:70, countMin:5, countMax:40},
     {key:'low', label:'Low-level', levelMin:5, levelMax:35, countMin:10, countMax:60}
   ];
-  const BULK_SKILL_CATEGORIES = [{"category":"Academic","skills":["History, (specific)","History, Ancient","History, Early Modern","History, Medieval","History, Military","History, Modern","History, Political","Knowledge, Other (specific)","Knowledge, Beanie Babies","Knowledge, Celebrity Gossip","Knowledge, Classic Literature","Knowledge, College Football","Knowledge, Conspiracy Theories","Knowledge, Cryptids","Knowledge, Horror Movies","Knowledge, Internet Culture","Knowledge, Muscle Cars","Knowledge, Poetry","Knowledge, Professional Wrestling","Knowledge, Rock Music","Knowledge, UFO Lore","Language, (specific)","Language, American Sign Language","Language, Arabic","Language, French","Language, German","Language, Japanese","Language, Klingon","Language, Latin","Language, Mandarin Chinese","Language, Russian","Language, Spanish","Law, (specific)","Law, Corporate","Law, Criminal","Law, Environmental","Law, Family","Law, Immigration","Law, Intellectual Property","Law, Labor and Employment","Law, Tax","Mathematics","Philosophy, (specific)","Philosophy, Epistemology","Philosophy, Ethics","Philosophy, Logic","Philosophy, Metaphysics","Political Science","Religion, (specific)","Religion, Buddhism","Religion, Christianity","Religion, Hinduism","Religion, Islam","Religion, Judaism","Religion, Shinto","Religion, Sikhism","Religion, Taoism","Shorthand"]},{"category":"Arts and Crafts","skills":["3D Modeling","3D Printing","Animation","Art Conservation","Body Modification, (specific)","Body Modification, Tattooing","Body Modification, Piercing","Body Modification, Scarification","Body Modification, Branding","Body Modification, Subdermal Implants","Ceramics","CNC Crafting, (specific)","CNC Crafting, Laser Cutting","CNC Crafting, Plasma Cutting","CNC Crafting, Routing","Digital Art","Drawing","Leathercraft","Painting, Artistic","Photography","Sculpting, (specific)","Sculpting, Clay","Sculpting, Stone","Sculpting, Wood","Sculpting, Metal","Sculpting, Glass","Taxidermy","Textile Art, (specific)","Textile Art, Sewing","Textile Art, Quilting","Textile Art, Knitting","Textile Art, Crochet","Textile Art, Weaving","Textile Art, Embroidery","Writing, (specific)","Writing, Fiction","Writing, Poetry","Writing, Screenwriting","Writing, Playwriting","Writing, Journalism","Writing, Technical","Writing, Copywriting"]},{"category":"Athletics","skills":["Caving","Climbing, (specific)","Climbing, Ice","Climbing, Rock","Climbing, Tree","Climbing, Urban","Diving","Diving, Free","Diving, Scuba","Martial Art, (specific)","Martial Art, Boxing","Martial Art, Muay Thai","Martial Art, Brazilian Jiu-Jitsu","Martial Art, Judo","Martial Art, Folkstyle Wrestling","Martial Art, Karate","Martial Art, Taekwondo","Martial Art, Sumo","Parachuting","Parkour","Sport, (specific)","Sport, Baseball","Sport, Basketball","Sport, Billiards","Sport, Cricket","Sport, Cycling","Sport, Cycling, Road","Sport, Cycling, Mountain","Sport, Cycling, BMX","Sport, Football, American","Sport, Golf","Sport, Hockey","Sport, Hockey, Field","Sport, Hockey, Ice","Sport, Rodeo","Sport, Rugby","Sport, Soccer","Sport, Surfing","Sport, Tennis","Sport, Tumbling","Sport, Ultimate Frisbee","Sport, Volleyball","Sport, Skateboarding","Sport, Skiing","Sport, Snowboarding","Swimming"]},{"category":"Business","skills":["Accounting","Appraise, (specific)","Appraise, Fine Art","Appraise, Antique Furniture","Appraise, Gems and Jewelry","Appraise, Automobiles","Appraise, Firearms","Appraise, Coins","Bureaucracy","Business Management, (specific)","Business Management, Construction","Business Management, Healthcare","Business Management, Hospitality","Business Management, Manufacturing","Business Management, Nonprofit","Business Management, Restaurant","Business Management, Retail","Business Management, Technology","Economics","Logistics","Marketing"]},{"category":"Combat","skills":["Air Combat Maneuvering","Camouflage","CBRN (Chemical, Biological, Radiological, and Nuclear)","CQB (Close-Quarters Battle)","Enhanced Vision / NVG","Explosives, (specific)","Explosives, Disposal","Explosives, Large","Explosives, Small","Fire Support Coordination","Stress Inoculation, Combat","Tactics, (specific)","Tactics, Air","Tactics, Evasion","Tactics, Large-Scale War","Tactics, Naval","Tactics, Psychological","Tactics, Small Unit","Tactics, Space","Tactics, Surveillance","Tactics, Unconventional Warfare","Weapon, (specific)","Weapon, Blunt Weapons, Two-Handed","Weapon, Cannons, Aircraft","Weapon, Handguns, Revolvers","Weapon, Handguns, Semi-Automatic","Weapon, Knives, Combat","Weapon, Launchers, Shoulder-Fired","Weapon, Light Machine Guns","Weapon, Rifles, AK-Platform","Weapon, Rifles, AR-Platform","Weapon, Rifles, Bolt-Action, Heavy","Weapon, Shotguns, Pump-Action","Weapon, Submachine Guns","Weapon, Swords"]},{"category":"Criminal","skills":["Conceal Item","Dark Web","Drugs, Illicit","Forgery, (specific)","Forgery, Signatures","Forgery, Checks","Forgery, Currency","Forgery, Passports","Forgery, Driver’s Licenses","Forgery, Diplomas","Forgery, Paintings","Money Laundering","Pickpocketing","Social Engineering","Tactics, Criminal"]},{"category":"Food and Drink","skills":["Butchering","Competitive Drinking","Competitive Eating","Cooking","Culinary Specialist, (specific)","Culinary Specialist, Bread Baking","Culinary Specialist, Cake Decorating","Culinary Specialist, Confectionery","Culinary Specialist, Frozen Desserts","Culinary Specialist, Garde Manger","Culinary Specialist, Sushi","Food Art","Food Preservation","Mixology"]},{"category":"Medical","skills":["Anesthesiology","Autopsy","Biomedical Science","Dentistry","Dermatology","Herbalism","Medical, Emergency","Medical, General","Optometry","Pharmacology/Toxicology","Psychology","Public Health","Stress Inoculation, Medical Trauma","Surgery, (specific)","Surgery, General","Surgery, Trauma","Surgery, Orthopedic","Surgery, Neurological","Surgery, Cardiothoracic","Surgery, Plastic","Veterinary, (specific)","Veterinary, Common Pet","Veterinary, Exotic Pet","Veterinary, Livestock","Veterinary, Wildlife/Zoo"]},{"category":"Miscellaneous","skills":["Childcare","Cleaning","Gaming, (specific)","Gaming, Board Games","Gaming, Card Games","Gaming, Fighting","Gaming, First-Person Shooter","Gaming, Puzzle","Gaming, Racing","Gaming, Rhythm","Gaming, Role-Playing","Gaming, Strategy","Gaming, Tabletop Role-Playing","Geoguessing","Meditation","Navigation, (specific)","Navigation, Air","Navigation, Orienteering","Navigation, Road","Navigation, Sea","Navigation, Space","Operate Vehicle, (specific)","Operate Vehicle, Basic Road Vehicles","Operate Vehicle, Commercial Trucks","Operate Vehicle, Earthmoving Equipment","Operate Vehicle, Helicopters","Operate Vehicle, High-Performance Cars","Operate Vehicle, Light Fixed-Wing Aircraft","Operate Vehicle, Mid-Size Watercraft","Operate Vehicle, Off-Road Vehicles","Operate Vehicle, Passenger Trains","Operate Vehicle, Spacecraft, Crewed","Operate Vehicle, Sport Motorcycles","Operate Vehicle, UAVs","Ropework","Stress Inoculation (SI), (specific)","Stress Inoculation (SI), Confined Spaces","Stress Inoculation (SI), Heights"]},{"category":"Occupational","skills":["Air Traffic Control","Architecture, (specific)","Architecture, Civic","Architecture, Commercial","Architecture, Educational","Architecture, Healthcare","Architecture, Historic Preservation","Architecture, Industrial","Architecture, Residential","Architecture, Sustainable","Auctioneering","Beauty Care, (specific)","Beauty Care, Hairdressing","Beauty Care, Makeup","Beauty Care, Skincare","Carpentry","Electrical","Excavation","Firefighting","Glasswork","Gunsmith","HVAC","Interior Design","Jeweler","Landscaping","Librarianship","Locksmith","Masonry","Mechanic, General","Mechanic, Heavy/Industrial","Mechanic, Precision","Metalworking","Metalworking, Blacksmith/Forming","Metalworking, Machining","Metalworking, Smelting","Metalworking, Welding/Joining","Mining","Mortuary Services","Painting, Professional","Rigging","Pest Control","Plumbing","Printing, Professional","Surveying","Teaching","Tool/Machine, Special (specific)","Urban Planning","Zero Gravity"]},{"category":"Outdoors","skills":["Animal Riding, (specific)","Animal Riding, Horses","Animal Riding, Camels","Animal Riding, Elephants","Animal Handling, (specific)","Animal Handling, Dogs","Animal Handling, Cats","Animal Handling, Horses","Animal Handling, Cattle","Animal Handling, Pigs","Animal Handling, Parrots","Animal Handling, Snakes","Animal Handling, Birds of Prey","Conservation","Fishing, (specific)","Fishing, Freshwater","Fishing, Deep Sea","Fishing, Fly","Fishing, Ice","Fishing, Spear","Foraging","Horticulture","Hunting, (specific)","Hunting, Deer","Hunting, Elk","Hunting, Turkey","Hunting, Waterfowl","Hunting, Upland Birds","Hunting, Small Game","Hunting, Predators","Hunting, Wild Boar","Survival","Survival, Aquatic","Survival, Cold","Survival, Desert","Survival, Forest","Survival, Space","Survival, Urban","Tracking, (specific)","Tracking, Humans","Tracking, White-Tailed Deer","Tracking, Elk","Tracking, Black Bears","Tracking, Mountain Lions","Tracking, Wolves","Trapping","Wildlife Observation, (specific)","Wildlife Observation, Birds","Wildlife Observation, Whale","Wildlife Observation, Reptiles and Amphibians","Wildlife Observation, Butterfly"]},{"category":"Performance","skills":["Acting","Comedy","Contortion","Dance, (specific)","Dance, Ballet","Dance, Breaking","Dance, Contemporary","Dance, Jazz","Dance, Rave Freestyle","Dance, Salsa","Dance, Tango","Dance, Tap","Dance, Waltz","DJing","Engineering, Audio","Filmmaking","Instrument, (specific)","Instrument, Guitar","Instrument, Piano","Instrument, Drum Set","Instrument, Violin","Instrument, Trumpet","Instrument, Saxophone","Instrument, Flute","Instrument, Cello","Magic Tricks","Miming","Music Theory","Puppetry","Singing / Vocal, (specific)","Singing / Vocal, Classical","Singing / Vocal, Country","Singing / Vocal, Freestyle Rap","Singing / Vocal, Gospel","Singing / Vocal, Jazz","Singing / Vocal, Musical Theatre","Singing / Vocal, Pop","Singing / Vocal, R&B/Soul","Singing / Vocal, Rock","Singing / Vocal, Sound Effects","Sound Design","Stage Visual Effects","Stunt Work","Wrestling, Performance"]},{"category":"Science","skills":["Archaeology","Astronomy","Botany","Cartography","Chemistry","Criminology","Cryptology","Data Science","Enigmatology","Forensics","Geography","Geology","Linguistics","Material Science","Meteorology","Metrology","Microbiology","Mycology","Paleontology","Physics","Physics, Classical","Physics, Quantum","Sociology","Zoology","Zoology, Entomology","Zoology, Other Invertebrates","Zoology, Vertebrates"]},{"category":"Technology","skills":["Computers","Computers, Artificial Intelligence","Computers, General Systems","Computers, Hardware","Computers, Networking","Electronics, (specific)","Electronics, Alternative Imaging","Electronics, Audio","Electronics, Communications","Electronics, Control Systems","Electronics, Medical","Electronics, Remote Sensing","Electronics, Repair","Electronics, Scientific","Electronics, Security","Electronics, Video","Hacking/Exploitation","Programming","Programming, Data/Scientific","Programming, Industrial","Programming, Software","Robotics"]}];
+  // v709: adds the core Engineering occupational skill family: (specific), Chemical, Civil, Electrical, and Mechanical.
+  const BULK_SKILL_CATEGORIES = [{"category":"Academic","skills":["History, (specific)","History, Ancient","History, Early Modern","History, Medieval","History, Military","History, Modern","History, Political","Knowledge, Other (specific)","Knowledge, Beanie Babies","Knowledge, Celebrity Gossip","Knowledge, Classic Literature","Knowledge, College Football","Knowledge, Conspiracy Theories","Knowledge, Cryptids","Knowledge, Horror Movies","Knowledge, Internet Culture","Knowledge, Muscle Cars","Knowledge, Poetry","Knowledge, Professional Wrestling","Knowledge, Rock Music","Knowledge, UFO Lore","Language, (specific)","Language, American Sign Language","Language, Arabic","Language, French","Language, German","Language, Japanese","Language, Klingon","Language, Latin","Language, Mandarin Chinese","Language, Russian","Language, Spanish","Law, (specific)","Law, Corporate","Law, Criminal","Law, Environmental","Law, Family","Law, Immigration","Law, Intellectual Property","Law, Labor and Employment","Law, Tax","Mathematics","Philosophy, (specific)","Philosophy, Epistemology","Philosophy, Ethics","Philosophy, Logic","Philosophy, Metaphysics","Political Science","Religion, (specific)","Religion, Buddhism","Religion, Christianity","Religion, Hinduism","Religion, Islam","Religion, Judaism","Religion, Shinto","Religion, Sikhism","Religion, Taoism","Shorthand"]},{"category":"Arts and Crafts","skills":["3D Modeling","3D Printing","Animation","Art Conservation","Body Modification, (specific)","Body Modification, Tattooing","Body Modification, Piercing","Body Modification, Scarification","Body Modification, Branding","Body Modification, Subdermal Implants","Ceramics","CNC Crafting, (specific)","CNC Crafting, Laser Cutting","CNC Crafting, Plasma Cutting","CNC Crafting, Routing","Digital Art","Drawing","Leathercraft","Painting, Artistic","Photography","Sculpting, (specific)","Sculpting, Clay","Sculpting, Stone","Sculpting, Wood","Sculpting, Metal","Sculpting, Glass","Taxidermy","Textile Art, (specific)","Textile Art, Sewing","Textile Art, Quilting","Textile Art, Knitting","Textile Art, Crochet","Textile Art, Weaving","Textile Art, Embroidery","Writing, (specific)","Writing, Fiction","Writing, Poetry","Writing, Screenwriting","Writing, Playwriting","Writing, Journalism","Writing, Technical","Writing, Copywriting"]},{"category":"Athletics","skills":["Caving","Climbing, (specific)","Climbing, Ice","Climbing, Rock","Climbing, Tree","Climbing, Urban","Diving","Diving, Free","Diving, Scuba","Martial Art, (specific)","Martial Art, Boxing","Martial Art, Muay Thai","Martial Art, Brazilian Jiu-Jitsu","Martial Art, Judo","Martial Art, Folkstyle Wrestling","Martial Art, Karate","Martial Art, Taekwondo","Martial Art, Sumo","Parachuting","Parkour","Sport, (specific)","Sport, Baseball","Sport, Basketball","Sport, Billiards","Sport, Cricket","Sport, Cycling","Sport, Cycling, Road","Sport, Cycling, Mountain","Sport, Cycling, BMX","Sport, Football, American","Sport, Golf","Sport, Hockey","Sport, Hockey, Field","Sport, Hockey, Ice","Sport, Rodeo","Sport, Rugby","Sport, Soccer","Sport, Surfing","Sport, Tennis","Sport, Tumbling","Sport, Ultimate Frisbee","Sport, Volleyball","Sport, Skateboarding","Sport, Skiing","Sport, Snowboarding","Swimming"]},{"category":"Business","skills":["Accounting","Appraise, (specific)","Appraise, Fine Art","Appraise, Antique Furniture","Appraise, Gems and Jewelry","Appraise, Automobiles","Appraise, Firearms","Appraise, Coins","Bureaucracy","Business Management, (specific)","Business Management, Construction","Business Management, Healthcare","Business Management, Hospitality","Business Management, Manufacturing","Business Management, Nonprofit","Business Management, Restaurant","Business Management, Retail","Business Management, Technology","Economics","Logistics","Marketing"]},{"category":"Combat","skills":["Air Combat Maneuvering","Camouflage","CBRN (Chemical, Biological, Radiological, and Nuclear)","CQB (Close-Quarters Battle)","Enhanced Vision / NVG","Explosives, (specific)","Explosives, Disposal","Explosives, Large","Explosives, Small","Fire Support Coordination","Stress Inoculation, Combat","Tactics, (specific)","Tactics, Air","Tactics, Evasion","Tactics, Large-Scale War","Tactics, Naval","Tactics, Psychological","Tactics, Small Unit","Tactics, Space","Tactics, Surveillance","Tactics, Unconventional Warfare","Weapon, (specific)","Weapon, Blunt Weapons, Two-Handed","Weapon, Cannons, Aircraft","Weapon, Handguns, Revolvers","Weapon, Handguns, Semi-Automatic","Weapon, Knives, Combat","Weapon, Launchers, Shoulder-Fired","Weapon, Light Machine Guns","Weapon, Rifles, AK-Platform","Weapon, Rifles, AR-Platform","Weapon, Rifles, Bolt-Action, Heavy","Weapon, Shotguns, Pump-Action","Weapon, Submachine Guns","Weapon, Swords"]},{"category":"Criminal","skills":["Conceal Item","Dark Web","Drugs, Illicit","Forgery, (specific)","Forgery, Signatures","Forgery, Checks","Forgery, Currency","Forgery, Passports","Forgery, Driver’s Licenses","Forgery, Diplomas","Forgery, Paintings","Money Laundering","Pickpocketing","Social Engineering","Tactics, Criminal"]},{"category":"Food and Drink","skills":["Butchering","Competitive Drinking","Competitive Eating","Cooking","Culinary Specialist, (specific)","Culinary Specialist, Bread Baking","Culinary Specialist, Cake Decorating","Culinary Specialist, Confectionery","Culinary Specialist, Frozen Desserts","Culinary Specialist, Garde Manger","Culinary Specialist, Sushi","Food Art","Food Preservation","Mixology"]},{"category":"Medical","skills":["Anesthesiology","Autopsy","Biomedical Science","Dentistry","Dermatology","Herbalism","Medical, Emergency","Medical, General","Optometry","Pharmacology/Toxicology","Psychology","Public Health","Stress Inoculation, Medical Trauma","Surgery, (specific)","Surgery, General","Surgery, Trauma","Surgery, Orthopedic","Surgery, Neurological","Surgery, Cardiothoracic","Surgery, Plastic","Veterinary, (specific)","Veterinary, Common Pet","Veterinary, Exotic Pet","Veterinary, Livestock","Veterinary, Wildlife/Zoo"]},{"category":"Miscellaneous","skills":["Childcare","Cleaning","Gaming, (specific)","Gaming, Board Games","Gaming, Card Games","Gaming, Fighting","Gaming, First-Person Shooter","Gaming, Puzzle","Gaming, Racing","Gaming, Rhythm","Gaming, Role-Playing","Gaming, Strategy","Gaming, Tabletop Role-Playing","Geoguessing","Meditation","Navigation, (specific)","Navigation, Air","Navigation, Orienteering","Navigation, Road","Navigation, Sea","Navigation, Space","Operate Vehicle, (specific)","Operate Vehicle, Basic Road Vehicles","Operate Vehicle, Commercial Trucks","Operate Vehicle, Earthmoving Equipment","Operate Vehicle, Helicopters","Operate Vehicle, High-Performance Cars","Operate Vehicle, Light Fixed-Wing Aircraft","Operate Vehicle, Mid-Size Watercraft","Operate Vehicle, Off-Road Vehicles","Operate Vehicle, Passenger Trains","Operate Vehicle, Spacecraft, Crewed","Operate Vehicle, Sport Motorcycles","Operate Vehicle, UAVs","Ropework","Stress Inoculation (SI), (specific)","Stress Inoculation (SI), Confined Spaces","Stress Inoculation (SI), Heights"]},{"category":"Occupational","skills":["Air Traffic Control","Architecture, (specific)","Architecture, Civic","Architecture, Commercial","Architecture, Educational","Architecture, Healthcare","Architecture, Historic Preservation","Architecture, Industrial","Architecture, Residential","Architecture, Sustainable","Auctioneering","Beauty Care, (specific)","Beauty Care, Hairdressing","Beauty Care, Makeup","Beauty Care, Skincare","Carpentry","Electrical","Engineering, (specific)","Engineering, Chemical","Engineering, Civil","Engineering, Electrical","Engineering, Mechanical","Excavation","Firefighting","Glasswork","Gunsmith","HVAC","Interior Design","Jeweler","Landscaping","Librarianship","Locksmith","Masonry","Mechanic, General","Mechanic, Heavy/Industrial","Mechanic, Precision","Metalworking","Metalworking, Blacksmith/Forming","Metalworking, Machining","Metalworking, Smelting","Metalworking, Welding/Joining","Mining","Mortuary Services","Painting, Professional","Rigging","Pest Control","Plumbing","Printing, Professional","Surveying","Teaching","Tool/Machine, Special (specific)","Urban Planning","Zero Gravity"]},{"category":"Outdoors","skills":["Animal Riding, (specific)","Animal Riding, Horses","Animal Riding, Camels","Animal Riding, Elephants","Animal Handling, (specific)","Animal Handling, Dogs","Animal Handling, Cats","Animal Handling, Horses","Animal Handling, Cattle","Animal Handling, Pigs","Animal Handling, Parrots","Animal Handling, Snakes","Animal Handling, Birds of Prey","Conservation","Fishing, (specific)","Fishing, Freshwater","Fishing, Deep Sea","Fishing, Fly","Fishing, Ice","Fishing, Spear","Foraging","Horticulture","Hunting, (specific)","Hunting, Deer","Hunting, Elk","Hunting, Turkey","Hunting, Waterfowl","Hunting, Upland Birds","Hunting, Small Game","Hunting, Predators","Hunting, Wild Boar","Survival","Survival, Aquatic","Survival, Cold","Survival, Desert","Survival, Forest","Survival, Subterranean","Survival, Space","Survival, Urban","Tracking, (specific)","Tracking, Humans","Tracking, White-Tailed Deer","Tracking, Elk","Tracking, Black Bears","Tracking, Mountain Lions","Tracking, Wolves","Trapping","Wildlife Observation, (specific)","Wildlife Observation, Birds","Wildlife Observation, Whale","Wildlife Observation, Reptiles and Amphibians","Wildlife Observation, Butterfly"]},{"category":"Performance","skills":["Acting","Comedy","Contortion","Dance, (specific)","Dance, Ballet","Dance, Breaking","Dance, Contemporary","Dance, Jazz","Dance, Rave Freestyle","Dance, Salsa","Dance, Tango","Dance, Tap","Dance, Waltz","DJing","Engineering, Audio","Filmmaking","Instrument, (specific)","Instrument, Guitar","Instrument, Piano","Instrument, Drum Set","Instrument, Violin","Instrument, Trumpet","Instrument, Saxophone","Instrument, Flute","Instrument, Cello","Magic Tricks","Miming","Music Theory","Puppetry","Singing / Vocal, (specific)","Singing / Vocal, Classical","Singing / Vocal, Country","Singing / Vocal, Freestyle Rap","Singing / Vocal, Gospel","Singing / Vocal, Jazz","Singing / Vocal, Musical Theatre","Singing / Vocal, Pop","Singing / Vocal, R&B/Soul","Singing / Vocal, Rock","Singing / Vocal, Sound Effects","Sound Design","Stage Visual Effects","Stunt Work","Wrestling, Performance"]},{"category":"Science","skills":["Archaeology","Astronomy","Botany","Cartography","Chemistry","Criminology","Cryptology","Data Science","Enigmatology","Forensics","Geography","Geology","Linguistics","Material Science","Meteorology","Metrology","Microbiology","Mycology","Paleontology","Physics","Physics, Classical","Physics, Quantum","Sociology","Zoology","Zoology, Entomology","Zoology, Other Invertebrates","Zoology, Vertebrates"]},{"category":"Technology","skills":["Computers","Computers, Artificial Intelligence","Computers, General Systems","Computers, Hardware","Computers, Networking","Electronics, (specific)","Electronics, Alternative Imaging","Electronics, Audio","Electronics, Communications","Electronics, Control Systems","Electronics, Medical","Electronics, Remote Sensing","Electronics, Repair","Electronics, Scientific","Electronics, Security","Electronics, Video","Hacking/Exploitation","Programming","Programming, Data/Scientific","Programming, Industrial","Programming, Software","Robotics"]}];
 
 
   /* INTERNAL v573 SAFE/Vault OPENING + HEAVY CUTTING PASS — NOT USER-FACING
@@ -13170,6 +13191,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     );
   }
 
+  // v710: compact belt phone holster used by the Tom Mercer built-in template.
+  GEAR_CATALOG.push({
+    id:'gc2949', name:'Cellphone Belt Holster', category:'Bags, Packs & Containers', subcategory:'Pouches & Small Containers',
+    weight:0.20, price:20.0, availability:'Common', colors:['Black','Brown','Gray'], createsLocation:true, locationCapacityPounds:1.0,
+    specs:'Belt-mounted cellphone holster with a dedicated phone compartment and two slim writing-instrument loops · Holds one cellular phone plus up to two pens, pencils, markers, highlighters, or similar slim writing instruments',
+    aliases:['cell phone belt holster','phone belt holster','cellphone holster','phone holster','belt phone pouch'],
+    locationContentRule:'cellphone-belt-holster', wetRetention:'moderate', dirtRetention:'low'
+  });
+
   const GEAR_CATALOG_BY_ID = new Map(GEAR_CATALOG.map(item => [item.id, item]));
   const V672_BLOOD_FAMILY_TO_RESOURCE_ID = Object.freeze({
     'blood-o-negative':'gc2886',
@@ -15372,6 +15402,43 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return state.gearLocations.find(location => isSetDownGearLocation(location)) || defaultGearLocation();
   }
 
+  const CELLPHONE_HOLSTER_PHONE_IDS = new Set(['gc0180','gc0177','gc0178','gc0179','gc2219']);
+  const CELLPHONE_HOLSTER_WRITING_IDS = new Set(['gc0156','gc0157','gc0158','gc0159','gc0160','gc0161','gc0815']);
+
+  function cellphoneHolsterContentRole(item, catalog=catalogForGearInstance(item)) {
+    const catalogId = String(catalog?.id || item?.catalogId || '');
+    if (CELLPHONE_HOLSTER_PHONE_IDS.has(catalogId)) return 'phone';
+    if (CELLPHONE_HOLSTER_WRITING_IDS.has(catalogId)) return 'writing';
+    if (catalogId) return '';
+    const name = String(item?.item || '').trim().toLowerCase();
+    if (/\b(?:cell ?phone|smartphone|feature phone|mobile phone)\b/.test(name)) return 'phone';
+    if (/^(?:pen\b|pencil\b|mechanical pencil\b|permanent marker\b|highlighter\b|stylus\b)/.test(name)) return 'writing';
+    return '';
+  }
+
+  function gearLocationContentRule(location) {
+    const sourceCatalog = location?.sourceCatalogId ? GEAR_CATALOG_BY_ID.get(location.sourceCatalogId) : null;
+    return String(sourceCatalog?.locationContentRule || '');
+  }
+
+  function gearLocationCompatibilityStatus(location, item, catalog=catalogForGearInstance(item)) {
+    if (!location || gearLocationContentRule(location) !== 'cellphone-belt-holster') return {allowed:true, reason:''};
+    const role = cellphoneHolsterContentRole(item, catalog);
+    if (!role) return {allowed:false, reason:'Cellphone Belt Holster accepts only one phone and up to two slim writing instruments.'};
+    const quantity = Math.max(1, Number(item?.quantity) || 1);
+    const contents = state.gear.filter(entry => entry?.locationId === location.id && entry?.id !== item?.id);
+    const phoneCount = contents.reduce((sum, entry) => sum + (cellphoneHolsterContentRole(entry) === 'phone' ? Math.max(1, Number(entry.quantity) || 1) : 0), 0);
+    const writingCount = contents.reduce((sum, entry) => sum + (cellphoneHolsterContentRole(entry) === 'writing' ? Math.max(1, Number(entry.quantity) || 1) : 0), 0);
+    if (role === 'phone' && phoneCount + quantity > 1) return {allowed:false, reason:'Cellphone Belt Holster can hold only one phone.'};
+    if (role === 'writing' && writingCount + quantity > 2) return {allowed:false, reason:'Cellphone Belt Holster can hold at most two writing instruments.'};
+    return {allowed:true, reason:''};
+  }
+
+  function gearLocationAcceptsCatalog(location, catalog, item=null) {
+    const probe = item ? {...item, catalogId:catalog?.id || item.catalogId, item:catalog?.name || item.item} : {id:'', catalogId:catalog?.id || '', item:catalog?.name || '', quantity:1};
+    return gearLocationCompatibilityStatus(location, probe, catalog).allowed;
+  }
+
   function gearLocationIsCarried(location, seenLocationIds=new Set()) {
     if (!location) return true;
     if (isOnPersonGearLocation(location)) return true;
@@ -16621,6 +16688,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       return gearItemQuantity(item);
     }
     item.quantity = stored;
+    const location = state.gearLocations?.find(entry => entry.id === item.locationId);
+    if (location && gearLocationContentRule(location) === 'cellphone-belt-holster') {
+      const role = cellphoneHolsterContentRole(item, catalog);
+      if (role) {
+        const contents = state.gear.filter(entry => entry?.locationId === location.id && entry?.id !== item.id);
+        const used = contents.reduce((sum, entry) => sum + (cellphoneHolsterContentRole(entry) === role ? Math.max(1, Number(entry.quantity) || 1) : 0), 0);
+        const capacity = role === 'phone' ? 1 : 2;
+        item.quantity = Math.max(1, Math.min(Number(stored) || 1, Math.max(1, capacity - used)));
+      }
+    }
     return item.quantity;
   }
 
@@ -24032,10 +24109,24 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     });
   }
 
+  function gearItemUsesSpecificCatalogTemplate(item) {
+    if (!item?.catalogId) return false;
+    const catalog = GEAR_CATALOG_BY_ID.get(item.catalogId);
+    return Boolean(catalog && hasSpecificGearPlaceholder(catalog.name));
+  }
+
   function updateGearItemAutocomplete(input, item) {
-    if (!input || isSectionLocked('gear')) { closeGearItemAutocomplete(); return; }
+    // v707: Once a catalog "(specific)" template has been chosen, its Item field
+    // is a custom-name field, not another catalog search. Keep the template's
+    // catalog metadata while the player replaces "(specific)" with their own text,
+    // and never open Gear-catalog suggestions for that edit.
+    if (!input || isSectionLocked('gear') || gearItemUsesSpecificCatalogTemplate(item)) {
+      closeGearItemAutocomplete();
+      return;
+    }
     const query = input.value.trim();
-    const matches = catalogAutocompleteResults(query);
+    const location = state.gearLocations.find(entry => entry.id === item.locationId);
+    const matches = catalogAutocompleteResults(query).filter(catalog => gearLocationAcceptsCatalog(location, catalog, item));
     if (!query || !matches.length) { closeGearItemAutocomplete(); return; }
     const menu = ensureGearItemAutocompleteMenu();
     activeGearItemAutocompleteInput = input;
@@ -24130,6 +24221,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function bindGearItemAutocomplete(input, item) {
     if (!input || !item) return;
+    if (gearItemUsesSpecificCatalogTemplate(item)) {
+      input.setAttribute('aria-autocomplete', 'none');
+      input.removeAttribute('aria-controls');
+      input.setAttribute('aria-expanded', 'false');
+    }
     input.addEventListener('pointerdown', event => {
       const entering = document.activeElement !== input && hasSpecificGearPlaceholder(input.value);
       if (!entering) return;
@@ -27717,7 +27813,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function closeGearItemActionMenu() {
     const menu = document.getElementById('gearItemActionMenu');
-    if (menu) menu.hidden = true;
+    if (menu) {
+      menu.hidden = true;
+      menu.classList.remove('weapon-supply-menu');
+    }
     if (activeGearItemActionButton) activeGearItemActionButton.setAttribute('aria-expanded', 'false');
     activeGearItemActionId = null;
     activeGearItemActionButton = null;
@@ -27753,13 +27852,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function validGearMoveLocations(item) {
-    return state.gearLocations.filter(location => !gearLocationIsDescendantOfItem(location, item?.id));
+    return state.gearLocations.filter(location =>
+      !gearLocationIsDescendantOfItem(location, item?.id) &&
+      gearLocationCompatibilityStatus(location, item).allowed
+    );
   }
 
   function moveGearItemToLocation(item, locationId) {
     if (!item) return;
     const destination = state.gearLocations.find(location => location.id === locationId);
     if (!destination || destination.id === item.locationId) { closeGearItemActionMenu(); return; }
+    if (!gearLocationCompatibilityStatus(destination, item).allowed) { closeGearItemActionMenu(); return; }
     const owned = ownedGearLocationForItem(item.id);
     if (owned && destination.id === owned.id) return;
     const previousLocationId = item.locationId;
@@ -28130,6 +28233,97 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     requestAnimationFrame(() => positionGearItemActionMenu(activeGearItemActionButton));
   }
 
+  function compatibleAmmunitionCatalogForWeapon(weaponCatalog) {
+    const family = String(weaponCatalog?.ammoFamily || '');
+    if (!family) return [];
+    return GEAR_CATALOG.filter(candidate =>
+      !candidate?.internalOnly && catalogIsAmmunition(candidate) && candidate.ammoFamily === family
+    );
+  }
+
+  function compatibleMagazineCatalogForWeapon(weaponCatalog) {
+    const family = String(weaponCatalog?.magazineFamily || '');
+    if (!family || weaponCatalog?.feedType !== 'detachable-magazine') return [];
+    return GEAR_CATALOG.filter(candidate =>
+      !candidate?.internalOnly && catalogIsMagazine(candidate) && candidate.magazineFamily === family
+    );
+  }
+
+  function ownedCatalogGearQuantity(catalogId) {
+    const id = String(catalogId || '');
+    if (!id) return 0;
+    return (state.gear || []).reduce((total, item) => {
+      if (String(item?.catalogId || '') !== id) return total;
+      return total + Math.max(0, Number(gearItemQuantity(item)) || 0);
+    }, 0);
+  }
+
+  function weaponSupplyCatalogRows(candidates) {
+    return candidates.map(catalog => ({catalog, owned:ownedCatalogGearQuantity(catalog.id)}))
+      .sort((a,b) => {
+        const ownedDelta = Number(b.owned > 0) - Number(a.owned > 0);
+        if (ownedDelta) return ownedDelta;
+        return String(a.catalog?.name || '').localeCompare(String(b.catalog?.name || ''), undefined, {sensitivity:'base', numeric:true});
+      });
+  }
+
+  function weaponSupplyRowMarkup(entry) {
+    const quantity = Math.max(0, Number(entry?.owned) || 0);
+    const ownedText = quantity > 0
+      ? `Owned ×${Number.isInteger(quantity) ? quantity : Number(quantity.toFixed(2))} · Add`
+      : 'Add';
+    return `<button type="button" class="gear-item-action-option weapon-supply-option" data-weapon-supply-catalog="${esc(entry.catalog.id)}" role="menuitem"><span class="weapon-supply-name">${esc(entry.catalog.name)}</span><span class="weapon-supply-status">${esc(ownedText)}</span></button>`;
+  }
+
+  function openBulkGearForCatalogItem(catalogId) {
+    const catalog = GEAR_CATALOG_BY_ID.get(String(catalogId || ''));
+    if (!catalog || catalog.internalOnly || isSectionLocked('gear')) return false;
+    closeGearItemActionMenu();
+    openBulkGear();
+
+    // Hand off to the ordinary Add Gear workflow rather than creating a parallel
+    // inventory path. Narrow to the requested catalog item and preselect it, so
+    // the player can review quantity/price/state and use the normal Add selected.
+    const search = document.getElementById('bulkGearSearch');
+    if (search) search.value = catalog.name;
+    bulkSelectedGear.add(catalog.id);
+    bulkGearQuantities.set(catalog.id, catalogPackageQuantity(catalog));
+    bulkSelectedGearStates.set(catalog.id, defaultBulkGearState());
+    activeBulkGearId = catalog.id;
+    bulkGearPaneMode = 'details';
+    renderBulkGear();
+    renderBulkGearDetail(catalog);
+    updateBulkGearSelectionUi();
+    return true;
+  }
+
+  function renderWeaponAmmoAndMagazineMenu(item) {
+    const menu = document.getElementById('gearItemActionMenu');
+    const weaponCatalog = catalogForGearInstance(item);
+    if (!menu || !item || !catalogIsLoadableWeapon(weaponCatalog)) return;
+
+    const ammo = weaponSupplyCatalogRows(compatibleAmmunitionCatalogForWeapon(weaponCatalog));
+    const magazines = weaponSupplyCatalogRows(compatibleMagazineCatalogForWeapon(weaponCatalog));
+    const ammoRows = ammo.length
+      ? ammo.map(weaponSupplyRowMarkup).join('')
+      : '<div class="gear-item-action-empty">No compatible ammunition is in the Gear catalog.</div>';
+    const magazineSection = weaponCatalog.feedType === 'detachable-magazine'
+      ? `<div class="gear-item-action-section-label">Compatible Magazines</div>${magazines.length ? magazines.map(weaponSupplyRowMarkup).join('') : '<div class="gear-item-action-empty">No compatible magazines are in the Gear catalog.</div>'}`
+      : '';
+
+    menu.classList.add('weapon-supply-menu');
+    menu.innerHTML = `<div class="gear-item-action-heading"><button type="button" class="gear-item-action-back" data-gear-item-action-back aria-label="Back to item actions">‹</button><span>Ammo &amp; Magazines</span></div><div class="gear-item-action-section-label">Compatible Ammunition</div>${ammoRows}${magazineSection}`;
+    menu.querySelector('[data-gear-item-action-back]')?.addEventListener('click', () => {
+      menu.classList.remove('weapon-supply-menu');
+      renderGearItemActionRoot(item);
+      requestAnimationFrame(() => positionGearItemActionMenu(activeGearItemActionButton));
+    });
+    menu.querySelectorAll('[data-weapon-supply-catalog]').forEach(button => button.addEventListener('click', () => {
+      openBulkGearForCatalogItem(button.dataset.weaponSupplyCatalog);
+    }));
+    requestAnimationFrame(() => positionGearItemActionMenu(activeGearItemActionButton));
+  }
+
   function openGearSpecsDialog(label, catalog) {
     const specs = String(catalog?.specs || '').trim();
     if (!specs) return;
@@ -28149,6 +28343,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   function renderGearItemActionRoot(item) {
     const menu = document.getElementById('gearItemActionMenu');
     if (!menu || !item) return;
+    menu.classList.remove('weapon-supply-menu');
     const currentLocation = state.gearLocations.find(location => location.id === item.locationId);
     const itemCatalog = catalogForGearInstance(item);
     const specsAction = String(itemCatalog?.specs || '').trim()
@@ -28193,6 +28388,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const deviceRechargeAction = rechargeableCatalog && gearCanRecharge(item, rechargeableCatalog)
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-device-recharge role="menuitem">Recharge</button>'
       : '';
+    const ammoAndMagazinesAction = catalogIsLoadableWeapon(itemCatalog)
+      ? '<button type="button" class="gear-item-action-option" data-gear-item-action-ammo-magazines role="menuitem"><span>Ammo &amp; Magazines</span><span aria-hidden="true">›</span></button>'
+      : '';
     const unloadAction = canUnloadGearItem(item)
       ? '<button type="button" class="gear-item-action-option" data-gear-item-action-unload role="menuitem">Unload</button>'
       : '';
@@ -28216,6 +28414,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       ${pourOutLiquidAction}
       ${vehicleEnergyAction}
       ${deviceRechargeAction}
+      ${ammoAndMagazinesAction}
       ${unloadAction}
       ${removeBatteriesAction}
       ${removeBatteryPackAction}
@@ -28237,6 +28436,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     menu.querySelector('[data-gear-item-action-pour-out]')?.addEventListener('click', () => pourOutGearItemLiquid(item));
     menu.querySelector('[data-gear-item-action-vehicle-energy]')?.addEventListener('click', () => openVehicleEnergyDialog(item, itemVehicleCatalog));
     menu.querySelector('[data-gear-item-action-device-recharge]')?.addEventListener('click', () => openGearRechargeDialog(item, rechargeableCatalog));
+    menu.querySelector('[data-gear-item-action-ammo-magazines]')?.addEventListener('click', () => renderWeaponAmmoAndMagazineMenu(item));
     menu.querySelector('[data-gear-item-action-unload]')?.addEventListener('click', () => unloadGearItem(item));
     menu.querySelector('[data-gear-item-action-remove-batteries]')?.addEventListener('click', () => removeInstalledBatteries(item));
     menu.querySelector('[data-gear-item-action-remove-battery-pack]')?.addEventListener('click', () => removeInstalledBatteryPack(item));
@@ -32769,6 +32969,115 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     saveNow();
   }
 
+  function loadTomMercerCharacter() {
+    const tom = defaultState();
+    tom.ui.starterSkillsFinished = true;
+    tom.identity = {...tom.identity,
+      player:'', name:'Thomas “Tom” Mercer', sex:'M', age:56, height:'5 ft 11 in', weight:208,
+      skin:'Fair, weathered', hair:'Short brown-gray; grayer at the sides, modestly thinning on top', eyes:'Hazel',
+      voice:'Warm baritone; matter-of-fact', temperament:'Practical, curious, skeptical of confident guesswork',
+      goals:'Solve difficult problems without pretending certainty.',
+      features:'Neatly trimmed full mustache; weathered hands; reading glasses; cellphone belt holster.',
+      vision:'100', hearing:'100', smell:'100'
+    };
+    tom.attributes.body = {
+      'Agility':{current:50,max:50}, 'Beauty':{current:45,max:45}, 'Cardio':{current:60,max:60}, 'Constitution':{current:70,max:70}, 'Coordination':{current:65,max:65}, 'Fine Motor Control':{current:65,max:65}, 'Strength':{current:60,max:60}
+    };
+    tom.attributes.mind = {
+      'Charisma':{current:55,max:55}, 'Creativity':{current:83,max:83}, 'Empathy':{current:55,max:55}, 'Extraversion':{current:50,max:50}, 'Intelligence':{current:92,max:92}, 'Organization':{current:75,max:75}, 'Stability':{current:60,max:60}, 'Will':{current:65,max:65}
+    };
+    tom.skills = [
+      ['Engineering, Structural',90], ['Engineering, Geotechnical',90], ['Physics, Classical',80], ['Mathematics',75], ['Knowledge, Pretzels',75],
+      ['Geology',70], ['Material Science',70], ['Excavation',70], ['Carpentry',65], ['Masonry',65], ['Mechanic, General',65],
+      ['Mining',60], ['Rigging',60], ['Stress Inoculation (SI), Confined Spaces',60],
+      ['Survival, Subterranean',55], ['Surveying',55], ['Metrology',55], ['Mechanic, Heavy/Industrial',55], ['Metalworking, Welding/Joining',55], ['Operate Vehicle, Basic Road Vehicles',55], ['Fishing, Freshwater',55],
+      ['Computers, General Systems',50], ['Electrical',50], ['Cooking',50],
+      ['Plumbing',45], ['Operate Vehicle, Earthmoving Equipment',45], ['Electronics, Communications',45], ['Knowledge, Subterranean Wildlife',45], ['Knowledge, Classic & Alternative Rock',45],
+      ['Operate Vehicle, Off-Road Vehicles',40], ['Instrument, Guitar',40], ['Navigation, Road',40],
+      ['Horticulture',35], ['Gaming, Puzzle',35], ['Language, Spanish',35], ['Medical, Emergency',35], ['Electronics, Repair',35], ['Astronomy',35], ['Knowledge, College Basketball',35],
+      ['Photography',30], ['Swimming',30], ['Knowledge, Midwestern Freshwater Fish',30], ['Knowledge, Amateur Radio',30],
+      ['Singing / Vocal, Rock',25], ['Wildlife Observation, Birds',25], ['Knowledge, Cast-Iron Cookware',25],
+      ['Weapon, Handguns, Revolvers',20],
+      ['Dance, Two-Step',15], ['Gaming, First-Person Shooter',15], ['Knowledge, Bourbon',15],
+      ['Drawing',10], ['Animal Handling, Cats',10], ['Knowledge, Local Railroad History',10], ['Instrument, Piano',5]
+    ].map(([name,level]) => ({id:uid(), name, level:String(level), groupId:''}));
+    while (tom.skills.length < 60) tom.skills.push({id:uid(), name:'', level:'', groupId:''});
+
+    tom.funds = [{id:uid(), type:'cash', name:'Cash', currency:'USD', balance:80, carried:true, wet:false, dirty:false, customUnitWeightPounds:'', isDefault:true}];
+    const onPerson = tom.gearLocations[0];
+    const setDown = tom.gearLocations[1];
+    const phoneHolsterId = uid();
+    const laptopBagId = uid();
+    const walletId = uid();
+    const phoneHolsterLocation = {id:uid(), name:'Cellphone Belt Holster — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:phoneHolsterId, sourceCatalogId:'gc2949', maxWeightPounds:1};
+    const laptopBagLocation = {id:uid(), name:'Laptop Bag, 15-Inch — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:laptopBagId, sourceCatalogId:'gc0112', maxWeightPounds:20};
+    const walletLocation = {id:uid(), name:'Wallet, Bifold — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:walletId, sourceCatalogId:'gc0137', maxWeightPounds:1};
+    tom.gearLocations = [onPerson, setDown, phoneHolsterLocation, laptopBagLocation, walletLocation];
+    tom.gear = [
+      {id:uid(),item:'Underwear',catalogId:'gc0001',color:'Gray',quantity:1,weight:.18,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:'Jeans',catalogId:'gc0038',color:'Blue',quantity:1,weight:1.5,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:'Button-Up Shirt, Casual',catalogId:'gc0015',color:'Blue',quantity:1,weight:.65,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:'Dress Belt',catalogId:'gc2038',color:'Brown',quantity:1,weight:.35,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:'Casual Socks, Pair',catalogId:'gc0054',color:'Gray',quantity:1,weight:.12,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:'Casual Sneakers, Pair',catalogId:'gc0063',color:'Gray',quantity:1,weight:1.6,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:'Softshell Jacket, Lightweight',catalogId:'gc0032',color:'Navy Blue',quantity:1,weight:1.15,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:'Reading Glasses',catalogId:'gc0148',color:'Brown',quantity:1,weight:.08,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:'Wristwatch, Analog',catalogId:'gc0150',color:'Gray',quantity:1,weight:.15,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:phoneHolsterId,item:'Cellphone Belt Holster',catalogId:'gc2949',color:'Brown',quantity:1,weight:.2,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:'Smartphone, Standard',catalogId:'gc0178',color:'Black',quantity:1,weight:.43,condition:'Good',wet:false,dirty:false,locationId:phoneHolsterLocation.id},
+      {id:uid(),item:'Pen, Ballpoint',catalogId:'gc0156',color:'Blue',quantity:1,weight:.02,condition:'Good',wet:false,dirty:false,locationId:phoneHolsterLocation.id},
+      {id:uid(),item:'Mechanical Pencil',catalogId:'gc0159',color:'Gray',quantity:1,weight:.03,condition:'Good',wet:false,dirty:false,locationId:phoneHolsterLocation.id},
+      {id:walletId,item:'Wallet, Bifold',catalogId:'gc0137',color:'Brown',quantity:1,weight:.18,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Driver's License / ID Card",catalogId:'gc0142',quantity:1,weight:.01,condition:'Good',wet:false,dirty:false,locationId:walletLocation.id},
+      {id:uid(),item:'Credit Card',catalogId:'gc0143',quantity:1,weight:.01,condition:'Good',wet:false,dirty:false,locationId:walletLocation.id},
+      {id:uid(),item:'Key Ring',catalogId:'gc0139',color:'Silver',quantity:1,weight:.02,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:laptopBagId,item:'Laptop Bag, 15-Inch',catalogId:'gc0112',color:'Black',quantity:1,weight:1.6,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:'Laptop, Semi-Rugged, 14-Inch',catalogId:'gc0185',color:'Black',quantity:1,weight:4.7,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'Computer Mouse, Wireless',catalogId:'gc1309',color:'Black',quantity:1,weight:.2,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'Notebook, Full-Size',catalogId:'gc0154',color:'Black',quantity:1,weight:.75,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'Pen, Ballpoint',catalogId:'gc0156',color:'Blue',quantity:1,weight:.02,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'USB-C to USB-C Cable, 1 m',catalogId:'gc0232',color:'Black',quantity:1,weight:.07,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'Wall Charger, USB-C, 65 W',catalogId:'gc0230',color:'Black',quantity:1,weight:.25,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'Power Bank, 10,000 mAh',catalogId:'gc0226',color:'Black',quantity:1,weight:.30875,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'Bluetooth Earbuds, Pair',catalogId:'gc0218',color:'Black',quantity:1,weight:.09,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'Pocket Flashlight, Compact',catalogId:'gc0167',color:'Black',quantity:1,weight:.18,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id}
+    ];
+
+    tom.areas = [
+      {id:uid(),ageFrom:0,ageTo:23,location:'Wheeling, West Virginia',level:''},
+      {id:uid(),ageFrom:23,ageTo:29,location:'Morgantown, West Virginia',level:''},
+      {id:uid(),ageFrom:29,ageTo:34,location:'Golden, Colorado',level:''},
+      {id:uid(),ageFrom:34,ageTo:56,location:'Pittsburgh, Pennsylvania',level:''}
+    ];
+    tom.subcultures = [
+      {id:uid(),ageFrom:0,ageTo:18,location:'Ohio Valley Working-Class',involvement:'primary',level:''},
+      {id:uid(),ageFrom:8,ageTo:56,location:'Freshwater Anglers',involvement:'low',level:''},
+      {id:uid(),ageFrom:16,ageTo:56,location:'DIY / Garage Tinkerers',involvement:'medium',level:''},
+      {id:uid(),ageFrom:17,ageTo:29,location:'Construction Trades',involvement:'high',level:''},
+      {id:uid(),ageFrom:18,ageTo:29,location:'Local Rock / Bar-Band Musicians',involvement:'low',level:''},
+      {id:uid(),ageFrom:23,ageTo:29,location:'University Engineering Students',involvement:'medium',level:''},
+      {id:uid(),ageFrom:29,ageTo:34,location:'Graduate Engineering / Research',involvement:'high',level:''},
+      {id:uid(),ageFrom:29,ageTo:56,location:'Professional Civil Engineers',involvement:'high',level:''},
+      {id:uid(),ageFrom:31,ageTo:56,location:'Underground Construction & Tunneling',involvement:'veryHigh',level:''},
+      {id:uid(),ageFrom:32,ageTo:56,location:'Mainline Protestant Church Community',involvement:'low',level:''},
+      {id:uid(),ageFrom:38,ageTo:56,location:'Amateur Radio / Shortwave Operators',involvement:'medium',level:''}
+    ];
+    tom.background.text='Thomas “Tom” Mercer, 56, grew up in Wheeling, West Virginia, and spent his late teens and early twenties working in construction. At 23 he moved to Morgantown to study civil engineering at West Virginia University, earning both his B.S. and M.S. He then moved to Golden, Colorado, where he earned a Ph.D. in Underground Construction and Tunnel Engineering from the Colorado School of Mines.\n\nTom later settled in Pittsburgh and built a career in structural and geotechnical engineering focused on tunnels and other underground structures. His combination of exceptional engineering ability and firsthand construction experience has made him a world-class specialist called in for unusually difficult underground problems.\n\nOutside work, Tom is a longtime freshwater fisherman, guitarist, gardener, home cook, garage tinkerer, and amateur-radio enthusiast. He also belongs to a local mainline Protestant church. Practical and intensely curious, Tom is comfortable admitting when something lies outside his expertise and has little patience for confident guesswork.';
+    tom.background.notes='Education: B.S. and M.S., Civil Engineering — West Virginia University; Ph.D., Underground Construction and Tunnel Engineering — Colorado School of Mines.';
+
+    const tomSkillOrderBeforeSort = tom.skills.map(skill => skill.id);
+    tom.skills.sort((a,b) => (Number(b.level)||-1) - (Number(a.level)||-1) || String(a.name||'').localeCompare(String(b.name||''), undefined, {sensitivity:'base', numeric:true}));
+    state = tom;
+    setActiveLibraryCharacterId(null);
+    skillHeaderSort = {key:'level', direction:'desc'};
+    skillOrderBeforeSort = tomSkillOrderBeforeSort;
+    skillQuickSortNext = {...SKILL_QUICK_SORT_DEFAULTS, level:'asc'};
+    updateSkillQuickSortControls();
+    renderAll();
+    setActiveCharacterBaselineFromCurrent();
+    saveNow();
+  }
+
   async function saveNamedCharacter(saveName, existingId = '') {
     const name = characterSaveDisplayName(saveName);
     if (!name) throw new Error('Enter a save name.');
@@ -32808,7 +33117,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         </div>
         <div class="character-library-actions"><button class="btn primary" data-library-load-demo type="button">Load</button></div>
       </div>`;
-    list.innerHTML = demoRow + '<div class="character-library-empty">Loading local characters…</div>';
+    const tomRow = `
+      <div class="character-library-row demo">
+        <div class="character-library-copy">
+          <div class="character-library-name">Tom Mercer — Template</div>
+          <div class="character-library-meta">Built-in senior underground-engineering template • always available</div>
+        </div>
+        <div class="character-library-actions"><button class="btn primary" data-library-load-tom type="button">Load</button></div>
+      </div>`;
+    const builtInRows = demoRow + tomRow;
+    list.innerHTML = builtInRows + '<div class="character-library-empty">Loading local characters…</div>';
     try {
       const records = await listLocalCharacters();
       const savedRows = records.map(record => {
@@ -32838,10 +33156,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
             </div>
           </div>`;
       }).join('');
-      list.innerHTML = demoRow + savedRows;
+      list.innerHTML = builtInRows + savedRows;
     } catch (error) {
       console.error(error);
-      list.innerHTML = demoRow + '<div class="character-library-empty">Named local saves are unavailable in this browser. Import and Export still work.</div>';
+      list.innerHTML = builtInRows + '<div class="character-library-empty">Named local saves are unavailable in this browser. Import and Export still work.</div>';
     }
   }
 
@@ -32979,6 +33297,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (pending.type === 'demo') {
       loadDemoCharacter();
       setLocalSaveStatus('Loaded Morgan Vale — Demo');
+    } else if (pending.type === 'tom') {
+      loadTomMercerCharacter();
+      setLocalSaveStatus('Loaded Tom Mercer — Template');
     } else if (pending.type === 'saved') {
       await loadNamedCharacter(pending.id);
     }
@@ -32989,7 +33310,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     document.getElementById('characterLoadDialog')?.close();
     const saveStatus = await currentNamedSaveStatus();
     if (saveStatus.hasUnsavedChanges) {
-      const label = loadRequest.type === 'demo' ? 'Morgan Vale — Demo' : (loadRequest.name || 'the selected character');
+      const label = loadRequest.name || (loadRequest.type === 'demo' ? 'Morgan Vale — Demo' : loadRequest.type === 'tom' ? 'Tom Mercer — Template' : 'the selected character');
       const currentSaveName = characterSaveDisplayName(saveStatus.record?.name);
       document.getElementById('characterLoadConfirmText').textContent = saveStatus.hasNamedSave
         ? `Load “${label}”? The current character has changes that have not been saved to “${currentSaveName || 'its local save'}”. Save those changes first or load without saving.`
@@ -33055,6 +33376,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!button) return;
     if (button.hasAttribute('data-library-load-demo')) {
       requestCharacterLoad({type:'demo', name:'Morgan Vale — Demo'});
+      return;
+    }
+    if (button.hasAttribute('data-library-load-tom')) {
+      requestCharacterLoad({type:'tom', name:'Tom Mercer — Template'});
       return;
     }
     const loadId = button.dataset.libraryLoad;
@@ -33482,6 +33807,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Restores the tablet Gear … actions gutter to the normal 48 px width with 10 px side padding around the 28 px control.
      - The Gear Item column remains flexible and gives up the reclaimed 12 px instead; Condition stays at 112 px and the no-horizontal-scroll tablet fit work remains otherwise unchanged.
   */
+
+  /* INTERNAL v710 TOM MERCER TEMPLATE + PHONE HOLSTER — NOT USER-FACING
+     - Adds Survival, Subterranean to Outdoors skills.
+     - Adds Cellphone Belt Holster (gc2949), a dedicated carried container restricted to one cellular phone plus up to two slim writing instruments.
+     - Adds Tom Mercer as a second always-available built-in character template with finalized attributes, skills, Areas/Subcultures, concise biography, appearance, and non-expedition day-meeting gear.
+     - Tom's Structural and Geotechnical Engineering are 90 (World Class Expert); Physics is 80; Mathematics and Knowledge, Pretzels are 75.
+  */
 </script>
 
   <!-- INTERNAL v690 NUMERIC HEADER CENTERING — NOT USER-FACING
@@ -33595,5 +33927,20 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - At 641–1024 px portrait viewports, Background switches from two columns to one.
      - Areas/Subcultures therefore get the full available width, and Character Background + Notes flow underneath.
      - Landscape tablet retains the existing two-column layout. -->
+
+<!-- INTERNAL v707 SPECIFIC-GEAR CUSTOM ENTRY — NOT USER-FACING
+     - Catalog Gear items whose canonical template contains “(specific)” now treat
+       the Item field as strictly custom once that template has been selected.
+     - Typing the replacement text no longer opens the Gear-catalog autocomplete,
+       including via ArrowDown; the original catalogId/metadata remain attached.
+     - Specific-template inputs also expose aria-autocomplete="none" while editing. -->
+
+<!-- INTERNAL v708 WEAPON-CENTRIC AMMO / MAGAZINE DISCOVERY — NOT USER-FACING
+     - Loadable weapons now expose … > Ammo & Magazines.
+     - The submenu derives exact compatible ammunition from ammoFamily and detachable magazines from magazineFamily; caliber alone never implies physical magazine compatibility.
+     - Compatible catalog items are shown with owned items first and aggregate owned quantities (including loaded/embedded stock).
+     - Selecting any compatible item hands off to the ordinary Bulk Add Gear dialog, narrowed to and preselecting that catalog item, so adding more uses the existing quantity/price/state/charge workflow.
+     - Internal/tube/cylinder-fed weapons show ammunition only; detachable-magazine weapons also show compatible magazines.
+     - The contextual browser uses a wider scrollable action menu for long ammunition/magazine names and returns to normal menu width when closed/backed out. -->
 </body>
 </html>
