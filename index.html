@@ -9858,6 +9858,77 @@
     }
 
 </style>
+
+<style id="v713-clothing-collapse-styles">
+  #gear .gear-clothing-group-row td {
+    padding:0 !important;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    background:color-mix(in srgb, var(--panel-2) 72%, transparent);
+  }
+  #gear .gear-clothing-toggle {
+    width:100%;
+    min-height:32px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:6px 10px;
+    border:0;
+    background:transparent;
+    color:var(--text);
+    font:inherit;
+    font-size:11px;
+    font-weight:850;
+    text-align:left;
+    cursor:pointer;
+  }
+  #gear .gear-clothing-chevron {
+    width:14px;
+    flex:0 0 14px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+    line-height:1;
+  }
+  #gear .gear-clothing-summary {
+    margin-left:auto;
+    color:var(--muted);
+    font-size:10px;
+    font-weight:750;
+    white-space:nowrap;
+  }
+  #gear .gear-row.gear-clothing-collapsed-row { display:none !important; }
+  @media (max-width:600px) {
+    #gear .gear-table tr.gear-clothing-group-row {
+      display:block !important;
+      width:100%;
+      padding:0;
+      border:0;
+      background:transparent;
+    }
+    #gear .gear-table tr.gear-clothing-group-row td {
+      display:block !important;
+      width:100% !important;
+      padding:0 !important;
+      border:0 !important;
+      background:transparent;
+    }
+    #gear .gear-table tr.gear-clothing-group-row td::before { content:none !important; }
+    #gear .gear-clothing-toggle {
+      min-height:38px;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:var(--panel-2);
+    }
+    #gear .gear-clothing-summary { font-size:9px; }
+  }
+  @media print {
+    #gear .gear-clothing-group-row { display:none !important; }
+    #gear .gear-row.gear-clothing-collapsed-row { display:table-row !important; }
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -10121,7 +10192,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v712</div>
+<div class="footer-note no-print">Character Sheet v713</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -20509,9 +20580,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const runtimeTitle = Number.isFinite(fullRuntime)
       ? `Estimated remaining active runtime from representative ${formatBatteryRuntimeHours(fullRuntime)} full-charge rating${basis ? `; basis: ${basis}` : ''}${reference ? `; reference class: ${reference}` : ''}. Standby drain is not modeled.`
       : `Stored charge${basis ? `; ${basis}` : '; runtime depends on connected load'}.`;
-    const runtimeChip = Number.isFinite(runtime)
-      ? `<span class="device-runtime-chip" data-device-runtime-output title="${esc(runtimeTitle)}">⏱ ${esc(formatBatteryRuntimeHours(runtime))}</span>`
-      : '';
+    const runtimeChip = catalog.category === 'Electronics & Communications'
+      ? ''
+      : Number.isFinite(runtime)
+        ? `<span class="device-runtime-chip" data-device-runtime-output title="${esc(runtimeTitle)}">⏱ ${esc(formatBatteryRuntimeHours(runtime))}</span>`
+        : '';
     const canTimedUse = Number.isFinite(fullRuntime) && fullRuntime > 0 && Number.isFinite(runtime) && runtime >= 1 / 60 && value > 1e-9;
     const canStoredChargeUse = catalog.manualBatteryDrain === true && value > 1e-9;
     const useButton = canTimedUse || canStoredChargeUse
@@ -20762,11 +20835,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       : full && condition === 'untested'
         ? `Remaining runtime is unknown because at least one installed ${type} ${chemistry} battery is untested. Record a coarse Dead / Low / Medium / Fresh state after testing; no percentage is inferred.`
         : `Install all ${required} compatible ${type} ${chemistry} ${required === 1 ? 'battery' : 'batteries'} to estimate remaining runtime.`;
-    const runtimeChip = runtime
-      ? `<span class="device-runtime-chip" title="${esc(runtimeTitle)}">⏱ ${esc(condition === 'dead' ? '0 usable' : runtimeText)}</span>`
-      : full && condition === 'untested'
-        ? `<span class="device-runtime-chip" title="${esc(runtimeTitle)}">⏱ Unknown</span>`
-        : '';
+    const runtimeChip = catalog.category === 'Electronics & Communications'
+      ? ''
+      : runtime
+        ? `<span class="device-runtime-chip" title="${esc(runtimeTitle)}">⏱ ${esc(condition === 'dead' ? '0 usable' : runtimeText)}</span>`
+        : full && condition === 'untested'
+          ? `<span class="device-runtime-chip" title="${esc(runtimeTitle)}">⏱ Unknown</span>`
+          : '';
     const controls = full
       ? `<button type="button" class="vehicle-energy-button" data-primary-device-step="-1" aria-label="Lower installed battery state"${condition === 'untested' || (condition === 'dead' && counts.dead === installed) ? ' disabled aria-disabled="true"' : ''}>−</button><span aria-hidden="true">🔋</span><span class="primary-battery-state-label">${esc(label)}</span><button type="button" class="vehicle-energy-button" data-primary-device-step="1" aria-label="Raise installed battery state"${condition === 'untested' || (condition === 'fresh' && counts.fresh === installed) ? ' disabled aria-disabled="true"' : ''}>+</button>`
       : `<span aria-hidden="true">🔋</span><span class="primary-battery-state-label">${esc(label)}</span>`;
@@ -28602,7 +28677,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         <th class="no-print delete-cell"></th>
       </tr></thead>`;
 
-    const rowMarkup = (g, location, draft=false) => {
+    const rowMarkup = (g, location, draft=false, extraClass='') => {
       const loadedBreakdown = draft ? null : gearItemLoadedWeightBreakdownPounds(g);
       const displayedWeight = formatGearWeight(draft ? g.weight : loadedBreakdown.loadedEach, weightUnit);
       const catalogItem = draft ? null : catalogForGearInstance(g);
@@ -28656,7 +28731,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         : `data-input-step data-step-amount="${esc(quantityStep)}" data-step-direction="-1"`;
 
       return `
-      <tr class="gear-row ${draft ? 'gear-draft-row no-print section-edit-only' : ''}${embeddedDepth ? ' gear-embedded-row' : ''} ${!draft && !String(g.item || '').trim() && !String(g.weight || '').trim() && !g.wet && !g.dirty ? 'print-empty' : ''}" ${rowAttributes}${embeddedDepth ? ` style="--gear-embedded-depth:${embeddedDepth}" data-embedded-parent-id="${esc(g.embeddedInGearId || '')}"` : ''}>
+      <tr class="gear-row${extraClass ? ` ${extraClass}` : ''} ${draft ? 'gear-draft-row no-print section-edit-only' : ''}${embeddedDepth ? ' gear-embedded-row' : ''} ${!draft && !String(g.item || '').trim() && !String(g.weight || '').trim() && !g.wet && !g.dirty ? 'print-empty' : ''}" ${rowAttributes}${embeddedDepth ? ` style="--gear-embedded-depth:${embeddedDepth}" data-embedded-parent-id="${esc(g.embeddedInGearId || '')}"` : ''}>
         <td class="gear-item-col"${itemSpecsTitle ? ` title="${esc(itemSpecsTitle)}"` : ''}><div class="gear-item-input-wrap${liveStatus ? ' vehicle-item-input-wrap' : ''}">${dragControl}<div class="gear-item-name-highlight-wrap ${!draft && hasSpecificGearPlaceholder(g.item) ? 'has-specific-placeholder' : ''}"><div class="gear-item-name-highlight" aria-hidden="true"><span class="gear-item-name-highlight-content">${specificGearNameMarkup(g.item)}</span></div><input value="${esc(g.item)}" data-field="item" placeholder="${draft ? 'Add item…' : 'Item'}" autocomplete="off" aria-autocomplete="list" aria-controls="gearItemAutocompleteMenu" aria-expanded="false"${itemSpecsTitle ? ` title="${esc(itemSpecsTitle)}"` : ''}></div>${liveStatus}<span class="gear-print-value print-only">${esc(g.item || '')}</span></div></td>
         <td class="gear-color-cell">${gearColorSelectMarkup(g, draft)}<span class="gear-print-value print-only">${esc(g.color || '')}</span></td>
         <td class="gear-quantity-cell"><div class="gear-quantity-with-unit"><div class="numeric-stepper gear-numeric-stepper"><input type="number" min="0.01" max="9999.99" step="0.01" inputmode="decimal" value="${esc(quantityDisplayValue)}" data-field="quantity" aria-label="Quantity${quantityUnitLabel ? ` (${quantityUnitLabel})` : ''}"><div class="numeric-stepper-buttons no-print"><button class="numeric-stepper-button" type="button" ${quantityUpAttrs} aria-label="Increase quantity">▲</button><button class="numeric-stepper-button" type="button" ${quantityDownAttrs} aria-label="Decrease quantity">▼</button></div></div>${quantityUnitLabel ? (waterUnitToggle ? `<button type="button" class="gear-quantity-unit gear-liquid-unit-toggle no-print" data-liquid-gear-unit-toggle="${esc(g.id)}" aria-label="Switch water quantity between liters and US gallons" title="Switch between liters and US gallons">${esc(quantityUnitLabel)}</button>` : `<span class="gear-quantity-unit no-print">${esc(quantityUnitLabel)}</span>`) : ''}</div><span class="gear-print-value print-only">${esc(quantityDisplayValue)}${quantityUnitLabel ? ` ${esc(quantityUnitLabel)}` : ''}</span></td>
@@ -28668,10 +28743,22 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       </tr>`;
     };
 
-    const itemTreeMarkup = (item, location) => rowMarkup(item, location);
+    const itemTreeMarkup = (item, location, extraClass='') => rowMarkup(item, location, false, extraClass);
+    const isClothingItem = item => catalogForGearInstance(item)?.category === 'Clothing & Footwear';
 
     body.innerHTML = state.gearLocations.map(location => {
       const items = gearItemsForLocation(location.id);
+      const onPersonLocation = isOnPersonGearLocation(location);
+      const clothingItems = onPersonLocation ? items.filter(isClothingItem) : [];
+      const nonClothingItems = onPersonLocation ? items.filter(item => !isClothingItem(item)) : items;
+      const clothingCollapsed = onPersonLocation && Boolean(location.clothingCollapsed);
+      const clothingWeightPounds = clothingItems.reduce((sum, item) => sum + gearItemLoadedTotalPounds(item), 0);
+      const clothingGroupMarkup = clothingItems.length
+        ? `<tr class="gear-clothing-group-row no-print"><td colspan="8"><button type="button" class="gear-clothing-toggle" data-toggle-clothing aria-expanded="${clothingCollapsed ? 'false' : 'true'}" aria-label="${clothingCollapsed ? 'Expand' : 'Collapse'} clothing in On Person"><span class="gear-clothing-chevron" aria-hidden="true">${clothingCollapsed ? '+' : '−'}</span><span>Clothing</span><span class="gear-clothing-summary">${clothingItems.length} item${clothingItems.length === 1 ? '' : 's'} · ${esc(formatGearWeight(clothingWeightPounds, weightUnit))} ${esc(weightUnit)}</span></button></td></tr>`
+        : '';
+      const itemRowsMarkup = onPersonLocation
+        ? `${clothingGroupMarkup}${clothingItems.map(item => itemTreeMarkup(item, location, `gear-clothing-row${clothingCollapsed ? ' gear-clothing-collapsed-row' : ''}`)).join('')}${nonClothingItems.map(item => itemTreeMarkup(item, location)).join('')}`
+        : items.map(item => itemTreeMarkup(item, location)).join('');
       const draft = createGearItem(location.id);
       const systemLocation = isOnPersonGearLocation(location) || isSetDownGearLocation(location);
       const locationVehicleCatalog = vehicleCatalogForLocation(location);
@@ -28745,7 +28832,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
             <table class="data-table gear-table">
               ${tableHeaderMarkup(location.id)}
               <tbody data-location-body="${location.id}">
-                ${items.map(item => itemTreeMarkup(item, location)).join('')}
+                ${itemRowsMarkup}
                 ${rowMarkup(draft, location, true)}
               </tbody>
             </table>
@@ -28779,6 +28866,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     body.querySelectorAll('.gear-location-group').forEach(group => {
       const location = gearLocationById(group.dataset.locationId);
       const locationVehicleCatalog = vehicleCatalogForLocation(location);
+      group.querySelector('[data-toggle-clothing]')?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        location.clothingCollapsed = !Boolean(location.clothingCollapsed);
+        renderGear();
+        queueSave();
+      });
       group.querySelector('[data-vehicle-location-color]')?.addEventListener('change', event => { location.vehicleColor = event.currentTarget.value; queueSave(); });
       const vehicleConditionInput = group.querySelector('[data-vehicle-location-condition]');
       const vehicleConditionToggle = group.querySelector('[data-vehicle-location-condition-toggle]');
@@ -33037,18 +33131,18 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     };
     tom.skills = [
       ['Engineering, Structural',85], ['Engineering, Geotechnical',85], ['Physics, Classical',80], ['Mathematics',75], ['Knowledge, Pretzels',75],
-      ['Geology',70], ['Material Science',70], ['Excavation',70], ['Carpentry',65], ['Masonry',65], ['Mechanic, General',65], ['Writing, Technical',65],
+      ['Geology',70], ['Material Science',70], ['Excavation',70], ['Carpentry',65], ['Masonry',65], ['Mechanic, General',65], ['Writing, Technical',70],
       ['Mining',60], ['Rigging',60], ['Stress Inoculation (SI), Confined Spaces',60],
       ['Survival, Subterranean',55], ['Surveying',55], ['Metrology',55], ['Mechanic, Heavy/Industrial',55], ['Metalworking, Welding/Joining',55], ['Operate Vehicle, Basic Road Vehicles',55], ['Fishing, Freshwater',55],
       ['Computers, General Systems',50], ['Electrical',50], ['Cooking',50], ['Business Management, Construction',50],
-      ['Plumbing',45], ['Operate Vehicle, Earthmoving Equipment',45], ['Electronics, Communications',45], ['Knowledge, Subterranean Wildlife',45], ['Knowledge, Classic & Alternative Rock',45], ['Architecture, Tunnels',45], ['Teaching',45], ['Caving',45],
+      ['Plumbing',45], ['Operate Vehicle, Earthmoving Equipment',45], ['Electronics, Communications',45], ['Knowledge, Subterranean Wildlife',45], ['Knowledge, Classic & Alternative Rock',45], ['Architecture, Tunnels',45], ['Teaching',45], ['Caving',50],
       ['Operate Vehicle, Off-Road Vehicles',40], ['Instrument, Guitar',40], ['Navigation, Road',40], ['Bureaucracy',40],
       ['Horticulture',35], ['Gaming, Puzzle',35], ['Language, Spanish',35], ['Medical, Emergency',35], ['Electronics, Repair',35], ['Astronomy',35], ['Knowledge, College Basketball',35], ['Architecture, Historic Preservation',35],
-      ['Photography',30], ['Swimming',30], ['Knowledge, Midwestern Freshwater Fish',30], ['Knowledge, Amateur Radio',30], ['Religion, Christianity',30], ['Logistics',30], ['History, Military',30],
+      ['Photography',30], ['Swimming',30], ['Knowledge, Midwestern Freshwater Fish',30], ['Knowledge, Amateur Radio',30], ['Religion, Christianity',35], ['Logistics',30], ['History, Military',30],
       ['Singing / Vocal, Rock',25], ['Wildlife Observation, Birds',25], ['Knowledge, Cast-Iron Cookware',25], ['HVAC',25], ['History, Medieval',25],
-      ['Weapon, Handguns, Revolvers',20], ['Sport, Basketball',20], ['Accounting',20], ['Locksmith',20], ['Magic Tricks',20],
-      ['Dance, Two-Step',15], ['Gaming, First-Person Shooter',15], ['Knowledge, Bourbon',15], ['Pest Control',15],
-      ['Drawing',10], ['Animal Handling, Cats',10], ['Knowledge, Local Railroad History',10],
+      ['Weapon, Handguns, Revolvers',20], ['Sport, Basketball',20], ['Accounting',20], ['Locksmith',20], ['Magic Tricks',25],
+      ['Dance, Two-Step',15], ['Gaming, First-Person Shooter',15], ['Knowledge, Bourbon',15], ['Pest Control',20],
+      ['Drawing',10], ['Animal Handling, Cats',70], ['Knowledge, Local Railroad History',10],
       ['Gaming, Card Games',35], ['Electronics, Audio',35], ['Knowledge, Local Diners',35], ['Cleaning',30], ['Knowledge, Weather Folklore',25], ['Animal Handling, Dogs',20],
       ['Instrument, Piano',5], ['Operate Vehicle, Light Fixed-Wing Aircraft',5]
     ].map(([name,level]) => ({id:uid(), name, level:String(level), groupId:''}));
@@ -33060,6 +33154,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const phoneHolsterId = uid();
     const laptopBagId = uid();
     const walletId = uid();
+    const mouseId = uid();
+    const flashlightId = uid();
     const phoneHolsterLocation = {id:uid(), name:'Cellphone Belt Holster — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:phoneHolsterId, sourceCatalogId:'gc2949', maxWeightPounds:1};
     const laptopBagLocation = {id:uid(), name:'Laptop Bag, 15-Inch — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:laptopBagId, sourceCatalogId:'gc0112', maxWeightPounds:20};
     const walletLocation = {id:uid(), name:'Wallet, Bifold — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:walletId, sourceCatalogId:'gc0137', maxWeightPounds:1};
@@ -33071,27 +33167,30 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),item:'Dress Belt',catalogId:'gc2038',color:'Brown',quantity:1,weight:.35,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
       {id:uid(),item:'Casual Socks, Pair',catalogId:'gc0054',color:'Gray',quantity:1,weight:.12,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
       {id:uid(),item:'Casual Sneakers, Pair',catalogId:'gc0063',color:'Gray',quantity:1,weight:1.6,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
-      {id:uid(),item:'Softshell Jacket, Lightweight',catalogId:'gc0032',color:'Navy Blue',quantity:1,weight:1.15,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
       {id:uid(),item:'Reading Glasses',catalogId:'gc0148',color:'Brown',quantity:1,weight:.08,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
       {id:uid(),item:'Wristwatch, Analog',catalogId:'gc0150',color:'Gray',quantity:1,weight:.15,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
       {id:phoneHolsterId,item:'Cellphone Belt Holster',catalogId:'gc2949',color:'Brown',quantity:1,weight:.2,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
       {id:uid(),item:'Smartphone, Standard',catalogId:'gc0178',color:'Black',quantity:1,weight:.43,condition:'Good',wet:false,dirty:false,locationId:phoneHolsterLocation.id},
       {id:uid(),item:'Pen, Ballpoint',catalogId:'gc0156',color:'Blue',quantity:1,weight:.02,condition:'Good',wet:false,dirty:false,locationId:phoneHolsterLocation.id},
       {id:uid(),item:'Mechanical Pencil',catalogId:'gc0159',color:'Gray',quantity:1,weight:.03,condition:'Good',wet:false,dirty:false,locationId:phoneHolsterLocation.id},
-      {id:walletId,item:'Wallet, Bifold',catalogId:'gc0137',color:'Brown',quantity:1,weight:.18,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
+      {id:walletId,item:'Wallet, Bifold',catalogId:'gc0137',color:'Brown',quantity:1,weight:.18,condition:'Serviceable',wet:false,dirty:false,locationId:onPerson.id},
       {id:uid(),item:"Driver's License / ID Card",catalogId:'gc0142',quantity:1,weight:.01,condition:'Good',wet:false,dirty:false,locationId:walletLocation.id},
       {id:uid(),item:'Credit Card',catalogId:'gc0143',quantity:1,weight:.01,condition:'Good',wet:false,dirty:false,locationId:walletLocation.id},
       {id:uid(),item:'Key Ring',catalogId:'gc0139',color:'Silver',quantity:1,weight:.02,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
       {id:laptopBagId,item:'Laptop Bag, 15-Inch',catalogId:'gc0112',color:'Black',quantity:1,weight:1.6,condition:'Good',wet:false,dirty:false,locationId:onPerson.id},
       {id:uid(),item:'Laptop, Semi-Rugged, 14-Inch',catalogId:'gc0185',color:'Black',quantity:1,weight:4.7,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
-      {id:uid(),item:'Computer Mouse, Wireless',catalogId:'gc1309',color:'Black',quantity:1,weight:.2,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:mouseId,item:'Computer Mouse, Wireless',catalogId:'gc1309',color:'Black',quantity:1,weight:.2,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'AA Battery, Alkaline',catalogId:'gc0236',color:'Multicolor',quantity:1,weight:.052,condition:'New',wet:false,dirty:false,locationId:laptopBagLocation.id,embeddedInGearId:mouseId,primaryBatteryState:{condition:'fresh',actualCondition:'fresh'}},
       {id:uid(),item:'Notebook, Full-Size',catalogId:'gc0154',color:'Black',quantity:1,weight:.75,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
-      {id:uid(),item:'Pen, Ballpoint',catalogId:'gc0156',color:'Blue',quantity:1,weight:.02,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'Pen, Ballpoint',catalogId:'gc0156',color:'Blue',quantity:1,weight:.02,condition:'New',wet:false,dirty:false,locationId:laptopBagLocation.id},
       {id:uid(),item:'USB-C to USB-C Cable, 1 m',catalogId:'gc0232',color:'Black',quantity:1,weight:.07,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
       {id:uid(),item:'Wall Charger, USB-C, 65 W',catalogId:'gc0230',color:'Black',quantity:1,weight:.25,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
       {id:uid(),item:'Power Bank, 10,000 mAh',catalogId:'gc0226',color:'Black',quantity:1,weight:.30875,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
       {id:uid(),item:'Bluetooth Earbuds, Pair',catalogId:'gc0218',color:'Black',quantity:1,weight:.09,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
-      {id:uid(),item:'Pocket Flashlight, Compact',catalogId:'gc0167',color:'Black',quantity:1,weight:.18,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id}
+      {id:uid(),item:'Bottled Water, 16.9 oz',catalogId:'gc1280',color:'Clear',quantity:1,weight:1.1,condition:'New',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'Tape Measure, 25 ft',catalogId:'gc0287',color:'Yellow',quantity:1,weight:1.0,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:flashlightId,item:'Pocket Flashlight, Compact',catalogId:'gc0167',color:'Black',quantity:1,weight:.18,condition:'Good',wet:false,dirty:false,locationId:laptopBagLocation.id},
+      {id:uid(),item:'AA Battery, Alkaline',catalogId:'gc0236',color:'Multicolor',quantity:1,weight:.052,condition:'New',wet:false,dirty:false,locationId:laptopBagLocation.id,embeddedInGearId:flashlightId,primaryBatteryState:{condition:'fresh',actualCondition:'fresh'}}
     ];
 
     tom.areas = [
@@ -33859,6 +33958,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - The Gear Item column remains flexible and gives up the reclaimed 12 px instead; Condition stays at 112 px and the no-horizontal-scroll tablet fit work remains otherwise unchanged.
   */
 
+
+
+  /* INTERNAL v713 TOM MERCER GEAR / SKILL POLISH + ELECTRONICS STATUS + ON-PERSON CLOTHING COLLAPSE — NOT USER-FACING
+     - Tom: Animal Handling, Cats 70. Remaining starter XP is used exactly by raising Writing, Technical to 70; Caving to 50; Religion, Christianity to 35; Magic Tricks to 25; and Pest Control to 20, for 341.75 / 341.75 XP spent.
+     - Tom's wallet is Serviceable; his jacket is removed; the laptop-bag pen is New; Bottled Water 16.9 oz and a 25 ft tape measure are added to the laptop bag.
+     - Tom's wireless mouse and pocket flashlight each start with one fresh AA alkaline battery installed as embedded Gear.
+     - Electronics & Communications Gear no longer shows remaining-runtime chips on the Gear tab. Rechargeable electronics retain battery percentage and Use actions; replaceable-primary-battery electronics retain their coarse battery state without a runtime estimate.
+     - On Person now groups catalog Clothing & Footwear under a compact Clothing subheader with item count and subtotal weight. The group can be collapsed/expanded independently of the On Person location, persists with the character state, and always prints expanded. */
 
   /* INTERNAL v712 TOM MERCER FLOATED-LIFE SKILLS + PHONE SKILL COMPACTION — NOT USER-FACING
      - Tom's Structural and Geotechnical Engineering are reduced from 90 to 85, freeing starter XP while retaining elite specialist proficiency.
