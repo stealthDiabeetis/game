@@ -10221,7 +10221,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v728</div>
+<div class="footer-note no-print">Character Sheet v731</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -33343,7 +33343,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),ageFrom:32,ageTo:56,location:'Mainline Protestant Church Community',involvement:'low',level:''},
       {id:uid(),ageFrom:38,ageTo:56,location:'Amateur Radio / Shortwave Operators',involvement:'medium',level:''}
     ];
-    tom.background.text='Thomas “Tom” Mercer, 56, grew up in Wheeling, West Virginia, and spent his late teens and early twenties working in construction. At 23 he moved to Morgantown to study civil engineering at West Virginia University, earning both his B.S. and M.S. He then moved to Golden, Colorado, where he earned a Ph.D. in Underground Construction and Tunnel Engineering from the Colorado School of Mines.\n\nTom later settled in Pittsburgh and built a career in structural and geotechnical engineering focused on tunnels and other underground structures. His combination of exceptional engineering ability and firsthand construction experience has made him a world-class specialist called in for unusually difficult underground problems.\n\nAt home, Tom lives with his lovely wife, Nancy; their two adult children are out of the home. Outside work, he is a longtime freshwater fisherman, guitarist, gardener, home cook, garage tinkerer, and amateur-radio enthusiast. He also belongs to a local mainline Protestant church. Humble and easy-going, Tom is always good for a corny joke and is comfortable admitting when something lies outside his expertise.';
+    tom.background.text='Thomas “Tom” Mercer, 56, grew up in Wheeling, West Virginia, and spent his late teens and early twenties working in construction. At 23 he moved to Morgantown to study civil engineering at West Virginia University, earning both his B.S. and M.S. He then moved to Golden, Colorado, where he earned a Ph.D. in Underground Construction and Tunnel Engineering from the Colorado School of Mines.\n\nTom later settled in Pittsburgh and built a career in structural and geotechnical engineering focused on tunnels and other underground structures. His combination of exceptional engineering ability and firsthand construction experience has made him a world-class specialist called in for unusually difficult underground problems.\n\nAt home, Tom lives with his lovely wife, Nancy; their two adult children are out of the home. Outside work, he is a longtime freshwater fisherman, guitarist, gardener, home cook, garage tinkerer, and amateur-radio enthusiast. He also belongs to a local mainline Protestant church. Humble and easy-going, Tom is comfortable admitting when something lies outside his expertise and is always good for a corny joke.';
     tom.background.notes='';
 
     const tomSkillOrderBeforeSort = tom.skills.map(skill => skill.id);
@@ -33450,13 +33450,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const onPerson = gareth.gearLocations[0];
     const setDown = gareth.gearLocations[1];
     const walletId = uid();
+    const keyRingId = uid();
     const satchelId = uid();
     const firstAidPouchId = uid();
     const waterBottleId = uid();
     const walletLocation = {id:uid(), name:'Wallet, Bifold — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:walletId, sourceCatalogId:'gc0137', maxWeightPounds:1};
+    const keyRingLocation = {id:uid(), name:'Key Ring — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:keyRingId, sourceCatalogId:'gc0139', maxWeightPounds:1};
     const satchelLocation = {id:uid(), name:'Canvas Field Satchel, 15 L — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:satchelId, sourceCatalogId:'gc0111', maxWeightPounds:20};
     const firstAidLocation = {id:uid(), name:'First Aid Pouch, 1 L — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:firstAidPouchId, sourceCatalogId:'gc0127', maxWeightPounds:3};
-    gareth.gearLocations = [onPerson, setDown, walletLocation, satchelLocation, firstAidLocation];
+    gareth.gearLocations = [onPerson, setDown, walletLocation, keyRingLocation, satchelLocation, firstAidLocation];
     gareth.gear = [
       {id:uid(),item:"Underwear",catalogId:"gc0001",color:"Gray",quantity:1,weight:0.18,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
       {id:uid(),item:"Hiking Shorts, Lightweight",catalogId:"gc0042",color:"Tan",quantity:1,weight:0.4,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
@@ -33470,7 +33472,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:walletId,item:'Wallet, Bifold',catalogId:'gc0137',color:'Brown',quantity:1,weight:.18,condition:'Serviceable',wet:false,dirty:false,locationId:onPerson.id},
       {id:uid(),item:"Driver's License / ID Card",catalogId:"gc0142",quantity:1,weight:0.01,condition:"Good",wet:false,dirty:false,locationId:walletLocation.id},
       {id:uid(),item:"Credit Card",catalogId:"gc0143",quantity:1,weight:0.01,condition:"Good",wet:false,dirty:false,locationId:walletLocation.id},
-      {id:uid(),item:"Key Ring",catalogId:"gc0139",color:"Silver",quantity:1,weight:0.02,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
+      {id:keyRingId,item:"Key Ring",catalogId:"gc0139",color:"Silver",quantity:1,weight:0.02,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Key, Home",catalogId:"gc0140",color:"Silver",quantity:1,weight:0.02,condition:"Good",wet:false,dirty:false,locationId:keyRingLocation.id},
+      {id:uid(),item:"Key, Van",catalogId:"gc0140",color:"Brass",quantity:1,weight:0.02,condition:"Serviceable",wet:false,dirty:false,locationId:keyRingLocation.id},
       {id:uid(),item:"Multitool, Compact",catalogId:"gc0240",color:"Gray",quantity:1,weight:0.35,condition:"Serviceable",wet:false,dirty:false,locationId:onPerson.id},
       {id:satchelId,item:'Canvas Field Satchel, 15 L',catalogId:'gc0111',color:'Tan',quantity:1,weight:1.8,condition:'Serviceable',wet:false,dirty:false,locationId:onPerson.id},
       {id:waterBottleId,item:"Water Bottle, Plastic, 1 L",catalogId:"gc0515",color:"Clear",quantity:1,weight:0.39,condition:"Good",wet:false,dirty:false,locationId:satchelLocation.id},
@@ -33493,9 +33497,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),item:"Elastic Bandage, 2 in",catalogId:"gc0404",color:"Tan",quantity:1,weight:0.1,condition:"Good",wet:false,dirty:false,locationId:firstAidLocation.id},
       {id:uid(),item:"Tweezers",catalogId:"gc0173",color:"Silver",quantity:1,weight:0.03,condition:"Good",wet:false,dirty:false,locationId:firstAidLocation.id},
       {id:uid(),item:"Tourniquet, Windlass",catalogId:"gc0412",color:"Orange",quantity:1,weight:0.18,condition:"Good",wet:false,dirty:false,locationId:firstAidLocation.id},
-      {id:uid(),item:"Ibuprofen, 200 mg Tablet",catalogId:"gc0441",color:"White",quantity:4,weight:0.0007716179176470714,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
-      {id:uid(),item:"Acetaminophen, 500 mg Tablet",catalogId:"gc0440",color:"White",quantity:4,weight:0.0014770971566386798,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
-      {id:uid(),item:"Cetirizine, 10 mg Tablet",catalogId:"gc0446",color:"White",quantity:2,weight:0.0003306933932773163,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id}
+      {id:uid(),item:"Ibuprofen, 200 mg Tablet — Small Bottle",catalogId:"gc0441",color:"White",quantity:50,weight:0.0007716179176470714,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Acetaminophen, 500 mg Tablet — Small Bottle",catalogId:"gc0440",color:"White",quantity:50,weight:0.0014770971566386798,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Cetirizine, 10 mg Tablet — Small Bottle",catalogId:"gc0446",color:"White",quantity:30,weight:0.0003306933932773163,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id}
     ];
 
     gareth.areas = [
@@ -34500,12 +34504,21 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 <!-- INTERNAL v726 FOOTER VERSION SYNC — NOT USER-FACING
      - Visible footer version synchronized to v726. -->
 
-<!-- INTERNAL v728 GARETH/TOM PROFILE CLEANUP — NOT USER-FACING
+<!-- INTERNAL v729 GARETH/TOM PROFILE CLEANUP — NOT USER-FACING
      - Gareth Subcultures are sorted numerically by starting age.
      - Falkland Islands Area is labeled “Falkland Islands — British Overseas Territory” for geographic/political clarity.
      - Gareth appearance no longer says “without a tactical look.”
      - Tom bio now describes him as humble, easy-going, and always good for a corny joke.
      - Visible footer version synchronized to v727. -->
+
+<!-- INTERNAL v730 GARETH EDC MEDICATION/KEY PASS — NOT USER-FACING
+     - Gareth now carries normal small bottles of ibuprofen (50 tablets), acetaminophen (50 tablets), and cetirizine (30 tablets) in his 1 L first-aid pouch instead of tiny travel quantities.
+     - His Key Ring now owns two actual nested keys: a Home key and a Gear Locker key.
+     - Visible footer synchronized to Character Sheet v730. -->
+
+<!-- INTERNAL v731 GARETH VAN KEY — NOT USER-FACING
+     - Gareth Cole: renames the second nested Key Ring key from “Key, Gear Locker” to “Key, Van”.
+     - Visible footer synchronized to Character Sheet v731. -->
 
 </body>
 </html>
