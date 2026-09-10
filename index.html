@@ -10221,7 +10221,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v731</div>
+<div class="footer-note no-print">Character Sheet v733</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -33366,7 +33366,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     gareth.identity = {...gareth.identity,
       player:'', name:'Gareth Cole', sex:'M', age:42, height:'6 ft 0 in', weight:180,
       skin:'Tan; Weathered', hair:'Short Brown/Gray', eyes:'Blue-gray',
-      voice:'Low, steady British baritone; dry, understated delivery',
+      voice:'Low, steady British baritone; dry delivery',
       temperament:'Calm, pragmatic, compassionate; understated',
       goals:'Keep the team alive and get everyone home.',
       features:'Lean, wiry build; usually a few days of stubble; slightly crooked nose from an old injury; strong forearms and hands; a few small scars; practical outdoor clothing.',
@@ -33548,6 +33548,129 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     saveNow();
   }
 
+
+  function loadCalvinBrooksCharacter() {
+    const calvin = defaultState();
+    // Calvin remains in starter-skill setup because some of his lifetime skill XP is intentionally unassigned.
+    calvin.ui.starterSkillsFinished = false;
+    calvin.identity = {...calvin.identity,
+      player:'', name:'Calvin Brooks', sex:'M', age:69, height:'5 ft 8 in', weight:153,
+      skin:'Deep brown', hair:'Short gray hair', eyes:'Dark brown',
+      voice:'Warm, measured baritone', temperament:'Thoughtful, patient, quietly stubborn',
+      goals:'',
+      features:'Lean, wiry endurance build; short gray beard; pronounced smile lines; weathered hands; upright posture; quick, economical gait; practical field clothing.',
+      vision:'100', hearing:'100', smell:'100'
+    };
+    calvin.attributes.body = {
+      'Agility':{current:55,max:55}, 'Beauty':{current:45,max:45}, 'Cardio':{current:72,max:72}, 'Constitution':{current:70,max:70}, 'Coordination':{current:50,max:50}, 'Fine Motor Control':{current:76,max:76}, 'Strength':{current:54,max:54}
+    };
+    calvin.attributes.mind = {
+      'Charisma':{current:55,max:55}, 'Creativity':{current:70,max:70}, 'Empathy':{current:55,max:55}, 'Extraversion':{current:37,max:37}, 'Intelligence':{current:88,max:88}, 'Organization':{current:78,max:78}, 'Stability':{current:68,max:68}, 'Will':{current:77,max:77}
+    };
+    calvin.skills = [
+      ['Archaeology',95],
+      ['History, Ancient',90],
+      ['Excavation',85],
+      ['Surveying',80],
+      ['Cartography',75],
+      ['Geography',75],
+      ['Knowledge, Ancient Mythology',75],
+      ['Geology',70],
+      ['Language, Akkadian',65],
+      ['Language, Arabic',65],
+      ['Language, Egyptian, Ancient',65],
+      ['Language, Sumerian',65],
+      ['Architecture, Historic Preservation',60],
+      ['Computers, General Systems',60],
+      ['Knowledge, Horror Movies',60],
+      ['Linguistics',60],
+      ['Metrology',60],
+      ['Navigation, Orienteering',60],
+      ['Bureaucracy',55],
+      ['Electronics, Remote Sensing',55],
+      ['Knowledge, 1970s–90s Popular Culture',55],
+      ['Knowledge, Jazz & Soul',55],
+      ['Teaching',55],
+      ['Writing, Technical',55],
+      ['Survival, Desert',50],
+      ['Drawing',45],
+      ['Operate Vehicle, Basic Road Vehicles',45],
+      ['3D Modeling',40],
+      ['Operate Vehicle, Off-Road Vehicles',40],
+      ['Cooking',35],
+      ['History, Medieval',35],
+      ['Knowledge, American Literature',35],
+      ['Language, French',35],
+      ['Language, Latin',35],
+      ['Photography',35],
+      ['Religion, Islam',35],
+      ['Sport, Cycling, Road',35],
+      ['Swimming',35],
+      ['Astronomy',30],
+      ['Caving',30],
+      ['Food Preservation',30],
+      ['Gaming, Board Games',30],
+      ['Geoguessing',30],
+      ['Instrument, Saxophone',30],
+      ['Material Science',30],
+      ['Medical, Emergency',30],
+      ['Paleontology',30],
+      ['Religion, Christianity',30],
+      ['Religion, Judaism',30],
+      ['Sociology',30],
+      ['Animal Riding, Camels',25],
+      ['Art Conservation',25],
+      ['Chemistry',25],
+      ['Dance, Salsa',25],
+      ['Gaming, Card Games',25],
+      ['Horticulture',25],
+      ['Knowledge, Mediterranean Food',25],
+      ['Knowledge, Wine',25],
+      ['Logistics',25],
+      ['Philosophy, Ethics',25],
+      ['Political Science',25],
+      ['Animal Handling, Dogs',20],
+      ['Knowledge, Baseball',20],
+      ['Knowledge, Classic Cinema',20],
+      ['Knowledge, UFO Lore',15],
+      ['Magic Tricks',10],
+      ['Ropework',5]
+    ].map(([name,level]) => ({id:uid(), name, level:String(level), groupId:''}));
+    while (calvin.skills.length < 60) calvin.skills.push({id:uid(), name:'', level:'', groupId:''});
+
+    // Areas reflect only residences of roughly six months or longer; shorter field seasons stay in the biography.
+    calvin.areas = [
+      {id:uid(),ageFrom:0,ageTo:22,location:'Philadelphia, Pennsylvania',level:''},
+      {id:uid(),ageFrom:22,ageTo:26,location:'Chicago, Illinois',level:''},
+      {id:uid(),ageFrom:26,ageTo:32,location:'Cambridge, Massachusetts',level:''},
+      {id:uid(),ageFrom:32,ageTo:69,location:'Philadelphia, Pennsylvania',level:''},
+      {id:uid(),ageFrom:33,ageTo:35,location:'Syria',level:''},
+      {id:uid(),ageFrom:38,ageTo:39.5,location:'Turkey',level:''},
+      {id:uid(),ageFrom:43,ageTo:44,location:'Egypt',level:''}
+    ];
+    calvin.subcultures = [
+      {id:uid(),ageFrom:0,ageTo:18,location:'Philadelphia Family & Neighborhood',involvement:'primary',level:''},
+      {id:uid(),ageFrom:18,ageTo:69,location:'Academic Archaeology',involvement:'veryHigh',level:''},
+      {id:uid(),ageFrom:22,ageTo:69,location:'Ancient Near Eastern Studies',involvement:'veryHigh',level:''},
+      {id:uid(),ageFrom:24,ageTo:69,location:'Marathon Running Community',involvement:'medium',level:''},
+      {id:uid(),ageFrom:38,ageTo:69,location:'Triathlon Community',involvement:'medium',level:''}
+    ];
+    calvin.background.text='Calvin Brooks, 69, was born and raised in Philadelphia. He studied archaeology at the University of Pennsylvania, earned master’s degrees in ancient history and Near Eastern studies at the University of Chicago, and completed a Ph.D. in archaeology at Harvard, specializing in the Ancient Near East.\n\nBrooks became a leading field archaeologist, with decades of excavation and research experience across Syria, Turkey, Egypt, Iraq, and the wider eastern Mediterranean. He is especially known for ancient history, excavation technique, and his ability to work with several ancient languages.\n\nHe is married to Marian Brooks. They have one adult daughter, one grandchild, and several dogs. A lifelong endurance athlete, Brooks has run marathons for decades and remains an active triathlete. Outside work, he enjoys good food and wine, listens to jazz and soul, reads widely, and watches as many horror movies as Marian can tolerate.';
+    calvin.background.notes='';
+
+    const calvinSkillOrderBeforeSort = calvin.skills.map(skill => skill.id);
+    calvin.skills.sort((a,b) => (Number(b.level)||-1) - (Number(a.level)||-1) || String(a.name||'').localeCompare(String(b.name||''), undefined, {sensitivity:'base', numeric:true}));
+    state = calvin;
+    setActiveLibraryCharacterId(null);
+    skillHeaderSort = {key:'level', direction:'desc'};
+    skillOrderBeforeSort = calvinSkillOrderBeforeSort;
+    skillQuickSortNext = {...SKILL_QUICK_SORT_DEFAULTS, level:'asc'};
+    updateSkillQuickSortControls();
+    renderAll();
+    setActiveCharacterBaselineFromCurrent();
+    saveNow();
+  }
+
   async function saveNamedCharacter(saveName, existingId = '') {
     const name = characterSaveDisplayName(saveName);
     if (!name) throw new Error('Enter a save name.');
@@ -33603,7 +33726,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         </div>
         <div class="character-library-actions"><button class="btn primary" data-library-load-gareth type="button">Load</button></div>
       </div>`;
-    const builtInRows = demoRow + tomRow + garethRow;
+    const calvinRow = `
+      <div class="character-library-row demo">
+        <div class="character-library-copy">
+          <div class="character-library-name">Calvin Brooks — Template</div>
+          <div class="character-library-meta">Built-in field-archaeology / ancient-world template • always available</div>
+        </div>
+        <div class="character-library-actions"><button class="btn primary" data-library-load-calvin type="button">Load</button></div>
+      </div>`;
+    const builtInRows = demoRow + tomRow + garethRow + calvinRow;
     list.innerHTML = builtInRows + '<div class="character-library-empty">Loading local characters…</div>';
     try {
       const records = await listLocalCharacters();
@@ -33781,6 +33912,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     } else if (pending.type === 'gareth') {
       loadGarethColeCharacter();
       setLocalSaveStatus('Loaded Gareth Cole — Template');
+    } else if (pending.type === 'calvin') {
+      loadCalvinBrooksCharacter();
+      setLocalSaveStatus('Loaded Calvin Brooks — Template');
     } else if (pending.type === 'saved') {
       await loadNamedCharacter(pending.id);
     }
@@ -33791,7 +33925,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     document.getElementById('characterLoadDialog')?.close();
     const saveStatus = await currentNamedSaveStatus();
     if (saveStatus.hasUnsavedChanges) {
-      const label = loadRequest.name || (loadRequest.type === 'demo' ? 'Morgan Vale — Demo' : loadRequest.type === 'tom' ? 'Tom Mercer — Template' : loadRequest.type === 'gareth' ? 'Gareth Cole — Template' : 'the selected character');
+      const label = loadRequest.name || (loadRequest.type === 'demo' ? 'Morgan Vale — Demo' : loadRequest.type === 'tom' ? 'Tom Mercer — Template' : loadRequest.type === 'gareth' ? 'Gareth Cole — Template' : loadRequest.type === 'calvin' ? 'Calvin Brooks — Template' : 'the selected character');
       const currentSaveName = characterSaveDisplayName(saveStatus.record?.name);
       document.getElementById('characterLoadConfirmText').textContent = saveStatus.hasNamedSave
         ? `Load “${label}”? The current character has changes that have not been saved to “${currentSaveName || 'its local save'}”. Save those changes first or load without saving.`
@@ -33865,6 +33999,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
     if (button.hasAttribute('data-library-load-gareth')) {
       requestCharacterLoad({type:'gareth', name:'Gareth Cole — Template'});
+      return;
+    }
+    if (button.hasAttribute('data-library-load-calvin')) {
+      requestCharacterLoad({type:'calvin', name:'Calvin Brooks — Template'});
       return;
     }
     const loadId = button.dataset.libraryLoad;
@@ -34519,6 +34657,19 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 <!-- INTERNAL v731 GARETH VAN KEY — NOT USER-FACING
      - Gareth Cole: renames the second nested Key Ring key from “Key, Gear Locker” to “Key, Van”.
      - Visible footer synchronized to Character Sheet v731. -->
+
+<!-- INTERNAL v732 GARETH VOICE CLEANUP — NOT USER-FACING
+     - Gareth voice is now “Low, steady British baritone; dry delivery.”
+     - “Understated” remains only in temperament to avoid duplicate wording.
+     - Visible footer synchronized to Character Sheet v732. -->
+
+<!-- INTERNAL v733 CALVIN BROOKS FIELD-ARCHAEOLOGIST TEMPLATE — NOT USER-FACING
+     - Adds Calvin Brooks — Template as a fourth built-in character alongside Morgan Vale, Tom Mercer, and Gareth Cole.
+     - Calvin is a 69-year-old Philadelphia-born leading field archaeologist with the finalized 950-point attribute profile.
+     - Adds the user-approved archaeology, ancient-history, ancient-language, life-experience, horror-film, jazz/soul, and endurance-adjacent skill profile while intentionally leaving remaining starter Skill XP unassigned for later workshop use.
+     - Background includes Penn, two University of Chicago master’s degrees, Harvard Ph.D. specialization in the Ancient Near East, extended field residence in Syria/Turkey/Egypt, Marian, one adult daughter, one grandchild, several dogs, marathon running, triathlon, jazz/soul, food/wine, and horror movies.
+     - Calvin's starter-skill setup remains unfinished so the intentionally unassigned Skill XP stays visible/editable.
+     - Visible footer synchronized to Character Sheet v733. -->
 
 </body>
 </html>
