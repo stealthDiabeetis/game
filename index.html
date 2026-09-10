@@ -10495,6 +10495,57 @@
   }
 </style>
 
+
+<style id="v748-phone-attribute-arrows-background-involvement-styles">
+  /* v748: keep the compact iPhone attribute controls from v747, but explicitly
+     size/inset the overlaid increment buttons so both arrows remain entirely
+     inside the 38px field. Also normalize the compact Background involvement
+     control so its text stays vertically inside the 26px phone field. */
+  @media screen and (max-width: 600px),
+         screen and (max-height: 520px) and (pointer: coarse) {
+    #overview .card.body .attribute-table .numeric-stepper-buttons,
+    #overview .card.mind .attribute-table .numeric-stepper-buttons {
+      top: 3px !important;
+      right: 3px !important;
+      bottom: 3px !important;
+      width: 18px !important;
+      height: auto !important;
+      grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+      overflow: hidden !important;
+    }
+    #overview .card.body .attribute-table .numeric-stepper-button,
+    #overview .card.mind .attribute-table .numeric-stepper-button {
+      width: 18px !important;
+      min-width: 18px !important;
+      height: auto !important;
+      min-height: 0 !important;
+      padding: 0 !important;
+      line-height: 1 !important;
+      font-size: 7px !important;
+    }
+
+    #background #subculturesBody .life-involvement-cell {
+      width: auto !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      overflow: visible !important;
+    }
+    #background #subculturesBody .life-involvement-cell select,
+    #background #subculturesBody .life-involvement-cell input {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      height: 26px !important;
+      min-height: 26px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      line-height: 24px !important;
+      font-size: 13px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -10759,7 +10810,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v747</div>
+<div class="footer-note no-print">Character Sheet v748</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -28734,8 +28785,110 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     )) || Boolean(target.closest('#newBtn, #loadCharacterBtn, #importBtn, #importFile'));
   }
 
+  function abbreviatedUndoValue(value, maximum=42) {
+    let text = String(value ?? '').replace(/\s+/g, ' ').trim();
+    if (!text) return 'blank';
+    if (text.length > maximum) text = `${text.slice(0, Math.max(1, maximum - 1)).trimEnd()}…`;
+    return text;
+  }
+
+  function undoControlForTarget(target) {
+    if (!target?.closest) return null;
+    const direct = target.closest('input, textarea, select');
+    if (direct) return direct;
+
+    const stepPath = target.closest('[data-step-path]')?.dataset.stepPath;
+    if (stepPath) return document.querySelector(`[data-path="${CSS.escape(stepPath)}"]`);
+
+    const lifeStep = target.closest('[data-life-step-field]');
+    if (lifeStep) return lifeStep.closest('tr')?.querySelector(`[data-field="${CSS.escape(lifeStep.dataset.lifeStepField || '')}"]`) || null;
+
+    const stageStep = target.closest('[data-condition-stage-step]');
+    if (stageStep) return stageStep.closest('tr')?.querySelector('[data-condition-stage-value]') || null;
+
+    const fieldClear = target.closest('[data-condition-clear-field]');
+    if (fieldClear) return fieldClear.closest('td')?.querySelector('input, textarea, select') || null;
+
+    const gearCondition = target.closest('[data-condition-toggle]');
+    if (gearCondition) return gearCondition.closest('td')?.querySelector('[data-field="condition"]') || null;
+
+    return null;
+  }
+
+  function undoFieldName(control, originalTarget) {
+    const path = control?.dataset?.path || '';
+    let match = path.match(/^attributes\.(body|mind)\.(.+)\.(current|max)$/);
+    if (match) return `${match[2]} ${match[3] === 'max' ? 'Max' : 'Current'}`;
+
+    const pathLabels = {
+      'identity.name':'Name', 'identity.sex':'Sex', 'identity.age':'Age',
+      'identity.height':'Height', 'identity.weight':'Weight', 'identity.skin':'Skin',
+      'identity.hair':'Hair', 'identity.eyes':'Eyes', 'identity.voice':'Voice',
+      'identity.temperament':'Temperament', 'identity.goals':'Goal',
+      'identity.features':'Distinguishing Features', 'identity.vision':'Vision',
+      'identity.hearing':'Hearing', 'identity.smell':'Smell',
+      'background.bio':'Character Background', 'background.notes':'Notes'
+    };
+    if (pathLabels[path]) return pathLabels[path];
+
+    const row = control?.closest?.('tr');
+    const dataField = control?.dataset?.field;
+    if (row?.closest('#skills')) {
+      const skillName = row.querySelector('.skill-name-highlight-wrap > input, [data-skill-name], input[type="text"]')?.value?.trim();
+      if (control.matches?.('.skill-level-number, [data-skill-level], [data-field="level"]')) return skillName ? `${skillName} Level` : 'Skill Level';
+      if (control.matches?.('.skill-name-highlight-wrap > input, [data-skill-name]')) return 'Skill';
+    }
+    if (row?.closest('#areasBody, #subculturesBody')) {
+      const isSubculture = Boolean(row.closest('#subculturesBody'));
+      const names = {ageFrom:'Age From', ageTo:'Age To', location:isSubculture?'Subculture':'Location', involvement:'Involvement', level:'Level'};
+      if (names[dataField]) return names[dataField];
+    }
+    if (row?.closest('#conditions')) {
+      const names = {type:'Condition Type', location:'Location', treatment:'Treatment', progression:'Subtype / Progression Notes'};
+      if (names[dataField]) return names[dataField];
+      if (control?.hasAttribute?.('data-condition-stage-value')) return 'Stage';
+    }
+    if (row?.closest('#gear')) {
+      const names = {item:'Item', quantity:'Qty', weight:'Weight', condition:'Condition', color:'Color'};
+      if (names[dataField]) return names[dataField];
+    }
+
+    const aria = String(control?.getAttribute?.('aria-label') || originalTarget?.getAttribute?.('aria-label') || '').trim();
+    if (aria) return aria.replace(/^(Increase|Decrease|Show|Choose|Set|Clear|Toggle)\s+/i, '').replace(/\s+(value|options)$/i, '').trim();
+
+    const id = control?.id;
+    if (id) {
+      const label = document.querySelector(`label[for="${CSS.escape(id)}"]`)?.textContent?.trim();
+      if (label) return label;
+    }
+    const nearbyLabel = control?.closest?.('.field, td, .condition-target-row, .condition-qualifier-row')?.querySelector?.('label');
+    if (nearbyLabel?.textContent?.trim()) return nearbyLabel.textContent.trim();
+    return '';
+  }
+
+  function undoValueForControl(control) {
+    if (!control) return '';
+    if (control.matches?.('[data-condition-stage-value]')) return abbreviatedUndoValue(control.textContent);
+    if (control.type === 'checkbox') return control.checked ? 'On' : 'Off';
+    if (control.tagName === 'SELECT') return abbreviatedUndoValue(control.selectedOptions?.[0]?.textContent ?? control.value);
+    return abbreviatedUndoValue(control.value);
+  }
+
   function undoMessageForTarget(target) {
     if (!target?.closest) return 'Change made.';
+    const control = undoControlForTarget(target);
+    if (control) {
+      const field = undoFieldName(control, target);
+      const value = undoValueForControl(control);
+      if (field && value) return `${field} → ${value}`;
+    }
+
+    const attributeLink = target.closest('[data-attribute-link]');
+    if (attributeLink) {
+      const group = attributeLink.dataset.attributeLink === 'body' ? 'Body' : 'Mind';
+      return `${group} Current/Max link → ${attributeLink.getAttribute('aria-pressed') === 'true' ? 'On' : 'Off'}`;
+    }
+
     if (target.closest('#skills')) return 'Skill change made.';
     if (target.closest('#background')) return 'Background change made.';
     if (target.closest('#conditions')) return 'Condition change made.';
@@ -35552,7 +35705,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Skill deletion explicitly snapshots before its confirmation flow so deleted skills can be restored from the toast just like deleted Gear.
      - Undo restores character data while preserving the user's current tab/view/sort/group/lock ui state.
      - Character-management actions such as New, Load, Import, saved-character deletion, and save dialogs are excluded from this edit-level undo history.
-     - Visible footer synchronized to Character Sheet v747. -->
+     - Visible footer synchronized to Character Sheet v748. -->
 
 
 <!-- INTERNAL v747 PHONE ATTRIBUTE CENTERING / HEIGHT MATCH — NOT USER-FACING
@@ -35560,7 +35713,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Their inner numeric inputs are 36 px high inside the 1 px wrapper border.
      - Phone Body/Mind numeric values use equal 4 px left/right padding so the number is geometrically centered in the full field instead of being shifted left to reserve the increment-arrow gutter.
      - Increment arrows remain available; tablet/desktop attribute sizing and alignment are unchanged.
-     - Visible footer synchronized to Character Sheet v747. -->
+     - Visible footer synchronized to Character Sheet v748. -->
+
+
+<!-- INTERNAL v748 PHONE ATTRIBUTE ARROWS / BACKGROUND INVOLVEMENT / DESCRIPTIVE UNDO — NOT USER-FACING
+     - Phone Body/Mind attribute increment arrows are explicitly inset/sized to remain fully inside compact 38px fields.
+     - Phone Background Subculture involvement control receives compact 26px line-height/padding normalization so its text stays inside the field.
+     - Universal Undo toast now names direct edited fields and reports the resulting value (with long values abbreviated), e.g. “Creativity Current → 71”; checkbox/select values are humanized where possible.
+     - Existing custom deletion messages remain intact; generic section messages remain as fallback for complex actions.
+     - Visible footer synchronized to Character Sheet v748. -->
 
 </body>
 </html>
