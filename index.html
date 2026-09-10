@@ -9958,6 +9958,75 @@
   }
 </style>
 
+
+<style id="v735-density-senses-styles">
+  /* v735: Skin/Hair/Eyes are short descriptors; keep their value text compact at every resolution. */
+  #identitySkin, #identityHair, #identityEyes { font-size: 12px !important; }
+
+  /* v735: modest all-device Gear density pass. Skills are already ~29px on desktop; Gear now sits close to that density. */
+  #gear .gear-table th, #gear .gear-table td { padding-top: 4px; padding-bottom: 4px; }
+  #gear .gear-table input:not(.gear-check),
+  #gear .gear-table .combo-input-wrap,
+  #gear .gear-table .numeric-stepper,
+  #gear .gear-color-picker > summary { min-height: 32px; height: 32px; }
+  #gear .gear-table .combo-arrow { min-height: 30px; height: 30px; }
+
+  @media screen and (max-width: 600px), screen and (max-height: 520px) and (pointer: coarse) {
+    /* Skills: smaller type/rows, and reclaim the drag-handle gutter when locked. */
+    #skills .skill-entry { min-height: 38px !important; padding-top: 2px !important; padding-bottom: 2px !important; }
+    #skills .skill-name-highlight-wrap,
+    #skills .skill-name-highlight,
+    #skills .skill-entry .skill-name-highlight-wrap > input { height: 34px !important; min-height: 34px !important; }
+    #skills .skill-name-highlight { padding-top: 6px !important; padding-bottom: 6px !important; line-height: 20px !important; }
+    #skills .skill-entry .skill-name-highlight-wrap > input,
+    #skills .skill-name-highlight { font-size: 13px !important; }
+    #skills .skill-level-button,
+    #skills .skill-entry input.skill-level-number { min-height: 34px !important; height: 34px !important; font-size: 13px !important; }
+    #skills .skill-level-stepper { height: 34px !important; }
+    #skills .skill-drag-handle { height: 34px !important; width: 18px !important; min-width: 18px !important; font-size: 11px !important; }
+    #skills .skill-entry .icon-btn { width: 28px !important; height: 28px !important; }
+    #skills.section-locked .skill-column-header,
+    #skills.section-locked .skill-entry,
+    #skills.starter-skills-finished.section-locked .skill-column-header,
+    #skills.starter-skills-finished.section-locked .skill-entry { grid-template-columns: 22px minmax(0, 1fr) 44px !important; }
+
+    /* Gear: remove repetitive Item label and collapse card whitespace. */
+    #gear .gear-table tbody { gap: 6px !important; }
+    #gear .gear-table tr.gear-row { padding: 6px !important; row-gap: 4px !important; column-gap: 5px !important; border-radius: 8px !important; }
+    #gear .gear-table td { gap: 2px !important; padding-top: 0 !important; padding-bottom: 0 !important; }
+    #gear .gear-table td:nth-child(1)::before { content: none !important; display: none !important; }
+    #gear .gear-item-name-highlight-wrap,
+    #gear .gear-item-name-highlight,
+    #gear .gear-table input[data-field="item"] { height: 34px !important; min-height: 34px !important; }
+    #gear .gear-item-name-highlight { padding: 6px 6px !important; line-height: 20px !important; font-size: 13px !important; }
+    #gear .gear-table input[data-field="item"] { font-size: 13px !important; padding-top: 4px !important; padding-bottom: 4px !important; }
+    #gear .gear-table .gear-quantity-cell .numeric-stepper,
+    #gear .gear-table .gear-weight-cell .numeric-stepper,
+    #gear .gear-table .gear-condition-col .combo-input-wrap,
+    #gear .gear-table .gear-quantity-cell input,
+    #gear .gear-table .gear-weight-cell input,
+    #gear .gear-table .gear-condition-col input,
+    #gear .gear-table .gear-condition-col .combo-arrow,
+    #gear .gear-color-picker > summary { height: 32px !important; min-height: 32px !important; }
+    #gear .gear-table .gear-quantity-cell input,
+    #gear .gear-table .gear-weight-cell input,
+    #gear .gear-table .gear-condition-col input,
+    #gear .gear-color-picker > summary { font-size: 12px !important; }
+    #gear .gear-table td:nth-child(2)::before,
+    #gear .gear-table td:nth-child(3)::before,
+    #gear .gear-table td:nth-child(4)::before,
+    #gear .gear-table td:nth-child(5)::before,
+    #gear .gear-table td:nth-child(6)::before,
+    #gear .gear-table td:nth-child(7)::before { min-height: 8px !important; font-size: 8px !important; line-height: 1 !important; }
+    #gear .gear-table td:nth-child(6) input.gear-check,
+    #gear .gear-table td:nth-child(7) input.gear-check { height: 32px !important; min-height: 32px !important; flex-basis: 32px !important; }
+    #gear .gear-table td:nth-child(8) { height: 32px !important; }
+    #gear .gear-table td:nth-child(8) .gear-item-actions-button { height: 26px !important; width: 26px !important; min-width: 26px !important; }
+    #gear .gear-table .gear-drag-handle { height: 34px !important; }
+    #gear.section-locked .gear-item-input-wrap { grid-template-columns: minmax(0, 1fr) !important; }
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -10021,6 +10090,7 @@
 <div aria-live="polite" class="compatibility-free-entry" hidden="" id="compatibilityFreeEntryNotice" role="status"><span><strong>Free Entry Mode</strong> — compatibility checks are disabled.</span><button class="btn small" data-compatibility-action="reenable" type="button">Re-enable compatibility checks</button></div>
 <div aria-live="polite" class="compatibility-warnings" hidden="" id="compatibilityWarnings" role="alert"></div>
 <div aria-live="polite" class="attribute-rule-warnings" hidden="" id="attributeRuleWarnings" role="alert"></div>
+<div aria-live="polite" class="attribute-rule-warnings" hidden="" id="ageSenseWarning" role="alert"></div>
 <div class="split-layout" id="overviewIdentityLayout">
 <div>
 <div class="grid identity-primary-row">
@@ -10221,7 +10291,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v733</div>
+<div class="footer-note no-print">Character Sheet v737</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -29511,9 +29581,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (index === 0) return;
       const ageFrom = strictNumericValue(item.ageFrom);
       const ageTo = strictNumericValue(item.ageTo);
-      if (![ageFrom, ageTo].every(Number.isFinite) || ageTo <= ageFrom) return;
+      if (![ageFrom, ageTo].every(Number.isFinite) || ageTo < ageFrom) return;
+      const effectiveAgeTo = effectiveBackgroundAgeTo(ageFrom, ageTo);
+      const equalAgeRange = Math.abs(ageTo - ageFrom) < 1e-9;
       const start = Math.max(0, ageFrom);
-      const end = Number.isFinite(characterAge) ? Math.min(ageTo, characterAge) : ageTo;
+      const endCap = Number.isFinite(characterAge) ? characterAge + (equalAgeRange ? 1 : 0) : effectiveAgeTo;
+      const end = Math.min(effectiveAgeTo, endCap);
       if (end <= start) return;
       intervals.push({item, index, start, end});
     });
@@ -29731,7 +29804,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     for (const item of (state.subcultures || []).slice(1)) {
       const from = strictNumericValue(item.ageFrom);
       const to = strictNumericValue(item.ageTo);
-      if (![from, to].every(Number.isFinite) || to <= from) continue;
+      if (![from, to].every(Number.isFinite) || to < from) continue;
 
       const raw = rawScores.get(item.id) || 0;
       const capped = Math.max(0, Math.min(100, charisma, raw));
@@ -29768,6 +29841,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!text) return NaN;
     const parsed = Number(text);
     return Number.isFinite(parsed) ? parsed : NaN;
+  }
+
+  // Equal background ages (for example 38 to 38) represent the single year at that age.
+  // Unequal ranges keep their existing continuous-span semantics.
+  function effectiveBackgroundAgeTo(ageFrom, ageTo) {
+    if (![ageFrom, ageTo].every(Number.isFinite)) return NaN;
+    return Math.abs(ageTo - ageFrom) < 1e-9 ? ageTo + 1 : ageTo;
   }
 
   // Area/Subculture age validation is row-based rather than field-based.
@@ -29859,10 +29939,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     for (const item of areas) {
       const ageFrom = strictNumericValue(item.ageFrom);
       const ageTo = strictNumericValue(item.ageTo);
-      if (![ageFrom, ageTo].every(Number.isFinite) || ageTo <= ageFrom) continue;
+      if (![ageFrom, ageTo].every(Number.isFinite) || ageTo < ageFrom) continue;
       validRanges.add(item.id);
+      const effectiveAgeTo = effectiveBackgroundAgeTo(ageFrom, ageTo);
+      const equalAgeRange = Math.abs(ageTo - ageFrom) < 1e-9;
       const start = Math.max(5, ageFrom);
-      const end = Number.isFinite(characterAge) ? Math.min(ageTo, characterAge) : ageTo;
+      const endCap = Number.isFinite(characterAge) ? characterAge + (equalAgeRange ? 1 : 0) : effectiveAgeTo;
+      const end = Math.min(effectiveAgeTo, endCap);
       if (end <= start) continue;
       intervals.push({item, start, end});
     }
@@ -29963,7 +30046,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
           if (!Number.isFinite(ageFrom)) markBackgroundViolation(fromInput);
           if (!Number.isFinite(ageTo)) markBackgroundViolation(toInput);
         }
-        if (!ageFromIsBeingEdited && Number.isFinite(ageFrom) && Number.isFinite(ageTo) && ageTo <= ageFrom) {
+        if (!ageFromIsBeingEdited && Number.isFinite(ageFrom) && Number.isFinite(ageTo) && ageTo < ageFrom) {
           hasInvalidRange = true;
           markBackgroundViolation(toInput);
         }
@@ -29977,7 +30060,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       });
 
       if (hasInvalidAge) addMessage(`${label}: enter numeric Age From and Age To values for every entry.`);
-      if (hasInvalidRange) addMessage(`${label}: Age To must be greater than Age From.`);
+      if (hasInvalidRange) addMessage(`${label}: Age To must be equal to or greater than Age From.`);
       if (hasOrderError) addMessage(`${label}: list Age From values in ascending numerical order.`);
 
       if (items.length && !deferAgeFromRules) {
@@ -29992,14 +30075,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const areaItems = state.areas || [];
     const characterAge = strictNumericValue(state.identity?.age);
     const pendingAreaId = backgroundPendingAgeValidation.areas;
-    const parsedAreaIntervals = areaItems.map(item => ({
-      item,
-      from: strictNumericValue(item.ageFrom),
-      to: strictNumericValue(item.ageTo)
-    }));
+    const parsedAreaIntervals = areaItems.map(item => {
+      const from = strictNumericValue(item.ageFrom);
+      const to = strictNumericValue(item.ageTo);
+      return {item, from, to, end: effectiveBackgroundAgeTo(from, to)};
+    });
     const validAreaIntervals = parsedAreaIntervals
-      .filter(interval => Number.isFinite(interval.from) && Number.isFinite(interval.to) && interval.to > interval.from)
-      .sort((a, b) => a.from - b.from || a.to - b.to);
+      .filter(interval => Number.isFinite(interval.from) && Number.isFinite(interval.to) && interval.to >= interval.from)
+      .sort((a, b) => a.from - b.from || a.end - b.end);
     // A newly created row that is still in its first-field grace period should
     // not temporarily erase a real coverage warning from the completed rows.
     // Once that row has a complete valid range, it participates immediately.
@@ -30007,7 +30090,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     // validation is resolved, avoiding redundant warnings.
     const areaHasBlockingInvalid = parsedAreaIntervals.some(interval => {
       if (!backgroundRowHasMeaningfulContent(interval.item)) return false;
-      const valid = Number.isFinite(interval.from) && Number.isFinite(interval.to) && interval.to > interval.from;
+      const valid = Number.isFinite(interval.from) && Number.isFinite(interval.to) && interval.to >= interval.from;
       return !valid && interval.item.id !== pendingAreaId;
     });
     const areaCoverageReady = validAreaIntervals.length > 0 && !areaHasBlockingInvalid;
@@ -30019,15 +30102,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!areaCoverageEditDeferred && areaCoverageReady) {
       const targetEnd = Number.isFinite(characterAge)
         ? Math.max(0, characterAge)
-        : Math.max(...validAreaIntervals.map(interval => interval.to));
+        : Math.max(...validAreaIntervals.map(interval => interval.end));
       const gaps = [];
       let coverageEnd = 0;
       let lastCoveringInterval = null;
 
       for (const interval of validAreaIntervals) {
-        if (interval.to <= 0 || interval.from >= targetEnd) continue;
+        if (interval.end <= 0 || interval.from >= targetEnd) continue;
         const start = Math.max(0, interval.from);
-        const end = Math.min(targetEnd, interval.to);
+        const end = Math.min(targetEnd, interval.end);
         if (start > coverageEnd + 1e-9) {
           gaps.push([coverageEnd, start]);
         }
@@ -31102,6 +31185,31 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
   }
 
+  function updateAgeSenseWarning() {
+    const warningBox = document.getElementById('ageSenseWarning');
+    if (!warningBox) return;
+    const age = numberFromText(state.identity.age);
+    const vision = numberFromText(state.identity.vision);
+    const hearing = numberFromText(state.identity.hearing);
+    const smell = numberFromText(state.identity.smell);
+    if (!Number.isFinite(age) || age <= 40) {
+      warningBox.hidden = true;
+      warningBox.innerHTML = '';
+      return;
+    }
+    const requiredPenalty = Math.max(0, age - 40);
+    const values = [vision, hearing, smell];
+    const currentPenalty = values.reduce((sum, value) => sum + (Number.isFinite(value) ? Math.max(0, 100 - value) : 0), 0);
+    const shortfall = Math.max(0, requiredPenalty - currentPenalty);
+    if (shortfall <= 0) {
+      warningBox.hidden = true;
+      warningBox.innerHTML = '';
+      return;
+    }
+    warningBox.hidden = false;
+    warningBox.innerHTML = `<div class="compatibility-warning-row"><div>Characters over 40 must have at least 1 total point of Vision, Hearing, or Smell penalty for every year over 40.</div><ul class="compatibility-warning-options"><li>Age ${esc(fmtWhole(age))} requires ${esc(fmtWhole(requiredPenalty))} total sense penalty points; currently ${esc(fmtWhole(currentPenalty))}. Add ${esc(fmtWhole(shortfall))} more.</li></ul></div>`;
+  }
+
   function computeSide(side) {
     const values = {
       agility: attrValue('body','Agility',side),
@@ -31274,6 +31382,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
 
     validateAttributeRules();
+    updateAgeSenseWarning();
     validateCompatibilityRules();
     validateBackgroundRules();
     // Validation may rewrite field titles; apply condition score values and
@@ -33108,7 +33217,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     demo.encumbrance={light:'',medium:'',heavy:''};
     demo.funds = [
       {id:uid(), type:'cash', name:'Cash', currency:'USD', balance:120, carried:true, customUnitWeightPounds:'', isDefault:true},
-      {id:uid(), type:'bank', name:'Bank', currency:'USD', balance:5500, carried:false, customUnitWeightPounds:'', isDefault:false}
+      {id:uid(), type:'bank', name:'Checking', currency:'USD', balance:6500, carried:false, customUnitWeightPounds:'', isDefault:false}
     ];
     const onPersonLocation = demo.gearLocations[0];
     const setDownLocation = demo.gearLocations[1];
@@ -33252,7 +33361,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       voice:'Warm baritone; matter-of-fact', temperament:'Practical, curious, nerdy dad',
       goals:'Stay useful, keep learning, and enjoy the life he built.',
       features:'Neatly trimmed full mustache; weathered hands; reading glasses; cellphone belt holster.',
-      vision:'100', hearing:'100', smell:'100'
+      vision:'90', hearing:'94', smell:'100'
     };
     tom.attributes.body = {
       'Agility':{current:50,max:50}, 'Beauty':{current:45,max:45}, 'Cardio':{current:60,max:60}, 'Constitution':{current:70,max:70}, 'Coordination':{current:65,max:65}, 'Fine Motor Control':{current:65,max:65}, 'Strength':{current:60,max:60}
@@ -33279,7 +33388,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     ].map(([name,level]) => ({id:uid(), name, level:String(level), groupId:''}));
     while (tom.skills.length < 60) tom.skills.push({id:uid(), name:'', level:'', groupId:''});
 
-    tom.funds = [{id:uid(), type:'cash', name:'Cash', currency:'USD', balance:80, carried:true, wet:false, dirty:false, customUnitWeightPounds:'', isDefault:true}];
+    tom.funds = [
+      {id:uid(), type:'cash', name:'Cash', currency:'USD', balance:80, carried:true, wet:false, dirty:false, customUnitWeightPounds:'', isDefault:true},
+      {id:uid(), type:'bank', name:'Checking', currency:'USD', balance:11000, carried:false, wet:false, dirty:false, customUnitWeightPounds:'', isDefault:false}
+    ];
     const onPerson = tom.gearLocations[0];
     const setDown = tom.gearLocations[1];
     const phoneHolsterId = uid();
@@ -33370,7 +33482,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       temperament:'Calm, pragmatic, compassionate; understated',
       goals:'Keep the team alive and get everyone home.',
       features:'Lean, wiry build; usually a few days of stubble; slightly crooked nose from an old injury; strong forearms and hands; a few small scars; practical outdoor clothing.',
-      vision:'100', hearing:'100', smell:'100'
+      vision:'99', hearing:'99', smell:'100'
     };
     gareth.attributes.body = {
       'Agility':{current:60,max:60}, 'Beauty':{current:46,max:46}, 'Cardio':{current:69,max:69}, 'Constitution':{current:70,max:70}, 'Coordination':{current:61,max:61}, 'Fine Motor Control':{current:62,max:62}, 'Strength':{current:58,max:58}
@@ -33446,7 +33558,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     ].map(([name,level]) => ({id:uid(), name, level:String(level), groupId:''}));
     while (gareth.skills.length < 60) gareth.skills.push({id:uid(), name:'', level:'', groupId:''});
 
-    gareth.funds = [{id:uid(), type:'cash', name:'Cash', currency:'GBP', balance:60, carried:true, wet:false, dirty:false, customUnitWeightPounds:'', isDefault:true}];
+    gareth.funds = [
+      {id:uid(), type:'cash', name:'Cash', currency:'GBP', balance:60, carried:true, wet:false, dirty:false, customUnitWeightPounds:'', isDefault:true},
+      {id:uid(), type:'bank', name:'Current Account', currency:'GBP', balance:5500, carried:false, wet:false, dirty:false, customUnitWeightPounds:'', isDefault:false}
+    ];
     const onPerson = gareth.gearLocations[0];
     const setDown = gareth.gearLocations[1];
     const walletId = uid();
@@ -33507,7 +33622,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),ageFrom:11,ageTo:13,location:'Falkland Islands — British Overseas Territory',level:''},
       {id:uid(),ageFrom:13,ageTo:18,location:'Bristol, England',level:''},
       {id:uid(),ageFrom:18,ageTo:26,location:'Plymouth, England',level:''},
-      {id:uid(),ageFrom:24,ageTo:24.6,location:'Helmand Province, Afghanistan',level:''},
+      {id:uid(),ageFrom:24,ageTo:25,location:'Helmand Province, Afghanistan',level:''},
       {id:uid(),ageFrom:26,ageTo:42,location:'Inverness, Scotland',level:''}
     ];
     gareth.subcultures = [
@@ -33518,7 +33633,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),ageFrom:18,ageTo:26,location:'Royal Navy',involvement:'high',level:''},
       {id:uid(),ageFrom:18,ageTo:26,location:'Defence Medical Services / Military Medics',involvement:'veryHigh',level:''},
       {id:uid(),ageFrom:20,ageTo:26,location:'Royal Marines / Commando Support',involvement:'high',level:''},
-      {id:uid(),ageFrom:24,ageTo:24.6,location:'Deployed Forces, Afghanistan',involvement:'high',level:''},
+      {id:uid(),ageFrom:24,ageTo:25,location:'Deployed Forces, Afghanistan',involvement:'high',level:''},
       {id:uid(),ageFrom:26,ageTo:34,location:'Scottish Ambulance Service — Highland Crews',involvement:'veryHigh',level:''},
       {id:uid(),ageFrom:26,ageTo:34,location:'Cairngorm Mountain Rescue Team',involvement:'high',level:''},
       {id:uid(),ageFrom:26,ageTo:42,location:'UK Climbing & Mountaineering Community',involvement:'high',level:''},
@@ -33558,14 +33673,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       skin:'Deep brown', hair:'Short gray hair', eyes:'Dark brown',
       voice:'Warm, measured baritone', temperament:'Thoughtful, patient, quietly stubborn',
       goals:'',
-      features:'Lean, wiry endurance build; short gray beard; pronounced smile lines; weathered hands; upright posture; quick, economical gait; practical field clothing.',
-      vision:'100', hearing:'100', smell:'100'
+      features:'Lean endurance build; short gray beard; pronounced smile lines; weathered hands; upright posture; quick, economical gait; practical field clothing.',
+      vision:'92', hearing:'87', smell:'92'
     };
     calvin.attributes.body = {
-      'Agility':{current:55,max:55}, 'Beauty':{current:45,max:45}, 'Cardio':{current:72,max:72}, 'Constitution':{current:70,max:70}, 'Coordination':{current:50,max:50}, 'Fine Motor Control':{current:76,max:76}, 'Strength':{current:54,max:54}
+      'Agility':{current:55,max:55}, 'Beauty':{current:45,max:45}, 'Cardio':{current:72,max:72}, 'Constitution':{current:66,max:66}, 'Coordination':{current:50,max:50}, 'Fine Motor Control':{current:76,max:76}, 'Strength':{current:54,max:54}
     };
     calvin.attributes.mind = {
-      'Charisma':{current:55,max:55}, 'Creativity':{current:70,max:70}, 'Empathy':{current:55,max:55}, 'Extraversion':{current:37,max:37}, 'Intelligence':{current:88,max:88}, 'Organization':{current:78,max:78}, 'Stability':{current:68,max:68}, 'Will':{current:77,max:77}
+      'Charisma':{current:55,max:55}, 'Creativity':{current:70,max:70}, 'Empathy':{current:59,max:59}, 'Extraversion':{current:37,max:37}, 'Intelligence':{current:88,max:88}, 'Organization':{current:78,max:78}, 'Stability':{current:68,max:68}, 'Will':{current:77,max:77}
     };
     calvin.skills = [
       ['Archaeology',95],
@@ -33595,13 +33710,21 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       ['Survival, Desert',50],
       ['Drawing',45],
       ['Operate Vehicle, Basic Road Vehicles',45],
-      ['3D Modeling',40],
+      ['3D Modeling',25],
       ['Operate Vehicle, Off-Road Vehicles',40],
       ['Cooking',35],
       ['History, Medieval',35],
       ['Knowledge, American Literature',35],
+      ['Language, Spanish',30],
+      ['Language, Hindi',25],
+      ['Language, Sanskrit',25],
+      ['Language, Chinese, Old',25],
+      ['Language, Quechua',20],
+      ['Language, Mandarin Chinese',20],
+      ['Language, isiXhosa',20],
+      ['Language, Afrikaans',15],
       ['Language, French',35],
-      ['Language, Latin',35],
+      ['Language, Latin',40],
       ['Photography',35],
       ['Religion, Islam',35],
       ['Sport, Cycling, Road',35],
@@ -33638,6 +33761,53 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     ].map(([name,level]) => ({id:uid(), name, level:String(level), groupId:''}));
     while (calvin.skills.length < 60) calvin.skills.push({id:uid(), name:'', level:'', groupId:''});
 
+    calvin.funds = [
+      {id:uid(), type:'cash', name:'Cash', currency:'USD', balance:80, carried:true, wet:false, dirty:false, customUnitWeightPounds:'', isDefault:true},
+      {id:uid(), type:'bank', name:'Checking', currency:'USD', balance:10000, carried:false, wet:false, dirty:false, customUnitWeightPounds:'', isDefault:false}
+    ];
+    const calvinOnPerson = calvin.gearLocations[0];
+    const calvinSetDown = calvin.gearLocations[1];
+    const calvinWalletId = uid();
+    const calvinKeyRingId = uid();
+    const calvinMessengerId = uid();
+    const calvinWaterBottleId = uid();
+    const calvinWalletLocation = {id:uid(), name:'Wallet, Bifold — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:calvinWalletId, sourceCatalogId:'gc0137', maxWeightPounds:1};
+    const calvinKeyRingLocation = {id:uid(), name:'Key Ring — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:calvinKeyRingId, sourceCatalogId:'gc0139', maxWeightPounds:1};
+    const calvinMessengerLocation = {id:uid(), name:'Messenger Bag, 15 L — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:calvinMessengerId, sourceCatalogId:'gc0111', maxWeightPounds:20};
+    calvin.gearLocations = [calvinOnPerson, calvinSetDown, calvinWalletLocation, calvinKeyRingLocation, calvinMessengerLocation];
+    calvin.gear = [
+      {id:uid(),item:'Underwear',catalogId:'gc0001',color:'Gray',quantity:1,weight:0.18,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Button-Up Shirt, Casual',catalogId:'gc0015',color:'Blue',quantity:1,weight:0.65,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Chinos',catalogId:'gc0039',color:'Tan',quantity:1,weight:1.0,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Dress Socks, Pair',catalogId:'gc0055',color:'Navy Blue',quantity:1,weight:0.1,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Dress Shoes, Pair',catalogId:'gc0070',color:'Brown',quantity:1,weight:2.0,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Dress Belt',catalogId:'gc2038',color:'Brown',quantity:1,weight:0.35,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Blazer',catalogId:'gc2037',color:'Navy Blue',quantity:1,weight:1.3,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Reading Glasses',catalogId:'gc0148',color:'Brown',quantity:1,weight:0.08,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Fitness Watch',catalogId:'gc0152',color:'Black',quantity:1,weight:0.2,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Smartphone, Standard',catalogId:'gc0178',color:'Black',quantity:1,weight:0.43,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Handkerchief',catalogId:'gc2544',color:'White',quantity:1,weight:0.05,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:calvinWalletId,item:'Wallet, Bifold',catalogId:'gc0137',color:'Brown',quantity:1,weight:0.18,condition:'Serviceable',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:"Driver's License / ID Card",catalogId:'gc0142',quantity:1,weight:0.01,condition:'Good',wet:false,dirty:false,locationId:calvinWalletLocation.id},
+      {id:uid(),item:'Credit Card',catalogId:'gc0143',quantity:1,weight:0.01,condition:'Good',wet:false,dirty:false,locationId:calvinWalletLocation.id},
+      {id:calvinKeyRingId,item:'Key Ring',catalogId:'gc0139',color:'Silver',quantity:1,weight:0.02,condition:'Good',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Key, Home',catalogId:'gc0140',color:'Silver',quantity:1,weight:0.02,condition:'Good',wet:false,dirty:false,locationId:calvinKeyRingLocation.id},
+      {id:uid(),item:'Key, Car',catalogId:'gc0140',color:'Brass',quantity:1,weight:0.02,condition:'Serviceable',wet:false,dirty:false,locationId:calvinKeyRingLocation.id},
+      {id:calvinMessengerId,item:'Messenger Bag, 15 L',catalogId:'gc0111',color:'Tan',quantity:1,weight:1.8,condition:'Serviceable',wet:false,dirty:false,locationId:calvinOnPerson.id},
+      {id:uid(),item:'Tablet, 11-Inch',catalogId:'gc0182',color:'Gray',quantity:1,weight:0.98,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:calvinWaterBottleId,item:'Water Bottle, Insulated, 750 mL',catalogId:'gc0517',color:'Black',quantity:1,weight:0.5,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:uid(),item:'Water, 1 L',catalogId:'gc1975',color:'Clear',quantity:0.75,weight:2.2,condition:'New',wet:false,dirty:false,locationId:calvinMessengerLocation.id,embeddedInGearId:calvinWaterBottleId},
+      {id:uid(),item:'Sunglasses, Lightweight',catalogId:'gc0145',color:'Brown',quantity:1,weight:0.07,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:uid(),item:'Notebook, Pocket',catalogId:'gc0153',color:'Brown',quantity:1,weight:0.25,condition:'Serviceable',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:uid(),item:'Pen, Ballpoint',catalogId:'gc0156',color:'Blue',quantity:1,weight:0.02,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:uid(),item:'Business Card',catalogId:'gc1542',color:'Multicolor',quantity:10,weight:0.002,condition:'New',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:uid(),item:'Document Folder',catalogId:'gc0717',color:'Blue',quantity:1,weight:0.15,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:uid(),item:'Power Bank, 10,000 mAh',catalogId:'gc0226',color:'Black',quantity:1,weight:0.30875,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:uid(),item:'USB-C to USB-C Cable, 1 m',catalogId:'gc0232',color:'Black',quantity:1,weight:0.07,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:uid(),item:'Wall Charger, USB-C, 30 W',catalogId:'gc0229',color:'White',quantity:1,weight:0.12,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:uid(),item:'Bluetooth Earbuds, Pair',catalogId:'gc0218',color:'Black',quantity:1,weight:0.09,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id}
+    ];
+
     // Areas reflect only residences of roughly six months or longer; shorter field seasons stay in the biography.
     calvin.areas = [
       {id:uid(),ageFrom:0,ageTo:22,location:'Philadelphia, Pennsylvania',level:''},
@@ -33645,7 +33815,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),ageFrom:26,ageTo:32,location:'Cambridge, Massachusetts',level:''},
       {id:uid(),ageFrom:32,ageTo:69,location:'Philadelphia, Pennsylvania',level:''},
       {id:uid(),ageFrom:33,ageTo:35,location:'Syria',level:''},
-      {id:uid(),ageFrom:38,ageTo:39.5,location:'Turkey',level:''},
+      {id:uid(),ageFrom:38,ageTo:39,location:'Turkey',level:''},
       {id:uid(),ageFrom:43,ageTo:44,location:'Egypt',level:''}
     ];
     calvin.subcultures = [
@@ -34670,6 +34840,42 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Background includes Penn, two University of Chicago master’s degrees, Harvard Ph.D. specialization in the Ancient Near East, extended field residence in Syria/Turkey/Egypt, Marian, one adult daughter, one grandchild, several dogs, marathon running, triathlon, jazz/soul, food/wine, and horror movies.
      - Calvin's starter-skill setup remains unfinished so the intentionally unassigned Skill XP stays visible/editable.
      - Visible footer synchronized to Character Sheet v733. -->
+
+<!-- INTERNAL v734 CALVIN / BACKGROUND AGE PASS — NOT USER-FACING
+     - Calvin Brooks: Constitution 70→66 and Empathy 55→59, preserving the finalized 950-point attribute total while respecting the age-69 Constitution cap.
+     - Calvin: removes “wiry” from distinguishing features; 3D Modeling 40→25; Latin 35→40; no other skill levels changed in this pass.
+     - Adds Calvin's practical warm-weather field clothing and everyday field EDC: phone/wallet/keys, fitness watch, 15 L messenger bag, water, sun protection, notebook/writing tools, archaeology trowel/brushes/loupe, compact measuring/navigation/light/power items, and earbuds.
+     - Built-in Area/Subculture ages no longer use decimals (Gareth's Afghanistan entries use 24–25; Calvin's Turkey residence uses 38–39).
+     - Area/Subculture validation now accepts Age To equal to Age From. Equal-age entries are treated as a single year for level calculations; only Age To earlier than Age From is invalid.
+     - Visible footer synchronized to Character Sheet v734. -->
+
+
+<!-- INTERNAL v735 SENSE AGING / CALVIN LANGUAGES / DENSITY PASS — NOT USER-FACING
+     - Adds Calvin's approved global language exposure: Spanish 30; Hindi/Sanskrit/Old Chinese 25; Quechua/Mandarin/isiXhosa 20; Afrikaans 15. Calvin now spends 379.75 / 380.5 starter Skill XP, leaving 0.75 unassigned.
+     - Applies age-appropriate sense penalties: Tom Vision 90 / Hearing 94; Gareth Vision 99 / Hearing 99; Calvin Vision 92 / Hearing 87 / Smell 92.
+     - Overview warns characters over 40 when total Vision/Hearing/Smell penalties are less than one point per year over 40.
+     - Skin, Hair, and Eyes value text is smaller at all resolutions.
+     - Phone Skills use smaller name/level text, shorter rows, and reclaim the drag-handle gutter while locked.
+     - Gear receives a modest all-device vertical-density pass; phone Gear is further compacted and omits the repeated ITEM label.
+     - Calvin's business-meeting EDC replacement remains queued separately because its exact contents have not yet been finalized.
+     - Visible footer synchronized to Character Sheet v736. -->
+
+<!-- INTERNAL v736 CALVIN BUSINESS-MEETING EDC — NOT USER-FACING
+     - Replaces Calvin Brooks's dig-site loadout with first-meeting smart-casual clothing and ordinary professional EDC.
+     - Clothing: casual button-up shirt, chinos, dress socks/shoes/belt, navy blazer; fitness watch retained.
+     - On-person EDC: phone, reading glasses, bifold wallet with ID/card, key ring with home/car keys, and white handkerchief.
+     - Tan 15 L messenger bag: 11-inch tablet, 750 mL insulated water bottle filled with water, sunglasses, pocket notebook, ballpoint pen, 10 business cards, document folder, 10,000 mAh power bank, USB-C cable, 30 W charger, and Bluetooth earbuds.
+     - Removes Calvin's archaeology trowel/brushes, loupe, tape, compass, flashlight, sunscreen, lip balm, mechanical pencil, hiking clothing, and other dig-specific carry from this template loadout.
+     - Visible footer synchronized to Character Sheet v736. -->
+
+<!-- INTERNAL v737 TEMPLATE CHECKING/CURRENT-ACCOUNT BALANCES — NOT USER-FACING
+     - Adds/updates ordinary liquid bank balances for each built-in template, using career stage/income as the primary guide and Organization as a modest planning/cash-buffer influence rather than treating the balance as total wealth.
+     - Morgan Vale (Organization 70): Checking $6,500 USD; carried cash remains $120.
+     - Tom Mercer (Organization 75): Checking $11,000 USD; carried cash remains $80.
+     - Gareth Cole (Organization 69): Current Account £5,500 GBP; carried cash remains £60.
+     - Calvin Brooks (Organization 78): Checking $10,000 USD; carried cash remains $80.
+     - These balances represent readily available transaction-account money only; savings, investments, retirement accounts, property, and other net worth are not modeled here.
+     - Visible footer synchronized to Character Sheet v737. -->
 
 </body>
 </html>
