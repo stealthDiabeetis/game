@@ -10189,6 +10189,58 @@
   }
 </style>
 
+
+
+<style id="v740-phone-gear-breathing-room-styles">
+  /* v740: phone Gear trades center-stack whitespace for slightly more outer
+     breathing room. Secondary fields shrink to 26px; number steppers are
+     keyboard-entry only on phone so their tiny increment arrows cannot clip. */
+  @media screen and (max-width: 600px),
+         screen and (max-height: 520px) and (pointer: coarse) {
+    #gear .gear-table tr.gear-row {
+      padding-top: 5px !important;
+      padding-bottom: 5px !important;
+      row-gap: 1px !important;
+    }
+
+    #gear .gear-table .gear-quantity-cell .numeric-stepper,
+    #gear .gear-table .gear-weight-cell .numeric-stepper,
+    #gear .gear-table .gear-condition-col .combo-input-wrap,
+    #gear .gear-table .gear-quantity-cell input,
+    #gear .gear-table .gear-weight-cell input,
+    #gear .gear-table .gear-condition-col input,
+    #gear .gear-table .gear-condition-col .combo-arrow,
+    #gear .gear-table button.gear-color-picker,
+    #gear .gear-color-picker > summary {
+      height: 26px !important;
+      min-height: 26px !important;
+    }
+
+    #gear .gear-table td:nth-child(6),
+    #gear .gear-table td:nth-child(7) {
+      min-height: 26px !important;
+    }
+    #gear .gear-table td:nth-child(6) input.gear-check,
+    #gear .gear-table td:nth-child(7) input.gear-check {
+      height: 26px !important;
+      min-height: 26px !important;
+      flex-basis: 26px !important;
+    }
+
+    /* Phone numeric Gear fields are typed directly. Removing the bespoke
+       increment controls also lets the value use the full narrow field. */
+    #gear .gear-table .gear-numeric-stepper .numeric-stepper-buttons {
+      display: none !important;
+    }
+    #gear .gear-table .gear-numeric-stepper input,
+    #gear .gear-table .gear-weight-fixed input[readonly] {
+      padding-left: 3px !important;
+      padding-right: 3px !important;
+      text-align: center !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -10453,7 +10505,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v739</div>
+<div class="footer-note no-print">Character Sheet v740</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -35052,6 +35104,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Phone Gear: Qty and Wt numeric steppers no longer retain vertical auto margins, so all secondary controls share the same top baseline.
      - Tablet/desktop finished-starter Skills: numeric level inputs fit the 27 px stepper interior and center their text vertically instead of sitting low.
      - Visible footer synchronized to Character Sheet v739. -->
+
+<!-- INTERNAL v740 PHONE GEAR FIELD / SPACING REBALANCE — NOT USER-FACING
+     - Phone Gear secondary controls are reduced from 28 px to 26 px.
+     - Phone Gear Qty/Wt increment arrows are hidden; values are entered directly by keyboard, avoiding clipped arrows in the narrow controls.
+     - The center row gap below the Item name field is reduced from 3 px to 1 px.
+     - Top and bottom Gear-row padding increase from 4 px to 5 px, moving reclaimed space to the outer edges so rows feel less crowded while remaining compact.
+     - Visible footer synchronized to Character Sheet v740. -->
 
 </body>
 </html>
