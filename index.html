@@ -10150,6 +10150,45 @@
   }
 </style>
 
+
+<style id="v739-gear-skill-alignment-styles">
+  /* v739: align compact phone Gear controls to one shared field baseline.
+     v738 reduced most secondary controls to 28px, but the actual Color button
+     still inherited an older 36px rule and Weight retained auto vertical margins. */
+  @media screen and (max-width: 600px),
+         screen and (max-height: 520px) and (pointer: coarse) {
+    #gear .gear-table button.gear-color-picker {
+      height: 28px !important;
+      min-height: 28px !important;
+    }
+    #gear .gear-table .gear-quantity-cell .numeric-stepper,
+    #gear .gear-table .gear-weight-cell .numeric-stepper {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+    #gear .gear-table td:nth-child(6) input.gear-check,
+    #gear .gear-table td:nth-child(7) input.gear-check {
+      height: 28px !important;
+      min-height: 28px !important;
+      flex-basis: 28px !important;
+    }
+  }
+
+  /* Finished starter skills use a numeric input inside a 27px stepper on
+     tablet/desktop. Generic skill-input rules had allowed that inner input to
+     grow to 29px, making the number sit visibly low. Fit it to the stepper's
+     25px interior and center the text vertically. */
+  @media screen and (min-width: 601px) {
+    #skills.starter-skills-finished .skill-entry input.skill-level-number {
+      min-height: 25px !important;
+      height: 25px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      line-height: 25px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -10414,7 +10453,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v738</div>
+<div class="footer-note no-print">Character Sheet v739</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -35006,6 +35045,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Phone Gear rows no longer float as cards with empty gaps: rows are contiguous and separated by a single divider line, similar to Skills.
      - Phone secondary controls are reduced to 28 px and row/card padding is tightened further.
      - Visible footer synchronized to Character Sheet v738. -->
+
+
+<!-- INTERNAL v739 GEAR CONTROL ALIGNMENT / FINISHED-SKILL VERTICAL CENTERING — NOT USER-FACING
+     - Phone Gear: Color now matches the 28 px Qty / Wt / Condition control height; Dirty and Wet controls also use 28 px.
+     - Phone Gear: Qty and Wt numeric steppers no longer retain vertical auto margins, so all secondary controls share the same top baseline.
+     - Tablet/desktop finished-starter Skills: numeric level inputs fit the 27 px stepper interior and center their text vertically instead of sitting low.
+     - Visible footer synchronized to Character Sheet v739. -->
 
 </body>
 </html>
