@@ -10241,6 +10241,138 @@
   }
 </style>
 
+
+
+<style id="v741-phone-width-field-density-styles">
+  /* v741: use more of the narrow phone viewport on Gear, Skills, Background,
+     and Conditions. Nested Skills/Background/Conditions cards also shed some
+     redundant horizontal padding. Field-height changes in this pass are phone
+     only; tablet/desktop remain at their established densities. */
+  @media screen and (max-width: 600px),
+         screen and (max-height: 520px) and (pointer: coarse) {
+    #gear.screen,
+    #skills.screen,
+    #background.screen,
+    #conditions.screen {
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+    }
+
+    /* Groups otherwise double-pad Skills: once at the screen and again inside
+       the group. Keep a modest inset rather than spending 10px per side. */
+    #skills .skill-group-grid {
+      padding: 5px !important;
+      gap: 5px !important;
+    }
+
+    /* Compact phone Skills to the same 13px value type used by Gear item names. */
+    #skills .skill-entry {
+      min-height: 30px !important;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+    }
+    #skills .skill-name-highlight-wrap,
+    #skills .skill-name-highlight,
+    #skills .skill-entry .skill-name-highlight-wrap > input {
+      height: 26px !important;
+      min-height: 26px !important;
+    }
+    #skills .skill-name-highlight {
+      padding-top: 3px !important;
+      padding-bottom: 3px !important;
+      line-height: 18px !important;
+    }
+    #skills .skill-entry .skill-name-highlight-wrap > input,
+    #skills .skill-name-highlight,
+    #skills .skill-level-button,
+    #skills .skill-entry input.skill-level-number {
+      font-size: 13px !important;
+    }
+    #skills .skill-level-button,
+    #skills .skill-level-stepper {
+      min-height: 26px !important;
+      height: 26px !important;
+    }
+    #skills .skill-entry input.skill-level-number {
+      min-height: 24px !important;
+      height: 24px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      line-height: 24px !important;
+    }
+    #skills .skill-drag-handle { height: 26px !important; }
+    #skills .skill-entry .icon-btn { height: 26px !important; width: 26px !important; }
+
+    /* Areas/Subcultures: 26px controls and 13px values, with less redundant
+       card inset. Preserve the existing two-row phone information hierarchy. */
+    #background .life-table tr {
+      gap: 5px !important;
+      padding: 7px !important;
+    }
+    #background .life-table td { gap: 2px !important; }
+    #background .life-table input,
+    #background .life-table select,
+    #background .life-table .life-number-stepper {
+      min-height: 26px !important;
+      height: 26px !important;
+      font-size: 13px !important;
+    }
+    #background .life-table .life-number-stepper input {
+      min-height: 24px !important;
+      height: 24px !important;
+      line-height: 24px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    /* Conditions use the same compact field height/type, while their cards keep
+       enough internal structure for labels and long progression text. */
+    #conditions .condition-tracker-table tr {
+      gap: 5px !important;
+      padding: 7px !important;
+    }
+    #conditions .condition-tracker-table td { gap: 2px !important; }
+    #conditions .condition-tracker-table input,
+    #conditions .condition-tracker-table select {
+      min-height: 26px !important;
+      height: 26px !important;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+      font-size: 13px !important;
+    }
+    #conditions .condition-stage-stepper,
+    #conditions .condition-progression-composite {
+      min-height: 26px !important;
+      height: 26px !important;
+    }
+    #conditions .condition-stage-value {
+      min-height: 24px !important;
+      height: 24px !important;
+      padding: 2px 3px !important;
+      font-size: 13px !important;
+      line-height: 20px !important;
+    }
+    #conditions .condition-stage-step-button {
+      min-height: 12px !important;
+      height: 12px !important;
+    }
+    #conditions .condition-progression-composite input {
+      min-height: 24px !important;
+      height: 24px !important;
+      line-height: 20px !important;
+    }
+  }
+</style>
+
+
+<style id="v742-background-age-centering-styles">
+  /* v742: Center Area/Subculture age values in their fields at every responsive size. */
+  #background .life-table input[data-field="ageFrom"],
+  #background .life-table input[data-field="ageTo"] {
+    text-align: center !important;
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -10505,7 +10637,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v740</div>
+<div class="footer-note no-print">Character Sheet v742</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -34014,7 +34146,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),item:'Sunglasses, Lightweight',catalogId:'gc0145',color:'Brown',quantity:1,weight:0.07,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
       {id:uid(),item:'Notebook, Pocket',catalogId:'gc0153',color:'Brown',quantity:1,weight:0.25,condition:'Serviceable',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
       {id:uid(),item:'Pen, Ballpoint',catalogId:'gc0156',color:'Blue',quantity:1,weight:0.02,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
-      {id:uid(),item:'Business Card',catalogId:'gc1542',color:'Multicolor',quantity:10,weight:0.002,condition:'New',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
+      {id:uid(),item:'Business Card',catalogId:'gc1542',color:'Multicolor',quantity:30,weight:0.002,condition:'New',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
       {id:uid(),item:'Document Folder',catalogId:'gc0717',color:'Blue',quantity:1,weight:0.15,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
       {id:uid(),item:'Power Bank, 10,000 mAh',catalogId:'gc0226',color:'Black',quantity:1,weight:0.30875,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
       {id:uid(),item:'USB-C to USB-C Cable, 1 m',catalogId:'gc0232',color:'Black',quantity:1,weight:0.07,condition:'Good',wet:false,dirty:false,locationId:calvinMessengerLocation.id},
@@ -35111,6 +35243,22 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - The center row gap below the Item name field is reduced from 3 px to 1 px.
      - Top and bottom Gear-row padding increase from 4 px to 5 px, moving reclaimed space to the outer edges so rows feel less crowded while remaining compact.
      - Visible footer synchronized to Character Sheet v740. -->
+
+
+
+<!-- INTERNAL v741 PHONE WIDTH / SKILL-BACKGROUND-CONDITION DENSITY + CALVIN CARDS — NOT USER-FACING
+     - Calvin Brooks carries 30 business cards instead of 10.
+     - Phone Gear/Skills/Background/Conditions use 5px screen-side padding instead of the generic 12px, preserving the 8px outer safe-area/main inset while reclaiming usable width.
+     - Grouped phone Skills reduce the nested group-grid inset from 10px to 5px per side.
+     - Phone Skill name/level controls are 26px tall with 13px value text, matching Gear item-name typography; row controls compact accordingly.
+     - Phone Areas/Subcultures use 26px controls with 13px value text and tighter 7px card padding / 5px internal gaps.
+     - Phone Condition fields and Stage controls use a 26px baseline with 13px value text and tighter 7px card padding / 5px internal gaps.
+     - Tablet/desktop field heights and horizontal padding are intentionally unchanged in this pass.
+     - Visible footer synchronized to Character Sheet v741. -->
+
+<!-- INTERNAL v742 BACKGROUND AGE ALIGNMENT — NOT USER-FACING
+     - Area and Subculture Age From / Age To values are centered in their fields at all resolutions.
+     - Visible footer synchronized to Character Sheet v742. -->
 
 </body>
 </html>
