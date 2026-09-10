@@ -10373,6 +10373,84 @@
   }
 </style>
 
+
+<style id="v744-phone-skill-row-horizontal-density-styles">
+  /* v744: reclaim horizontal room inside phone Skill rows without changing the
+     section/group/card inset outside the skill-column cells. Trim the row's own
+     side padding and the spare width around the drag/delete controls. */
+  @media screen and (max-width: 600px),
+         screen and (max-height: 520px) and (pointer: coarse) {
+    #skills .skill-entry {
+      padding-left: 2px !important;
+      padding-right: 2px !important;
+    }
+
+    #skills .skill-column-header,
+    #skills .skill-entry {
+      grid-template-columns: 38px minmax(0, 1fr) 44px 28px !important;
+    }
+
+    #skills.starter-skills-finished .skill-column-header,
+    #skills.starter-skills-finished .skill-entry {
+      grid-template-columns: 38px minmax(0, 1fr) 44px 28px !important;
+    }
+
+    #skills.section-locked .skill-column-header,
+    #skills.section-locked .skill-entry,
+    #skills.starter-skills-finished.section-locked .skill-column-header,
+    #skills.starter-skills-finished.section-locked .skill-entry {
+      grid-template-columns: 22px minmax(0, 1fr) 44px !important;
+    }
+  }
+</style>
+
+<style id="v745-phone-background-age-and-condition-delete-fixes">
+  /* v745: phone-only cleanup. Background life-number steppers become direct
+     entry fields with no increment buttons, which also lets age values center
+     on the full control. Conditions reserve a dedicated delete column so the
+     red X no longer overlaps/clips the Stage control. */
+  @media screen and (max-width: 600px),
+         screen and (max-height: 520px) and (pointer: coarse) {
+    #background .life-table .life-number-stepper .numeric-stepper-buttons {
+      display: none !important;
+    }
+    #background .life-table .life-number-stepper input {
+      padding-left: 4px !important;
+      padding-right: 4px !important;
+      text-align: center !important;
+    }
+
+    #conditions .condition-tracker-table tr {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 26px !important;
+    }
+    #conditions .condition-tracker-table td:nth-child(1) { grid-column: 1; }
+    #conditions .condition-tracker-table td:nth-child(2) { grid-column: 2; }
+    #conditions .condition-tracker-table td:nth-child(3),
+    #conditions .condition-tracker-table td:nth-child(4),
+    #conditions .condition-tracker-table td:nth-child(5) {
+      grid-column: 1 / -1;
+    }
+    #conditions .condition-tracker-table td.delete-cell {
+      position: static !important;
+      grid-column: 3 !important;
+      grid-row: 1 !important;
+      width: 26px !important;
+      align-self: end !important;
+      justify-self: end !important;
+      display: flex !important;
+      justify-content: flex-end !important;
+      padding: 0 !important;
+    }
+    #conditions .condition-tracker-table .condition-delete-btn {
+      width: 26px !important;
+      min-width: 26px !important;
+      height: 26px !important;
+      min-height: 26px !important;
+      border-radius: 7px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -10637,7 +10715,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v743</div>
+<div class="footer-note no-print">Character Sheet v745</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -35265,5 +35343,19 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 <!-- INTERNAL v743 PHONE OUTER PADDING REBALANCE — NOT USER-FACING
      - Phone Gear, Skills, Background, and Conditions outer screen-side padding restored from 5px to 8px per side.
      - Nested grouped-Skills padding remains 5px per side so grouped lists still avoid the previous doubled inset. -->
+
+
+<!-- INTERNAL v744 PHONE SKILL ROW HORIZONTAL DENSITY — NOT USER-FACING
+     - Phone Skill rows keep the existing section/group/card outer inset unchanged.
+     - Row-internal left/right padding is reduced from 4px to 2px.
+     - The drag/index column is reduced from 42px to 38px and the delete column from 34px (30px finished) to 28px, keeping the 26px delete button with a small inset.
+     - Header grid columns follow the rows so Skill/Level labels remain aligned. -->
+
+<!-- INTERNAL v745 PHONE BACKGROUND AGE / CONDITION DELETE FIXES — NOT USER-FACING
+     - Phone Background age/level numeric steppers hide their increment/decrement arrows; values use the full field and are centered.
+     - Phone Conditions use a dedicated 26 px delete column aligned with the first-row controls so the red X no longer overlaps or clips the Stage field.
+     - Tablet/desktop behavior is unchanged.
+     - Visible footer synchronized to Character Sheet v745. -->
+
 </body>
 </html>
