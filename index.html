@@ -2499,6 +2499,15 @@
       background: color-mix(in srgb, var(--muted) 15%, transparent);
       color: var(--text);
     }
+    .bulk-skill-option.has-present-descendant:not(.already-present):not(.selected),
+    .bulk-skill-parent-only.has-present-descendant {
+      background: color-mix(in srgb, var(--muted) 15%, transparent);
+      color: var(--text);
+      border-radius: 4px;
+    }
+    .bulk-skill-option.has-present-descendant:not(.already-present):not(.selected) .bulk-check {
+      visibility: hidden;
+    }
     .bulk-skill-option.already-present:not(.selected) .bulk-check {
       border-color: color-mix(in srgb, var(--muted) 72%, var(--line));
       background: color-mix(in srgb, var(--muted) 20%, var(--panel-2));
@@ -9816,22 +9825,22 @@
     @media screen and (max-width: 600px), screen and (max-height: 520px) and (pointer: coarse) {
       #skills .skill-column-header,
       #skills .skill-entry {
-        grid-template-columns: 26px minmax(0, 1fr) 44px 34px;
+        grid-template-columns: 42px minmax(0, 1fr) 44px 34px;
       }
 
       #skills.section-locked .skill-column-header,
       #skills.section-locked .skill-entry {
-        grid-template-columns: 26px minmax(0, 1fr) 44px;
+        grid-template-columns: 42px minmax(0, 1fr) 44px;
       }
 
       #skills.starter-skills-finished .skill-column-header,
       #skills.starter-skills-finished .skill-entry {
-        grid-template-columns: 26px minmax(0, 1fr) 44px 30px;
+        grid-template-columns: 42px minmax(0, 1fr) 44px 30px;
       }
 
       #skills.starter-skills-finished.section-locked .skill-column-header,
       #skills.starter-skills-finished.section-locked .skill-entry {
-        grid-template-columns: 26px minmax(0, 1fr) 44px;
+        grid-template-columns: 42px minmax(0, 1fr) 44px;
       }
 
       #skills .skill-entry .skill-name-highlight-wrap > input,
@@ -9839,6 +9848,22 @@
       #skills .skill-level-button,
       #skills .skill-entry input.skill-level-number {
         font-size: 15px !important;
+      }
+
+      #skills .skill-order-cell {
+        gap: 3px;
+        overflow: visible;
+      }
+
+      #skills .skill-drag-handle {
+        width: 20px;
+        min-width: 20px;
+      }
+
+      #skills .skill-number {
+        flex: 0 0 auto;
+        min-width: 14px;
+        white-space: nowrap;
       }
 
       #skills .skill-level-stepper {
@@ -9858,6 +9883,10 @@
     }
 
 </style>
+
+<!-- INTERNAL v717 PHONE SKILL INDEX FIT — NOT USER-FACING
+     - Phone Skills rows reserve a wider first grid column for the drag handle + row number so two- and three-digit skill indices are not clipped.
+     - The phone-only drag handle is slightly narrower; the compact 44 px Level column from v712 remains unchanged. -->
 
 <style id="v713-clothing-collapse-styles">
   #gear .gear-clothing-group-row td {
@@ -10192,7 +10221,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v714</div>
+<div class="footer-note no-print">Character Sheet v720</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -23750,6 +23779,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return state.skills.some(skill => normalizedBulkSkillName(skill?.name) === target);
   }
 
+  function bulkTreeNodeHasPresentDescendant(node) {
+    return Array.isArray(node?.children) && node.children.some(child =>
+      bulkSkillAlreadyOnSheet(child.value) || bulkTreeNodeHasPresentDescendant(child)
+    );
+  }
+
   function updateBulkSelectionUi() {
     const count = bulkSelectedSkills.size;
     document.getElementById('bulkSelectionCount').textContent = `${count} selected`;
@@ -23807,13 +23842,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const selected = !parentOnly && bulkSelectedSkills.has(node.value);
     const alreadyPresent = !parentOnly && bulkSkillAlreadyOnSheet(node.value);
     const hasChildren = node.children.length > 0;
+    const hasPresentDescendant = hasChildren && bulkTreeNodeHasPresentDescendant(node);
     const expanded = hasChildren && (Boolean(query) || bulkExpandedSkills.has(node.value));
     const toggle = hasChildren
       ? `<button type="button" class="bulk-tree-toggle" data-bulk-toggle="${esc(node.value)}" aria-label="${expanded ? 'Collapse' : 'Expand'} ${esc(node.label)}" aria-expanded="${expanded ? 'true' : 'false'}">${expanded ? '−' : '+'}</button>`
       : '<span class="bulk-tree-toggle-spacer" aria-hidden="true"></span>';
+    const descendantClass = hasPresentDescendant && !alreadyPresent ? 'has-present-descendant' : '';
+    const descendantHint = hasPresentDescendant && !alreadyPresent ? '; contains a skill already on sheet' : '';
     const row = parentOnly
-      ? `<div class="bulk-skill-parent-only"><span class="bulk-check-spacer" aria-hidden="true"></span><span>${esc(node.label)}</span></div>`
-      : `<button type="button" class="bulk-skill-option ${selected ? 'selected' : ''} ${alreadyPresent ? 'already-present' : ''} ${hasChildren ? 'has-children' : ''}" data-bulk-skill="${esc(node.value)}" aria-pressed="${selected ? 'true' : 'false'}" aria-label="${esc(node.label)}${alreadyPresent ? '; already on sheet; select to add another' : ''}">
+      ? `<div class="bulk-skill-parent-only ${hasPresentDescendant ? 'has-present-descendant' : ''}"${hasPresentDescendant ? ' title="Contains a skill already on sheet"' : ''}><span class="bulk-check-spacer" aria-hidden="true"></span><span>${esc(node.label)}</span></div>`
+      : `<button type="button" class="bulk-skill-option ${selected ? 'selected' : ''} ${alreadyPresent ? 'already-present' : ''} ${descendantClass} ${hasChildren ? 'has-children' : ''}" data-bulk-skill="${esc(node.value)}" aria-pressed="${selected ? 'true' : 'false'}" aria-label="${esc(node.label)}${alreadyPresent ? '; already on sheet; select to add another' : descendantHint}">
           <span class="bulk-check" aria-hidden="true">✓</span><span>${esc(node.label)}</span>
         </button>`;
     return `<div class="bulk-tree-node">
@@ -33224,18 +33262,18 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     };
     tom.skills = [
       ['Engineering, Structural',85], ['Engineering, Geotechnical',85], ['Physics, Classical',80], ['Mathematics',75], ['Knowledge, Pretzels',75],
-      ['Geology',70], ['Material Science',70], ['Excavation',70], ['Carpentry',50], ['Masonry',50], ['Mechanic, General',45], ['Writing, Technical',70],
+      ['Geology',70], ['Material Science',70], ['Excavation',70], ['Carpentry',50], ['Masonry',50], ['Mechanic, General',45], ['Writing, Technical',55],
       ['Mining',60], ['Rigging',60], ['Stress Inoculation (SI), Confined Spaces',60],
       ['Survival, Subterranean',55], ['Surveying',55], ['Metrology',55], ['Mechanic, Heavy/Industrial',40], ['Metalworking, Welding/Joining',45], ['Operate Vehicle, Basic Road Vehicles',55], ['Fishing, Freshwater',55],
-      ['Computers, General Systems',50], ['Electrical',40], ['Cooking',50], ['Business Management, Construction',50],
-      ['Plumbing',35], ['Operate Vehicle, Earthmoving Equipment',45], ['Electronics, Communications',45], ['Knowledge, Subterranean Wildlife',45], ['Knowledge, Classic & Alternative Rock',45], ['Architecture, Tunnels',80], ['Teaching',45], ['Caving',50],
+      ['Computers, General Systems',50], ['3D Modeling',50], ['Electrical',40], ['Cooking',50], ['Business Management, Construction',40], ['Physics, Quantum',20],
+      ['Plumbing',35], ['Operate Vehicle, Earthmoving Equipment',45], ['Electronics, Communications',45], ['Knowledge, Subterranean Wildlife',45], ['Knowledge, Classic & Alternative Rock',45], ['Architecture, Tunnels',75], ['Teaching',45], ['Caving',50],
       ['Operate Vehicle, Off-Road Vehicles',40], ['Instrument, Guitar',40], ['Navigation, Road',40], ['Bureaucracy',40],
-      ['Horticulture',35], ['Gaming, Puzzle',35], ['Language, Spanish',35], ['Medical, Emergency',35], ['Electronics, Repair',35], ['Astronomy',35], ['Knowledge, College Basketball',35], ['Architecture, Historic Preservation',60],
+      ['Horticulture',35], ['Gaming, Puzzle',35], ['Language, Spanish',35], ['Medical, Emergency',35], ['Electronics, Repair',35], ['Electronics, Scientific',55], ['Electronics, Remote Sensing',40], ['Astronomy',35], ['Knowledge, College Basketball',35], ['Architecture, Historic Preservation',60],
       ['Photography',30], ['Swimming',30], ['Knowledge, Midwestern Freshwater Fish',30], ['Knowledge, Amateur Radio',30], ['Religion, Christianity',35], ['Logistics',30], ['History, Military',30],
       ['Singing / Vocal, Rock',25], ['Wildlife Observation, Birds',25], ['Knowledge, Cast-Iron Cookware',25], ['HVAC',25], ['History, Medieval',25],
       ['Weapon, Handguns, Revolvers',20], ['Sport, Basketball',20], ['Accounting',20], ['Locksmith',20], ['Magic Tricks',25],
       ['Dance, Two-Step',15], ['Gaming, First-Person Shooter',15], ['Knowledge, Bourbon',15], ['Pest Control',20],
-      ['Drawing',10], ['Animal Handling, Cats',70], ['Knowledge, Local Railroad History',10],
+      ['Drawing',10], ['Animal Handling, Cats',65], ['Knowledge, Local Railroad History',10],
       ['Gaming, Card Games',35], ['Electronics, Audio',35], ['Knowledge, Local Diners',35], ['Cleaning',30], ['Knowledge, Weather Folklore',25], ['Animal Handling, Dogs',20],
       ['Instrument, Piano',5], ['Operate Vehicle, Light Fixed-Wing Aircraft',5]
     ].map(([name,level]) => ({id:uid(), name, level:String(level), groupId:''}));
@@ -33321,6 +33359,190 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     saveNow();
   }
 
+
+  function loadGarethColeCharacter() {
+    const gareth = defaultState();
+    gareth.ui.starterSkillsFinished = true;
+    gareth.identity = {...gareth.identity,
+      player:'', name:'Gareth Cole', sex:'M', age:42, height:'6 ft 0 in', weight:180,
+      skin:'Fair; sun- and weathered', hair:'Short dark-blond/light-brown; graying at the temples', eyes:'Blue-gray',
+      voice:'Low, steady British baritone; dry, understated delivery',
+      temperament:'Calm, pragmatic, compassionate; understated',
+      goals:'Keep the team alive and get everyone home.',
+      features:'Lean, wiry build; usually a few days of stubble; slightly crooked nose from an old injury; strong forearms and hands; a few small scars; practical outdoor clothing without a tactical look.',
+      vision:'100', hearing:'100', smell:'100'
+    };
+    gareth.attributes.body = {
+      'Agility':{current:60,max:60}, 'Beauty':{current:46,max:46}, 'Cardio':{current:69,max:69}, 'Constitution':{current:70,max:70}, 'Coordination':{current:61,max:61}, 'Fine Motor Control':{current:62,max:62}, 'Strength':{current:58,max:58}
+    };
+    gareth.attributes.mind = {
+      'Charisma':{current:65,max:65}, 'Creativity':{current:61,max:61}, 'Empathy':{current:72,max:72}, 'Extraversion':{current:49,max:49}, 'Intelligence':{current:58,max:58}, 'Organization':{current:69,max:69}, 'Stability':{current:80,max:80}, 'Will':{current:70,max:70}
+    };
+    gareth.skills = [
+      ["Medical, Emergency",85],
+      ["Stress Inoculation, Medical Trauma",80],
+      ["Medical, General",70],
+      ["Ropework",70],
+      ["Survival, Cold",65],
+      ["Navigation, Orienteering",65],
+      ["Stress Inoculation, Combat",65],
+      ["Survival, Desert",65],
+      ["Pharmacology/Toxicology",60],
+      ["Survival, Forest",60],
+      ["Climbing, Rock",60],
+      ["Climbing, Ice",60],
+      ["Swimming",60],
+      ["Stress Inoculation (SI), Heights",60],
+      ["Stress Inoculation (SI), Confined Spaces",60],
+      ["Tracking, Humans",60],
+      ["Survival, Subterranean",55],
+      ["Survival, Aquatic",55],
+      ["Caving",55],
+      ["Electronics, Communications",55],
+      ["Operate Vehicle, Off-Road Vehicles",55],
+      ["Meteorology",55],
+      ["Operate Vehicle, Basic Road Vehicles",55],
+      ["Weapon, Rifles, SA80/L85",45],
+      ["Firefighting",45],
+      ["Navigation, Road",45],
+      ["Cooking",45],
+      ["Geography",45],
+      ["Computers, General Systems",40],
+      ["Bureaucracy",40],
+      ["Teaching",40],
+      ["Tactics, Small Unit",40],
+      ["Photography",35],
+      ["History, Expedition & Mountaineering",35],
+      ["Camouflage",35],
+      ["Sport, Surfing",35],
+      ["Cleaning",30],
+      ["Animal Handling, Dogs",30],
+      ["Gaming, Card Games",30],
+      ["Fishing, Freshwater",30],
+      ["Knowledge, Football/Soccer",30],
+      ["CQB (Close-Quarters Battle)",30],
+      ["Sport, Yoga",30],
+      ["Meditation",30],
+      ["Sport, Cycling, Mountain",30],
+      ["Instrument, Drum Set",25],
+      ["Sport, Hacky Sack",25],
+      ["Forensics",25],
+      ["Knowledge, Rock Music",25],
+      ["Knowledge, Outdoor Equipment",25],
+      ["Weapon, Handguns, Semi-Automatic",25],
+      ["Knowledge, Reality TV",25],
+      ["Diving, Scuba",25],
+      ["Animal Riding, Horses",25],
+      ["Zoology, Vertebrates",25],
+      ["Sport, Football/Soccer",20],
+      ["History, Military",20],
+      ["Knowledge, Cryptids",20],
+      ["Diving, Free",20],
+      ["Herbalism",20],
+      ["Zoology, Entomology",20],
+      ["Zoology, Other Invertebrates",20],
+      ["Fishing, Deep Sea",10]
+    ].map(([name,level]) => ({id:uid(), name, level:String(level), groupId:''}));
+    while (gareth.skills.length < 60) gareth.skills.push({id:uid(), name:'', level:'', groupId:''});
+
+    gareth.funds = [{id:uid(), type:'cash', name:'Cash', currency:'GBP', balance:60, carried:true, wet:false, dirty:false, customUnitWeightPounds:'', isDefault:true}];
+    const onPerson = gareth.gearLocations[0];
+    const setDown = gareth.gearLocations[1];
+    const walletId = uid();
+    const satchelId = uid();
+    const firstAidPouchId = uid();
+    const waterBottleId = uid();
+    const walletLocation = {id:uid(), name:'Wallet, Bifold — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:walletId, sourceCatalogId:'gc0137', maxWeightPounds:1};
+    const satchelLocation = {id:uid(), name:'Canvas Field Satchel, 15 L — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:satchelId, sourceCatalogId:'gc0111', maxWeightPounds:20};
+    const firstAidLocation = {id:uid(), name:'First Aid Pouch, 1 L — Contents', isDefault:false, wet:false, dirty:false, carried:true, collapsed:false, sourceGearItemId:firstAidPouchId, sourceCatalogId:'gc0127', maxWeightPounds:3};
+    gareth.gearLocations = [onPerson, setDown, walletLocation, satchelLocation, firstAidLocation];
+    gareth.gear = [
+      {id:uid(),item:"Underwear",catalogId:"gc0001",color:"Gray",quantity:1,weight:0.18,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Hiking Shorts, Lightweight",catalogId:"gc0042",color:"Tan",quantity:1,weight:0.4,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"T-Shirt, Synthetic",catalogId:"gc0012",color:"Gray",quantity:1,weight:0.38,condition:"Serviceable",wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Hiking Socks, Lightweight, Pair",catalogId:"gc0056",color:"Gray",quantity:1,weight:0.13,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Hiking Shoes, Lightweight, Pair",catalogId:"gc0064",color:"Gray",quantity:1,weight:1.75,condition:"Serviceable",wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Bristol City Baseball Cap",catalogId:"gc0075",color:"Red",quantity:1,weight:0.18,condition:"Serviceable",wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Sunglasses, Lightweight",catalogId:"gc0145",color:"Black",quantity:1,weight:0.07,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Fitness Watch",catalogId:"gc0152",color:"Black",quantity:1,weight:0.2,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Smartphone, Standard",catalogId:"gc0178",color:"Black",quantity:1,weight:0.43,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
+      {id:walletId,item:'Wallet, Bifold',catalogId:'gc0137',color:'Brown',quantity:1,weight:.18,condition:'Serviceable',wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Driver's License / ID Card",catalogId:"gc0142",quantity:1,weight:0.01,condition:"Good",wet:false,dirty:false,locationId:walletLocation.id},
+      {id:uid(),item:"Credit Card",catalogId:"gc0143",quantity:1,weight:0.01,condition:"Good",wet:false,dirty:false,locationId:walletLocation.id},
+      {id:uid(),item:"Key Ring",catalogId:"gc0139",color:"Silver",quantity:1,weight:0.02,condition:"Good",wet:false,dirty:false,locationId:onPerson.id},
+      {id:uid(),item:"Multitool, Compact",catalogId:"gc0240",color:"Gray",quantity:1,weight:0.35,condition:"Serviceable",wet:false,dirty:false,locationId:onPerson.id},
+      {id:satchelId,item:'Canvas Field Satchel, 15 L',catalogId:'gc0111',color:'Tan',quantity:1,weight:1.8,condition:'Serviceable',wet:false,dirty:false,locationId:onPerson.id},
+      {id:waterBottleId,item:"Water Bottle, Plastic, 1 L",catalogId:"gc0515",color:"Clear",quantity:1,weight:0.39,condition:"Good",wet:false,dirty:false,locationId:satchelLocation.id},
+      {id:uid(),item:"Water, 1 L",catalogId:"gc1975",color:"Clear",quantity:1,weight:2.2,condition:"New",wet:false,dirty:false,locationId:satchelLocation.id,embeddedInGearId:waterBottleId},
+      {id:uid(),item:"Sunscreen, 3 oz",catalogId:"gc0373",color:"Blue",quantity:1,weight:0.25,condition:"Good",wet:false,dirty:false,locationId:satchelLocation.id},
+      {id:uid(),item:"Lip Balm",catalogId:"gc0374",color:"Blue",quantity:1,weight:0.03,condition:"Good",wet:false,dirty:false,locationId:satchelLocation.id},
+      {id:uid(),item:"Notebook, Pocket",catalogId:"gc0153",color:"Brown",quantity:1,weight:0.25,condition:"Serviceable",wet:false,dirty:false,locationId:satchelLocation.id},
+      {id:uid(),item:"Pen, Ballpoint",catalogId:"gc0156",color:"Blue",quantity:1,weight:0.02,condition:"Good",wet:false,dirty:false,locationId:satchelLocation.id},
+      {id:uid(),item:"USB-C to USB-C Cable, 1 m",catalogId:"gc0232",color:"Black",quantity:1,weight:0.07,condition:"Good",wet:false,dirty:false,locationId:satchelLocation.id},
+      {id:uid(),item:"Wall Charger, USB-C, 30 W",catalogId:"gc0229",color:"White",quantity:1,weight:0.12,condition:"Good",wet:false,dirty:false,locationId:satchelLocation.id},
+      {id:firstAidPouchId,item:'First Aid Pouch, 1 L',catalogId:'gc0127',color:'Red',quantity:1,weight:0.25,condition:'Good',wet:false,dirty:false,locationId:satchelLocation.id},
+      {id:uid(),item:"Nitrile Gloves, Pair",catalogId:"gc0418",color:"Blue",quantity:2,weight:0.02,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Adhesive Bandage, Small",catalogId:"gc0397",color:"White",quantity:6,weight:0.002,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Adhesive Bandage, Large",catalogId:"gc0398",color:"White",quantity:2,weight:0.004,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Gauze Pad, 4×4 in",catalogId:"gc0401",color:"White",quantity:3,weight:0.008,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Gauze Roll, 2 in",catalogId:"gc0402",color:"White",quantity:1,weight:0.025,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Medical Tape, 1 in Roll",catalogId:"gc0406",color:"White",quantity:1,weight:0.12,condition:"Good",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Antiseptic Wipe",catalogId:"gc0408",color:"White",quantity:6,weight:0.005,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Blister Dressing",catalogId:"gc0407",color:"White",quantity:4,weight:0.01,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Elastic Bandage, 2 in",catalogId:"gc0404",color:"Tan",quantity:1,weight:0.1,condition:"Good",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Tweezers",catalogId:"gc0173",color:"Silver",quantity:1,weight:0.03,condition:"Good",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Tourniquet, Windlass",catalogId:"gc0412",color:"Orange",quantity:1,weight:0.18,condition:"Good",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Ibuprofen, 200 mg Tablet",catalogId:"gc0441",color:"White",quantity:4,weight:0.0007716179176470714,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Acetaminophen, 500 mg Tablet",catalogId:"gc0440",color:"White",quantity:4,weight:0.0014770971566386798,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id},
+      {id:uid(),item:"Cetirizine, 10 mg Tablet",catalogId:"gc0446",color:"White",quantity:2,weight:0.0003306933932773163,condition:"New",wet:false,dirty:false,locationId:firstAidLocation.id}
+    ];
+
+    gareth.areas = [
+      {id:uid(),ageFrom:0,ageTo:11,location:'Bristol, England',level:''},
+      {id:uid(),ageFrom:11,ageTo:13,location:'Falkland Islands',level:''},
+      {id:uid(),ageFrom:13,ageTo:18,location:'Bristol, England',level:''},
+      {id:uid(),ageFrom:18,ageTo:26,location:'Plymouth, England',level:''},
+      {id:uid(),ageFrom:24,ageTo:24.6,location:'Helmand Province, Afghanistan',level:''},
+      {id:uid(),ageFrom:26,ageTo:42,location:'Inverness, Scotland',level:''}
+    ];
+    gareth.subcultures = [
+      {id:uid(),ageFrom:0,ageTo:18,location:'Adventurous Field-Research Family',involvement:'primary',level:''},
+      {id:uid(),ageFrom:8,ageTo:18,location:'The Scouts (UK)',involvement:'high',level:''},
+      {id:uid(),ageFrom:14,ageTo:18,location:'Fire Cadets',involvement:'medium',level:''},
+      {id:uid(),ageFrom:18,ageTo:26,location:'Royal Navy',involvement:'high',level:''},
+      {id:uid(),ageFrom:18,ageTo:26,location:'Defence Medical Services / Military Medics',involvement:'veryHigh',level:''},
+      {id:uid(),ageFrom:20,ageTo:26,location:'Royal Marines / Commando Support',involvement:'high',level:''},
+      {id:uid(),ageFrom:24,ageTo:24.6,location:'Deployed Forces, Afghanistan',involvement:'high',level:''},
+      {id:uid(),ageFrom:26,ageTo:34,location:'Scottish Ambulance Service — Highland Crews',involvement:'veryHigh',level:''},
+      {id:uid(),ageFrom:28,ageTo:34,location:'Helicopter Search & Rescue',involvement:'veryHigh',level:''},
+      {id:uid(),ageFrom:26,ageTo:34,location:'Cairngorm Mountain Rescue Team',involvement:'high',level:''},
+      {id:uid(),ageFrom:26,ageTo:42,location:'UK Climbing & Mountaineering Community',involvement:'high',level:''},
+      {id:uid(),ageFrom:26,ageTo:42,location:'Grampian Speleological Group',involvement:'medium',level:''},
+      {id:uid(),ageFrom:34,ageTo:42,location:'Professional Expedition Medicine',involvement:'veryHigh',level:''},
+      {id:uid(),ageFrom:34,ageTo:42,location:'International Expedition Guides & Leaders',involvement:'high',level:''},
+      {id:uid(),ageFrom:32,ageTo:42,location:'Polar Expedition Community',involvement:'medium',level:''},
+      {id:uid(),ageFrom:28,ageTo:42,location:'Maritime Expedition Crews',involvement:'medium',level:''},
+      {id:uid(),ageFrom:28,ageTo:42,location:'Scottish North Coast Surf Scene',involvement:'low',level:''},
+      {id:uid(),ageFrom:26,ageTo:42,location:'Mountain Biking Community',involvement:'low',level:''},
+      {id:uid(),ageFrom:30,ageTo:42,location:'Yoga & Meditation Community',involvement:'low',level:''},
+      {id:uid(),ageFrom:12,ageTo:42,location:'Bristol City Supporters',involvement:'low',level:''}
+    ];
+    gareth.background.text="Raised in an adventurous British family, he spent much of his childhood camping, travelling and joining extended research trips. From about eleven to thirteen, he lived with his parents in the Falkland Islands during an extended research posting and was home schooled for much of the stay. As a youth, he was active in Scouts and Fire Cadets before serving eight years as a Royal Navy Medical Assistant supporting Royal Marines in austere environments. After leaving the Navy, he began freelancing as an expedition medic while working ambulance and helicopter rescue in the Scottish Highlands. By his mid-thirties, expedition work had become full time, and he developed a reputation as a sought-after medical lead for demanding, high-profile expeditions. His career has taken him from Everest and the polar regions to deserts, jungles, caves, mountains and remote maritime environments. Off duty, Gareth is fairly ordinary: he follows Bristol City, cooks competently, surfs when he gets the chance, mountain bikes, does yoga and meditation, plays a little drum set, fishes, and is unexpectedly decent at Hacky Sack. His guilty pleasure is reality TV, and although he is skeptical of the paranormal, he knows more cryptid lore than he usually admits.";
+    gareth.background.notes="Childhood: lived in the Falkland Islands from about age 11–13 during his parents’ extended research posting and was home schooled for much of that stay. Military: eight years as a Royal Navy Medical Assistant, including Royal Marines support and a roughly seven-month Afghanistan deployment. Civilian: transitioned into civilian paramedic practice after leaving the Navy; worked Scottish ambulance service and helicopter search-and-rescue before expedition medicine became full time. Areas list only places actually lived in or deployed to for at least six months; shorter expedition travel—including Everest, polar, desert, jungle, cave and maritime trips—is intentionally omitted.";
+
+    const garethSkillOrderBeforeSort = gareth.skills.map(skill => skill.id);
+    gareth.skills.sort((a,b) => (Number(b.level)||-1) - (Number(a.level)||-1) || String(a.name||'').localeCompare(String(b.name||''), undefined, {sensitivity:'base', numeric:true}));
+    state = gareth;
+    setActiveLibraryCharacterId(null);
+    skillHeaderSort = {key:'level', direction:'desc'};
+    skillOrderBeforeSort = garethSkillOrderBeforeSort;
+    skillQuickSortNext = {...SKILL_QUICK_SORT_DEFAULTS, level:'asc'};
+    updateSkillQuickSortControls();
+    renderAll();
+    setActiveCharacterBaselineFromCurrent();
+    saveNow();
+  }
+
   async function saveNamedCharacter(saveName, existingId = '') {
     const name = characterSaveDisplayName(saveName);
     if (!name) throw new Error('Enter a save name.');
@@ -33368,7 +33590,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         </div>
         <div class="character-library-actions"><button class="btn primary" data-library-load-tom type="button">Load</button></div>
       </div>`;
-    const builtInRows = demoRow + tomRow;
+    const garethRow = `
+      <div class="character-library-row demo">
+        <div class="character-library-copy">
+          <div class="character-library-name">Gareth Cole — Template</div>
+          <div class="character-library-meta">Built-in expedition-medicine / SAR template • always available</div>
+        </div>
+        <div class="character-library-actions"><button class="btn primary" data-library-load-gareth type="button">Load</button></div>
+      </div>`;
+    const builtInRows = demoRow + tomRow + garethRow;
     list.innerHTML = builtInRows + '<div class="character-library-empty">Loading local characters…</div>';
     try {
       const records = await listLocalCharacters();
@@ -33543,6 +33773,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     } else if (pending.type === 'tom') {
       loadTomMercerCharacter();
       setLocalSaveStatus('Loaded Tom Mercer — Template');
+    } else if (pending.type === 'gareth') {
+      loadGarethColeCharacter();
+      setLocalSaveStatus('Loaded Gareth Cole — Template');
     } else if (pending.type === 'saved') {
       await loadNamedCharacter(pending.id);
     }
@@ -33553,7 +33786,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     document.getElementById('characterLoadDialog')?.close();
     const saveStatus = await currentNamedSaveStatus();
     if (saveStatus.hasUnsavedChanges) {
-      const label = loadRequest.name || (loadRequest.type === 'demo' ? 'Morgan Vale — Demo' : loadRequest.type === 'tom' ? 'Tom Mercer — Template' : 'the selected character');
+      const label = loadRequest.name || (loadRequest.type === 'demo' ? 'Morgan Vale — Demo' : loadRequest.type === 'tom' ? 'Tom Mercer — Template' : loadRequest.type === 'gareth' ? 'Gareth Cole — Template' : 'the selected character');
       const currentSaveName = characterSaveDisplayName(saveStatus.record?.name);
       document.getElementById('characterLoadConfirmText').textContent = saveStatus.hasNamedSave
         ? `Load “${label}”? The current character has changes that have not been saved to “${currentSaveName || 'its local save'}”. Save those changes first or load without saving.`
@@ -33623,6 +33856,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
     if (button.hasAttribute('data-library-load-tom')) {
       requestCharacterLoad({type:'tom', name:'Tom Mercer — Template'});
+      return;
+    }
+    if (button.hasAttribute('data-library-load-gareth')) {
+      requestCharacterLoad({type:'gareth', name:'Gareth Cole — Template'});
       return;
     }
     const loadId = button.dataset.libraryLoad;
@@ -34211,5 +34448,36 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Selecting any compatible item hands off to the ordinary Bulk Add Gear dialog, narrowed to and preselecting that catalog item, so adding more uses the existing quantity/price/state/charge workflow.
      - Internal/tube/cylinder-fed weapons show ammunition only; detachable-magazine weapons also show compatible magazines.
      - The contextual browser uses a wider scrollable action menu for long ammunition/magazine names and returns to normal menu width when closed/backed out. -->
+
+<!-- INTERNAL v716 TOM ENGINEERING DEVICE/MODELING REBALANCE — NOT USER-FACING
+     - Tom Mercer keeps Knowledge, Pretzels at 75.
+     - Architecture, Tunnels 80→75; Writing, Technical 70→55; Animal Handling, Cats 70→65.
+     - Adds 3D Modeling 50, Electronics, Scientific 55, and Electronics, Remote Sensing 40.
+     - Net starter-skill XP remains exactly 341.75 / 341.75. -->
+
+<!-- INTERNAL v715 TOM QUANTUM + BULK-SKILL PARENT OWNED-DESCENDANT CUE — NOT USER-FACING
+     - Tom Mercer: Business Management, Construction 50→40 and Physics, Quantum 20; net starter-skill XP is unchanged.
+     - Bulk Add Skills now gives collapsed parent rows a muted already-present-style highlight whenever any descendant skill is already on the sheet. Parent rows do not receive an owned checkmark unless that exact selectable parent skill itself is already present. -->
+
+<!-- INTERNAL v718 GARETH COLE EXPEDITION-MEDIC TEMPLATE — NOT USER-FACING
+     - Adds Gareth Cole — Template as a third built-in character without replacing Morgan Vale or Tom Mercer.
+     - Gareth is a 42-year-old British expedition medic with the finalized 950-point attribute profile and exactly 258 starter-skill XP.
+     - Background includes Royal Navy Medical Assistant / Royal Marines support, Scottish ambulance and helicopter SAR, and full-time expedition medicine from his mid-thirties.
+     - Areas use a six-month minimum: Bristol, Plymouth, a roughly seven-month Helmand deployment, and Inverness; shorter global expeditions are intentionally omitted from Areas.
+     - Adds a complete Subculture history and a practical civilian expedition/field-medical loadout. -->
+
+<!-- INTERNAL v719 GARETH PERSONALITY / SKILL REBALANCE — NOT USER-FACING
+     - Removes Logistics, Public Health, Knowledge UK Mountains & Trails, Mechanic General, and Writing Technical from Gareth.
+     - Rebalances Cold Survival, Orienteering, and Combat Stress Inoculation to 65 and Deep Sea Fishing to 10, keeping exactly 258 starter-skill XP.
+     - Adds surfing, yoga, meditation, mountain biking, reality-TV and cryptid knowledge, scuba/free diving, horseback riding, herbalism, all three zoology branches, and light deep-sea fishing.
+     - Expands Gareth's Subcultures across separate helicopter SAR, mountain rescue, climbing/mountaineering, caving, high-altitude, polar, maritime, surfing, scuba, mountain biking, and yoga/meditation communities.
+     - Appearance text now explicitly includes his lean/wiry build and non-tactical practical outdoor style. -->
+
+<!-- INTERNAL v720 GARETH AREAS / SUBCULTURES / WARM-CLIMATE EDC — NOT USER-FACING
+     - Adds a two-year Falkland Islands childhood residence (about ages 11–13), splitting the Bristol childhood Area around it and tying the home-schooling period to the parents’ research posting.
+     - Gareth subcultures: removes Freelance Expedition Medicine, High-Altitude Expedition Community, and Recreational Scuba Divers; flavors approved entries as Bristol City Supporters, Grampian Speleological Group, Cairngorm Mountain Rescue Team, Scottish North Coast Surf Scene, and Scottish Ambulance Service — Highland Crews.
+     - Replaces the expedition-heavy backpack loadout with approved warm-weather clothing and civilian EDC. Adds a serviceable tan 15 L field satchel containing a small first-aid pouch, filled 1 L water bottle, sunscreen, lip balm, notebook, pen, USB-C cable and 30 W wall charger.
+     - First-aid pouch contains two pairs of nitrile gloves, adhesive bandages, gauze, tape, antiseptic wipes, blister dressings, elastic bandage, tweezers, a windlass tourniquet, and small OTC medication quantities. No flashlight/headlamp is carried. -->
+
 </body>
 </html>
