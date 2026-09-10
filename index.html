@@ -10451,6 +10451,50 @@
   }
 </style>
 
+
+
+<style id="v746-phone-background-specific-labels">
+  /* v746: on phone, use the section-specific label instead of the generic
+     Location / Subculture label shared by the responsive life-table rule. */
+  @media screen and (max-width: 600px),
+         screen and (max-height: 520px) and (pointer: coarse) {
+    #areasBody td:nth-child(3)::before { content: "Location" !important; }
+    #subculturesBody td:nth-child(3)::before { content: "Subculture" !important; }
+  }
+</style>
+
+
+
+<style id="v747-phone-attribute-centering-height-styles">
+  /* v747: phone-only Overview attribute cleanup. iPhone's compact layout was
+     still inheriting the generic 44px touch min-height on the Body/Mind
+     numeric-stepper wrapper, while the Derived score boxes remain about 38px.
+     Match the editable attribute controls to that derived-field height and
+     center the numeric value across the full field even while the overlaid
+     increment buttons remain available. Tablet/desktop are intentionally
+     unchanged. */
+  @media screen and (max-width: 600px),
+         screen and (max-height: 520px) and (pointer: coarse) {
+    #overview .card.body .attribute-table .numeric-stepper,
+    #overview .card.mind .attribute-table .numeric-stepper {
+      height: 38px !important;
+      min-height: 38px !important;
+    }
+
+    #overview .card.body .attribute-table .numeric-stepper input,
+    #overview .card.mind .attribute-table .numeric-stepper input {
+      height: 36px !important;
+      min-height: 36px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-left: 4px !important;
+      padding-right: 4px !important;
+      line-height: 36px !important;
+      text-align: center !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -10715,7 +10759,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v745</div>
+<div class="footer-note no-print">Character Sheet v747</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -24237,7 +24281,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       nameInput.addEventListener('input',e=>{skill.name=e.target.value;if(!hasSpecificSkillPlaceholder(skill.name))setSpecificSkillWarningFlag(skill.id,false);updateSpecificSkillInputAppearance(nameInput);updateSpecificSkillWarning();updateStarterSkillSetup();openSkillNameMenu(nameInput,skill);queueSave();});nameInput.addEventListener('scroll',()=>updateSpecificSkillInputAppearance(nameInput));
       nameInput.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement===nameInput)return;if(activeSpecificSkillNameEditId===skill.id)activeSpecificSkillNameEditId=null;if(hasSpecificSkillPlaceholder(skill.name))setSpecificSkillWarningFlag(skill.id,true);updateSpecificSkillWarning();queueSave();},0));nameInput.addEventListener('keydown',event=>handleSkillNameKeydown(event,nameInput,skill));const levelControl=row.querySelector('[data-skill-field="level"]');
       if(finished){bindWholePercentInput(levelControl,value=>{skill.level=value;calculate();queueSave();});row.querySelectorAll('[data-level-adjust]').forEach(button=>button.addEventListener('click',()=>{if(isPlayMode()||isSectionLocked('skills'))return;const direction=Number(button.dataset.levelAdjust)||0,current=Number.isFinite(Number(skill.level))&&skill.level!==''?Number(skill.level):0;skill.level=String(Math.max(0,Math.min(100,Math.round(current+direction))));levelControl.value=skill.level;calculate();queueSave();}));}else levelControl.addEventListener('click',()=>openSkillLevelMenu(levelControl,skill));
-      row.querySelector('[data-delete-skill]').addEventListener('click',async()=>{if(state.ui?.starterSkillsFinished){const skillName=String(skill.name||'').trim()||'this skill',skillLevel=String(skill.level??'').trim()||'0',confirmed=await requestCompatibilityOverride({title:'Remove skill?',text:`Are you sure you want to remove ${skillName} (${skillLevel})?`,acceptLabel:'Remove skill',cancelLabel:'Keep skill'});if(!confirmed)return;}state.skills=state.skills.filter(s=>s.id!==skill.id);clearSkillSortState();renderSkillsPreservingScroll();calculate();queueSave();});
+      row.querySelector('[data-delete-skill]').addEventListener('click',async()=>{const undoSnapshot=cloneCharacterStateForUndo();const undoSkillName=String(skill.name||'').trim()||'Skill';if(state.ui?.starterSkillsFinished){const skillName=undoSkillName,skillLevel=String(skill.level??'').trim()||'0',confirmed=await requestCompatibilityOverride({title:'Remove skill?',text:`Are you sure you want to remove ${skillName} (${skillLevel})?`,acceptLabel:'Remove skill',cancelLabel:'Keep skill'});if(!confirmed)return;}state.skills=state.skills.filter(s=>s.id!==skill.id);clearSkillSortState();renderSkillsPreservingScroll();calculate();queueSave();setTimeout(()=>showCharacterChangeUndo(undoSnapshot,`${undoSkillName} deleted.`),0);});
     });updateSpecificSkillWarning();applyMode();updateStarterSkillSetup();scheduleSkillGroupMasonry();
   }
 
@@ -28621,6 +28665,146 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   let pendingGearDeleteUndo = null;
   let gearDeleteUndoTimer = null;
 
+
+  // v746: one-level undo for character-data edits across every screen. The
+  // existing Gear toast is reused visually; UI-only state (sorting, open/closed
+  // groups, active tab, etc.) is intentionally excluded from change detection.
+  let pendingCharacterChangeUndo = null;
+  let characterChangeUndoTimer = null;
+  let undoFocusedControl = null;
+  let undoFocusedSnapshot = null;
+  let restoringCharacterChangeUndo = false;
+
+  function cloneCharacterStateForUndo(source=state) {
+    return JSON.parse(JSON.stringify(source));
+  }
+
+  function characterDataFingerprint(source=state) {
+    const copy = cloneCharacterStateForUndo(source);
+    delete copy.ui;
+    return JSON.stringify(copy);
+  }
+
+  function hideCharacterChangeUndo(clearPending=true) {
+    if (characterChangeUndoTimer) clearTimeout(characterChangeUndoTimer);
+    characterChangeUndoTimer = null;
+    const toast = document.getElementById('gearUndoToast');
+    if (toast) toast.hidden = true;
+    if (clearPending) pendingCharacterChangeUndo = null;
+  }
+
+  function showCharacterChangeUndo(previousState, message='Change made.') {
+    if (restoringCharacterChangeUndo || !previousState) return;
+    if (characterDataFingerprint(previousState) === characterDataFingerprint(state)) return;
+    if (gearDeleteUndoTimer) clearTimeout(gearDeleteUndoTimer);
+    gearDeleteUndoTimer = null;
+    pendingGearDeleteUndo = null;
+    pendingCharacterChangeUndo = cloneCharacterStateForUndo(previousState);
+    const toast = document.getElementById('gearUndoToast');
+    const messageNode = document.getElementById('gearUndoMessage');
+    if (messageNode) messageNode.textContent = message;
+    if (toast) toast.hidden = false;
+    if (characterChangeUndoTimer) clearTimeout(characterChangeUndoTimer);
+    characterChangeUndoTimer = setTimeout(() => hideCharacterChangeUndo(true), 7000);
+  }
+
+  function undoLastCharacterChange() {
+    if (!pendingCharacterChangeUndo) {
+      undoLastGearDelete();
+      return;
+    }
+    const snapshot = cloneCharacterStateForUndo(pendingCharacterChangeUndo);
+    const currentUi = cloneCharacterStateForUndo(state.ui || {});
+    restoringCharacterChangeUndo = true;
+    hideCharacterChangeUndo(true);
+    state = deepMerge(defaultState(), snapshot);
+    // Undo the character-data edit without unexpectedly changing the user's
+    // current tab, sort/group presentation, section locks, or play/edit view.
+    state.ui = currentUi;
+    renderAll();
+    queueSave();
+    restoringCharacterChangeUndo = false;
+  }
+
+  function undoEventIsCharacterManagement(target) {
+    if (!target?.closest) return false;
+    return Boolean(target.closest(
+      '#characterSaveDialog, #characterSaveOverwriteDialog, #characterLoadDialog, ' +
+      '#characterLoadConfirmDialog, #characterDeleteDialog, #confirmDialog'
+    )) || Boolean(target.closest('#newBtn, #loadCharacterBtn, #importBtn, #importFile'));
+  }
+
+  function undoMessageForTarget(target) {
+    if (!target?.closest) return 'Change made.';
+    if (target.closest('#skills')) return 'Skill change made.';
+    if (target.closest('#background')) return 'Background change made.';
+    if (target.closest('#conditions')) return 'Condition change made.';
+    if (target.closest('#gear, #gearItemActionMenu, #vehicleLocationActionMenu')) return 'Gear change made.';
+    if (target.closest('#overview')) return 'Character change made.';
+    return 'Change made.';
+  }
+
+  function scheduleCharacterUndoCheck(previousState, target, message='') {
+    if (!previousState || restoringCharacterChangeUndo || undoEventIsCharacterManagement(target)) return;
+    setTimeout(() => {
+      if (restoringCharacterChangeUndo) return;
+      if (characterDataFingerprint(previousState) === characterDataFingerprint(state)) return;
+      showCharacterChangeUndo(previousState, message || undoMessageForTarget(target));
+    }, 0);
+  }
+
+  function bindUniversalCharacterUndo() {
+    document.addEventListener('focusin', event => {
+      const control = event.target?.closest?.('input, textarea, select');
+      if (!control || control.disabled || control.readOnly || undoEventIsCharacterManagement(control)) return;
+      undoFocusedControl = control;
+      undoFocusedSnapshot = cloneCharacterStateForUndo();
+    }, true);
+
+    document.addEventListener('focusout', event => {
+      const control = event.target?.closest?.('input, textarea, select');
+      if (!control || control !== undoFocusedControl) return;
+      setTimeout(() => {
+        if (document.activeElement === control) return;
+        if (undoFocusedControl === control) {
+          undoFocusedControl = null;
+          undoFocusedSnapshot = null;
+        }
+      }, 0);
+    }, true);
+
+    const captureValueEdit = event => {
+      const control = event.target?.closest?.('input, textarea, select');
+      if (!control || control.disabled || control.readOnly || undoEventIsCharacterManagement(control)) return;
+      const previousState = control === undoFocusedControl && undoFocusedSnapshot
+        ? undoFocusedSnapshot
+        : cloneCharacterStateForUndo();
+      scheduleCharacterUndoCheck(previousState, control);
+    };
+    document.addEventListener('input', captureValueEdit, true);
+    document.addEventListener('change', captureValueEdit, true);
+
+    // Pointerdown runs before the sheet's click/pointer handlers. This catches
+    // buttons, toggles, custom steppers, Gear action-menu commands, Add actions,
+    // and other non-text edits without creating toasts for view-only UI changes.
+    document.addEventListener('pointerdown', event => {
+      const actionable = event.target?.closest?.('button, [role="button"], input[type="checkbox"], input[type="radio"]');
+      if (!actionable || actionable.id === 'gearUndoButton' || undoEventIsCharacterManagement(actionable)) return;
+      const previousState = cloneCharacterStateForUndo();
+      scheduleCharacterUndoCheck(previousState, actionable);
+    }, true);
+
+    // Keyboard activation does not always produce pointerdown, so capture the
+    // pre-change state for Enter/Space-driven controls as well.
+    document.addEventListener('keydown', event => {
+      if (!['Enter', ' '].includes(event.key)) return;
+      const actionable = event.target?.closest?.('button, [role="button"]');
+      if (!actionable || actionable.id === 'gearUndoButton' || undoEventIsCharacterManagement(actionable)) return;
+      const previousState = cloneCharacterStateForUndo();
+      scheduleCharacterUndoCheck(previousState, actionable);
+    }, true);
+  }
+
   function hideGearDeleteUndo(clearPending=true) {
     if (gearDeleteUndoTimer) clearTimeout(gearDeleteUndoTimer);
     gearDeleteUndoTimer = null;
@@ -28630,6 +28814,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function showGearDeleteUndo(item, index) {
+    hideCharacterChangeUndo(true);
     hideGearDeleteUndo(true);
     pendingGearDeleteUndo = {item:JSON.parse(JSON.stringify(item)), index};
     const toast = document.getElementById('gearUndoToast');
@@ -32649,7 +32834,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   document.getElementById('bulkGearClose').addEventListener('click', requestCloseBulkGear);
   document.getElementById('bulkGearCancel').addEventListener('click', requestCloseBulkGear);
   document.getElementById('bulkGearAddSelected').addEventListener('click', addSelectedBulkGear);
-  document.getElementById('gearUndoButton')?.addEventListener('click', undoLastGearDelete);
+  document.getElementById('gearUndoButton')?.addEventListener('click', undoLastCharacterChange);
   document.getElementById('bulkGearCancelKeep')?.addEventListener('click', () => document.getElementById('bulkGearCancelConfirmDialog')?.close());
   document.getElementById('bulkGearCancelDiscard')?.addEventListener('click', () => { document.getElementById('bulkGearCancelConfirmDialog')?.close(); bulkGearDialog.close(); });
 
@@ -34780,6 +34965,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   bindCalculatedDisplays();
   bindOverviewSteppers();
   bindAttributeLinkButtons();
+  bindUniversalCharacterUndo();
   renderAll();
   refreshVisibleEncumbranceLayout();
   void refreshExportControlAvailability();
@@ -35356,6 +35542,25 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Phone Conditions use a dedicated 26 px delete column aligned with the first-row controls so the red X no longer overlaps or clips the Stage field.
      - Tablet/desktop behavior is unchanged.
      - Visible footer synchronized to Character Sheet v745. -->
+
+
+<!-- INTERNAL v746 PHONE BACKGROUND LABELS / UNIVERSAL CHARACTER UNDO — NOT USER-FACING
+     - Phone Background cards now label Areas as “Location” and Subcultures as “Subculture” rather than the generic “Location / Subculture”.
+     - Reuses the existing floating Gear undo toast as a one-level character-data Undo surface across Overview, Skills, Background, Gear, and Conditions.
+     - Text/select/checkbox edits capture the state before the edit; continuous typing in one focused field coalesces to the value present when that field received focus.
+     - Button/toggle/custom-stepper edits are also undoable when they actually change character data; UI-only changes such as sorting/group display do not trigger the toast because ui state is excluded from change detection.
+     - Skill deletion explicitly snapshots before its confirmation flow so deleted skills can be restored from the toast just like deleted Gear.
+     - Undo restores character data while preserving the user's current tab/view/sort/group/lock ui state.
+     - Character-management actions such as New, Load, Import, saved-character deletion, and save dialogs are excluded from this edit-level undo history.
+     - Visible footer synchronized to Character Sheet v747. -->
+
+
+<!-- INTERNAL v747 PHONE ATTRIBUTE CENTERING / HEIGHT MATCH — NOT USER-FACING
+     - Phone-only Body/Mind attribute numeric-stepper wrappers are reduced from the inherited 44 px touch height to 38 px, matching the visual height of Derived score fields.
+     - Their inner numeric inputs are 36 px high inside the 1 px wrapper border.
+     - Phone Body/Mind numeric values use equal 4 px left/right padding so the number is geometrically centered in the full field instead of being shifted left to reserve the increment-arrow gutter.
+     - Increment arrows remain available; tablet/desktop attribute sizing and alignment are unchanged.
+     - Visible footer synchronized to Character Sheet v747. -->
 
 </body>
 </html>
