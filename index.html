@@ -10027,6 +10027,129 @@
   }
 </style>
 
+
+<style id="v738-gear-density-separators-styles">
+  /* v738: second Gear density pass. Keep enough breathing room to read controls,
+     but remove the oversized control boxes and surplus row padding. Matching the
+     highlight wrapper to the actual Item input also removes the tablet "ghost"
+     strip that could show beneath the item-name field. */
+  #gear .gear-table th,
+  #gear .gear-table td {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+  }
+  #gear .gear-item-name-highlight-wrap,
+  #gear .gear-item-name-highlight,
+  #gear .gear-table input:not(.gear-check),
+  #gear .gear-table .combo-input-wrap,
+  #gear .gear-table .numeric-stepper,
+  #gear .gear-color-picker > summary {
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+  #gear .gear-item-name-highlight {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    line-height: 20px !important;
+  }
+  #gear .gear-table input:not(.gear-check) {
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+  }
+  #gear .gear-table .combo-arrow {
+    height: 28px !important;
+    min-height: 28px !important;
+  }
+  #gear .gear-drag-handle {
+    height: 28px !important;
+  }
+
+  @media screen and (max-width: 600px),
+         screen and (max-height: 520px) and (pointer: coarse) {
+    /* Phone Gear now reads as one continuous list, like Skills: adjacent rows
+       meet at a single divider instead of floating as separated cards. */
+    #gear .gear-table tbody {
+      gap: 0 !important;
+    }
+    #gear .gear-table tr.gear-row {
+      padding: 4px 5px !important;
+      row-gap: 3px !important;
+      column-gap: 4px !important;
+      border: 0 !important;
+      border-bottom: 1px solid var(--line) !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+    }
+    #gear .gear-table tr.gear-row:first-child {
+      border-top: 1px solid var(--line) !important;
+    }
+    #gear .gear-table td {
+      gap: 1px !important;
+    }
+
+    #gear .gear-item-name-highlight-wrap,
+    #gear .gear-item-name-highlight,
+    #gear .gear-table input[data-field="item"] {
+      height: 30px !important;
+      min-height: 30px !important;
+    }
+    #gear .gear-item-name-highlight {
+      padding: 4px 6px !important;
+      line-height: 20px !important;
+    }
+    #gear .gear-table input[data-field="item"] {
+      padding-top: 3px !important;
+      padding-bottom: 3px !important;
+    }
+
+    #gear .gear-table .gear-quantity-cell .numeric-stepper,
+    #gear .gear-table .gear-weight-cell .numeric-stepper,
+    #gear .gear-table .gear-condition-col .combo-input-wrap,
+    #gear .gear-table .gear-quantity-cell input,
+    #gear .gear-table .gear-weight-cell input,
+    #gear .gear-table .gear-condition-col input,
+    #gear .gear-table .gear-condition-col .combo-arrow,
+    #gear .gear-color-picker > summary {
+      height: 28px !important;
+      min-height: 28px !important;
+    }
+    #gear .gear-table td:nth-child(2)::before,
+    #gear .gear-table td:nth-child(3)::before,
+    #gear .gear-table td:nth-child(4)::before,
+    #gear .gear-table td:nth-child(5)::before,
+    #gear .gear-table td:nth-child(6)::before,
+    #gear .gear-table td:nth-child(7)::before {
+      min-height: 7px !important;
+      line-height: 1 !important;
+    }
+    #gear .gear-table td:nth-child(6),
+    #gear .gear-table td:nth-child(7) {
+      min-height: 28px !important;
+      padding-left: 2px !important;
+      padding-right: 2px !important;
+    }
+    #gear .gear-table td:nth-child(6) input.gear-check,
+    #gear .gear-table td:nth-child(7) input.gear-check {
+      height: 26px !important;
+      min-height: 26px !important;
+      flex-basis: 26px !important;
+    }
+    #gear .gear-table .gear-drag-handle {
+      height: 30px !important;
+    }
+    #gear .gear-table td:nth-child(8) {
+      top: 5px !important;
+      right: 5px !important;
+      height: 26px !important;
+    }
+    #gear .gear-table td:nth-child(8) .gear-item-actions-button {
+      width: 26px !important;
+      min-width: 26px !important;
+      height: 26px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -10291,7 +10414,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v737</div>
+<div class="footer-note no-print">Character Sheet v738</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -34875,7 +34998,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Gareth Cole (Organization 69): Current Account £5,500 GBP; carried cash remains £60.
      - Calvin Brooks (Organization 78): Checking $10,000 USD; carried cash remains $80.
      - These balances represent readily available transaction-account money only; savings, investments, retirement accounts, property, and other net worth are not modeled here.
-     - Visible footer synchronized to Character Sheet v737. -->
+     - Visible footer synchronized to Character Sheet v738. -->
+
+<!-- INTERNAL v738 GEAR DENSITY / PHONE DIVIDERS / TABLET ITEM-FIELD FIX — NOT USER-FACING
+     - Gear controls are reduced to a denser 30 px baseline across desktop/tablet/phone, with tighter cell padding while retaining visible interior padding around text.
+     - Item highlight wrapper and input heights are explicitly synchronized, removing the tablet ghost/background strip beneath the Item field.
+     - Phone Gear rows no longer float as cards with empty gaps: rows are contiguous and separated by a single divider line, similar to Skills.
+     - Phone secondary controls are reduced to 28 px and row/card padding is tightened further.
+     - Visible footer synchronized to Character Sheet v738. -->
 
 </body>
 </html>
