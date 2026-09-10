@@ -10221,7 +10221,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v720</div>
+<div class="footer-note no-print">Character Sheet v723</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -33249,7 +33249,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     tom.identity = {...tom.identity,
       player:'', name:'Thomas “Tom” Mercer', sex:'M', age:56, height:'5 ft 11 in', weight:208,
       skin:'Fair, weathered', hair:'Short brown-gray; grayer at the sides, modestly thinning on top', eyes:'Hazel',
-      voice:'Warm baritone; matter-of-fact', temperament:'Practical, curious, skeptical of confident guesswork',
+      voice:'Warm baritone; matter-of-fact', temperament:'Nerdy dad',
       goals:'Solve difficult problems without pretending certainty.',
       features:'Neatly trimmed full mustache; weathered hands; reading glasses; cellphone belt holster.',
       vision:'100', hearing:'100', smell:'100'
@@ -33343,8 +33343,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),ageFrom:32,ageTo:56,location:'Mainline Protestant Church Community',involvement:'low',level:''},
       {id:uid(),ageFrom:38,ageTo:56,location:'Amateur Radio / Shortwave Operators',involvement:'medium',level:''}
     ];
-    tom.background.text='Thomas “Tom” Mercer, 56, grew up in Wheeling, West Virginia, and spent his late teens and early twenties working in construction. At 23 he moved to Morgantown to study civil engineering at West Virginia University, earning both his B.S. and M.S. He then moved to Golden, Colorado, where he earned a Ph.D. in Underground Construction and Tunnel Engineering from the Colorado School of Mines.\n\nTom later settled in Pittsburgh and built a career in structural and geotechnical engineering focused on tunnels and other underground structures. His combination of exceptional engineering ability and firsthand construction experience has made him a world-class specialist called in for unusually difficult underground problems.\n\nOutside work, Tom is a longtime freshwater fisherman, guitarist, gardener, home cook, garage tinkerer, and amateur-radio enthusiast. He also belongs to a local mainline Protestant church. Practical and intensely curious, Tom is comfortable admitting when something lies outside his expertise and has little patience for confident guesswork.';
-    tom.background.notes='Education: B.S. and M.S., Civil Engineering — West Virginia University; Ph.D., Underground Construction and Tunnel Engineering — Colorado School of Mines.';
+    tom.background.text='Thomas “Tom” Mercer, 56, grew up in Wheeling, West Virginia, and spent his late teens and early twenties working in construction. At 23 he moved to Morgantown to study civil engineering at West Virginia University, earning both his B.S. and M.S. He then moved to Golden, Colorado, where he earned a Ph.D. in Underground Construction and Tunnel Engineering from the Colorado School of Mines.\n\nTom later settled in Pittsburgh and built a career in structural and geotechnical engineering focused on tunnels and other underground structures. His combination of exceptional engineering ability and firsthand construction experience has made him a world-class specialist called in for unusually difficult underground problems.\n\nAt home, Tom lives with his lovely wife, Nancy; their two adult children are out of the home. Outside work, he is a longtime freshwater fisherman, guitarist, gardener, home cook, garage tinkerer, and amateur-radio enthusiast. He also belongs to a local mainline Protestant church. Practical and intensely curious, Tom is comfortable admitting when something lies outside his expertise.';
+    tom.background.notes='';
 
     const tomSkillOrderBeforeSort = tom.skills.map(skill => skill.id);
     tom.skills.sort((a,b) => (Number(b.level)||-1) - (Number(a.level)||-1) || String(a.name||'').localeCompare(String(b.name||''), undefined, {sensitivity:'base', numeric:true}));
@@ -33365,7 +33365,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     gareth.ui.starterSkillsFinished = true;
     gareth.identity = {...gareth.identity,
       player:'', name:'Gareth Cole', sex:'M', age:42, height:'6 ft 0 in', weight:180,
-      skin:'Fair; sun- and weathered', hair:'Short dark-blond/light-brown; graying at the temples', eyes:'Blue-gray',
+      skin:'Tan; Weathered', hair:'Short Brown/Gray', eyes:'Blue-gray',
       voice:'Low, steady British baritone; dry, understated delivery',
       temperament:'Calm, pragmatic, compassionate; understated',
       goals:'Keep the team alive and get everyone home.',
@@ -33385,7 +33385,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       ["Ropework",70],
       ["Survival, Cold",65],
       ["Navigation, Orienteering",65],
-      ["Stress Inoculation, Combat",65],
+      ["Stress Inoculation, Combat",55],
       ["Survival, Desert",65],
       ["Pharmacology/Toxicology",60],
       ["Survival, Forest",60],
@@ -33402,41 +33402,42 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       ["Operate Vehicle, Off-Road Vehicles",55],
       ["Meteorology",55],
       ["Operate Vehicle, Basic Road Vehicles",55],
-      ["Weapon, Rifles, SA80/L85",45],
-      ["Firefighting",45],
-      ["Navigation, Road",45],
-      ["Cooking",45],
-      ["Geography",45],
+      ["Weapon, Rifles, SA80/L85",35],
+      ["Firefighting",30],
+      ["Navigation, Road",40],
+      ["Cooking",30],
+      ["Geography",40],
       ["Computers, General Systems",40],
-      ["Bureaucracy",40],
-      ["Teaching",40],
-      ["Tactics, Small Unit",40],
-      ["Photography",35],
+      ["Bureaucracy",35],
+      ["Teaching",35],
+      ["Tactics, Small Unit",35],
+      ["CBRN (Chemical, Biological, Radiological, and Nuclear)",40],
+      ["Photography",25],
       ["History, Expedition & Mountaineering",35],
-      ["Camouflage",35],
+      ["Camouflage",30],
       ["Sport, Surfing",35],
       ["Cleaning",30],
       ["Animal Handling, Dogs",30],
       ["Gaming, Card Games",30],
       ["Fishing, Freshwater",30],
       ["Knowledge, Football/Soccer",30],
-      ["CQB (Close-Quarters Battle)",30],
+      ["CQB (Close-Quarters Battle)",25],
       ["Sport, Yoga",30],
       ["Meditation",30],
       ["Sport, Cycling, Mountain",30],
       ["Instrument, Drum Set",25],
-      ["Sport, Hacky Sack",25],
+      ["Sport, Hacky Sack",45],
       ["Forensics",25],
       ["Knowledge, Rock Music",25],
       ["Knowledge, Outdoor Equipment",25],
       ["Weapon, Handguns, Semi-Automatic",25],
-      ["Knowledge, Reality TV",25],
+      ["Knowledge, Reality TV",60],
       ["Diving, Scuba",25],
       ["Animal Riding, Horses",25],
       ["Zoology, Vertebrates",25],
       ["Sport, Football/Soccer",20],
       ["History, Military",20],
-      ["Knowledge, Cryptids",20],
+      ["Knowledge, Cryptids",40],
       ["Diving, Free",20],
       ["Herbalism",20],
       ["Zoology, Entomology",20],
@@ -33524,11 +33525,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),ageFrom:28,ageTo:42,location:'Maritime Expedition Crews',involvement:'medium',level:''},
       {id:uid(),ageFrom:28,ageTo:42,location:'Scottish North Coast Surf Scene',involvement:'low',level:''},
       {id:uid(),ageFrom:26,ageTo:42,location:'Mountain Biking Community',involvement:'low',level:''},
-      {id:uid(),ageFrom:30,ageTo:42,location:'Yoga & Meditation Community',involvement:'low',level:''},
-      {id:uid(),ageFrom:12,ageTo:42,location:'Bristol City Supporters',involvement:'low',level:''}
+      {id:uid(),ageFrom:34,ageTo:42,location:'Yoga & Meditation Community',involvement:'low',level:''},
+      {id:uid(),ageFrom:12,ageTo:42,location:'Bristol City Football Club Supporters',involvement:'low',level:''}
     ];
-    gareth.background.text="Raised in an adventurous British family, he spent much of his childhood camping, travelling and joining extended research trips. From about eleven to thirteen, he lived with his parents in the Falkland Islands during an extended research posting and was home schooled for much of the stay. As a youth, he was active in Scouts and Fire Cadets before serving eight years as a Royal Navy Medical Assistant supporting Royal Marines in austere environments. After leaving the Navy, he began freelancing as an expedition medic while working ambulance and helicopter rescue in the Scottish Highlands. By his mid-thirties, expedition work had become full time, and he developed a reputation as a sought-after medical lead for demanding, high-profile expeditions. His career has taken him from Everest and the polar regions to deserts, jungles, caves, mountains and remote maritime environments. Off duty, Gareth is fairly ordinary: he follows Bristol City, cooks competently, surfs when he gets the chance, mountain bikes, does yoga and meditation, plays a little drum set, fishes, and is unexpectedly decent at Hacky Sack. His guilty pleasure is reality TV, and although he is skeptical of the paranormal, he knows more cryptid lore than he usually admits.";
-    gareth.background.notes="Childhood: lived in the Falkland Islands from about age 11–13 during his parents’ extended research posting and was home schooled for much of that stay. Military: eight years as a Royal Navy Medical Assistant, including Royal Marines support and a roughly seven-month Afghanistan deployment. Civilian: transitioned into civilian paramedic practice after leaving the Navy; worked Scottish ambulance service and helicopter search-and-rescue before expedition medicine became full time. Areas list only places actually lived in or deployed to for at least six months; shorter expedition travel—including Everest, polar, desert, jungle, cave and maritime trips—is intentionally omitted.";
+    gareth.background.text="Raised in an adventurous British family, Gareth spent much of his childhood camping, travelling and joining extended research trips. From about eleven to thirteen, he lived with his parents in the Falkland Islands during an extended research posting and was home schooled for much of the stay. As a youth, he was active in Scouts and Fire Cadets.\n\nAt eighteen, he joined the Royal Navy. He served eight years as a Royal Navy Medical Assistant, much of it supporting Royal Marines in austere environments, including a roughly seven-month deployment to Afghanistan.\n\nAfter leaving the Navy, he transitioned into civilian paramedic practice in the Scottish Highlands while also freelancing as an expedition medic. He went on to work with the Scottish Ambulance Service and helicopter search-and-rescue, building extensive experience in remote casualty care and mountain rescue.\n\nBy his mid-thirties, expedition work had become full time, and he developed a reputation as a sought-after medical lead for demanding, high-profile expeditions. His career has taken him from Everest and the polar regions to deserts, jungles, caves, mountains and remote maritime environments.\n\nOff duty, Gareth is notably less intense than his résumé suggests. He follows Bristol City Football Club, watches reality television with zero pretension about it, and considers taking it easy a legitimate hobby. He’s also surprisingly good at hacky sack and has a long-standing interest in cryptid stories.";
+    gareth.background.notes='';
 
     const garethSkillOrderBeforeSort = gareth.skills.map(skill => skill.id);
     gareth.skills.sort((a,b) => (Number(b.level)||-1) - (Number(a.level)||-1) || String(a.name||'').localeCompare(String(b.name||''), undefined, {sensitivity:'base', numeric:true}));
@@ -34479,5 +34480,18 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Replaces the expedition-heavy backpack loadout with approved warm-weather clothing and civilian EDC. Adds a serviceable tan 15 L field satchel containing a small first-aid pouch, filled 1 L water bottle, sunscreen, lip balm, notebook, pen, USB-C cable and 30 W wall charger.
      - First-aid pouch contains two pairs of nitrile gloves, adhesive bandages, gauze, tape, antiseptic wipes, blister dressings, elastic bandage, tweezers, a windlass tourniquet, and small OTC medication quantities. No flashlight/headlamp is carried. -->
 
+<!-- INTERNAL v721 GARETH BIO / PERSONALITY SKILL REBALANCE — NOT USER-FACING
+     - Gareth Skin/Hair condensed for the compact identity fields: Tan; Weathered / Short Brown/Gray.
+     - Raises Hacky Sack, Reality TV, and Cryptids to 40; offsets with lower Geography, Teaching, Bureaucracy, Photography, Firefighting, Road Navigation, and Cooking so starter-skill XP remains exactly 258.
+     - Gareth Notes are cleared; all substantive biography is kept in Character Background. Low-level hobby callouts are removed from the biography.
+     - Moves Yoga & Meditation Community start to age 34 to eliminate the 32–34 Subculture point-allocation error while preserving the approved Subculture itself. -->
+
+
+<!-- INTERNAL v723 GARETH COMBAT / BIO REFINEMENT — NOT USER-FACING
+     - Combat background is de-emphasized after 16 years out of military service: SA80/L85 35, Small Unit Tactics 35, Camouflage 30, CQB 25, Combat Stress Inoculation 55, Firefighting 30; adds CBRN 40. Handguns remain 25.
+     - Uses freed points to raise Hacky Sack to 45 and Reality TV to 60; Gareth remains exactly 258 starter-skill XP.
+     - Character Background is formatted into five chronological/personality paragraphs; Notes remain empty.
+     - Off-duty paragraph now explicitly names Bristol City Football Club, reality television as a guilty-pleasure-adjacent interest without embarrassment framing, taking it easy as a real hobby, hacky sack, and cryptid stories.
+     - Subculture label clarified to Bristol City Football Club Supporters. -->
 </body>
 </html>
