@@ -10810,7 +10810,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v754</div>
+<div class="footer-note no-print">Character Sheet v755</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -14577,7 +14577,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   const defaultState = () => ({
     version: 46,
     ui: {mode:'edit', starterSkillsFinished:false, freeEntryMode:false, skillGroupView:false, skillGroupOrder:['__ungrouped__'], gearWeightUnit:'lb', attributeLinks:{body:true, mind:true}, sectionLocks:{overview:false, skills:false, conditions:false, gear:false, background:false}, specificSkillWarningIds:[]},
-    identity: {player:'', name:'', sex:'', age:30, height:'5 ft 8 in', weight:160, skin:'', hair:'', eyes:'', voice:'', features:'', vision:100, hearing:100, smell:100, temperament:'', goals:'Find something important enough to rewrite the history books.', portrait:''},
+    identity: {player:'', name:'', sex:'', age:30, height:'5 ft 8 in', weight:160, skin:'', hair:'', eyes:'', voice:'', features:'', vision:100, hearing:100, smell:100, temperament:'', goals:'', portrait:''},
     attributes: {body: makeAttributes(BODY_ATTRIBUTES), mind: makeAttributes(MIND_ATTRIBUTES)},
     skills: makeBlankSkills(60),
     skillGroups: [],
@@ -34491,7 +34491,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       player:'', name:'Calvin Brooks', sex:'M', age:69, height:'5 ft 8 in', weight:153,
       skin:'Deep brown', hair:'Short gray hair', eyes:'Dark brown',
       voice:'Warm, measured baritone', temperament:'Thoughtful, patient, quietly stubborn',
-      goals:'',
+      goals:'Find something important enough to rewrite the history books.',
       features:'Lean endurance build; short gray beard; pronounced smile lines; weathered hands; upright posture; quick, economical gait; practical field clothing.',
       vision:'92', hearing:'87', smell:'92'
     };
@@ -35820,7 +35820,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Calvin Brooks: Medical, Emergency 30→20 and Food Preservation 30→20.
      - Adds Medical, General 20 and Cleaning 20.
      - The two 30→20 reductions free exactly 2.0 XP, which exactly funds the two new level-20 skills, so Calvin remains at 380.5 / 380.5 starter skill XP.
-     - Visible footer synchronized to Character Sheet v754. -->
+     - Visible footer synchronized to Character Sheet v755. -->
 
+
+<!-- INTERNAL v755 CALVIN GOAL FIX — NOT USER-FACING
+     - Calvin Brooks Goal is set to “Find something important enough to rewrite the history books.”
+     - Reverts the blank/default character Goal to empty; v754 accidentally placed Calvin’s Goal in defaultState instead of Calvin’s template. -->
 </body>
 </html>
