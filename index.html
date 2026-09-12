@@ -1553,7 +1553,7 @@
       border-radius: 10px;
       background: var(--panel-2);
     }
-    .character-library-row.demo { border-color: color-mix(in srgb, var(--accent) 36%, var(--line)); }
+    .character-library-row.built-in { border-color: color-mix(in srgb, var(--accent) 36%, var(--line)); }
     .character-library-copy { min-width: 0; }
     .character-library-name-line {
       display: flex;
@@ -10674,6 +10674,7 @@
 <tr><td>Power<span class="formula" data-formula="power">(<span data-requirement="agility">Agility</span> + <span data-requirement="strength">Strength</span>) x 0.588</span></td><td><div class="computed" data-derived="power.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="power.max" tabindex="-1">0</div></td></tr>
 <tr><td>Bull Rush<span class="formula" data-formula="bullRush">(<span data-requirement="power">Power</span> + <span data-requirement="weight">Weight Score</span>) x 0.532</span></td><td><div class="computed" data-derived="bullRush.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="bullRush.max" tabindex="-1">0</div></td></tr>
 <tr><td>Reaction<span class="formula" data-formula="reaction">(<span data-requirement="agility">Agility</span> + <span data-requirement="intelligence">Intelligence</span>) / 2</span></td><td><div class="computed" data-derived="reaction.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="reaction.max" tabindex="-1">0</div></td></tr>
+<tr><td>Flexibility<span class="formula" data-formula="flexibility">(<span data-requirement="agility">Agility</span> + <span data-requirement="constitution">Constitution</span> + <span data-requirement="coordination">Coordination</span>) / 3; Female × 1.10</span></td><td><div class="computed" data-derived="flexibility.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="flexibility.max" tabindex="-1">0</div></td></tr>
 <tr><td>Humor<span class="formula" data-formula="humor">(<span data-requirement="charisma">Charisma</span> + <span data-requirement="creativity">Creativity</span> + <span data-requirement="intelligence">Intelligence</span>) / 3</span></td><td><div class="computed" data-derived="humor.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="humor.max" tabindex="-1">0</div></td></tr>
 <tr><td>Wisdom<span class="formula" data-formula="wisdom">(<span data-requirement="age">Age</span> + <span data-requirement="intelligence">Intelligence</span> + <span data-requirement="stability">Stability</span>) / 3; max 100</span></td><td><div class="computed" data-derived="wisdom.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="wisdom.max" tabindex="-1">0</div></td></tr>
 </tbody></table>
@@ -10817,7 +10818,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v759</div>
+<div class="footer-note no-print">Character Sheet v760</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -32041,6 +32042,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   function computeSide(side) {
     const values = {
       agility: attrValue('body','Agility',side),
+      constitution: attrValue('body','Constitution',side),
+      coordination: attrValue('body','Coordination',side),
       strength: attrValue('body','Strength',side),
       intelligence: attrValue('mind','Intelligence',side),
       charisma: attrValue('mind','Charisma',side),
@@ -32054,22 +32057,29 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const power = powerMissing.length ? NaN : Math.round((values.agility + values.strength) * .588);
     const bullMissing = [...powerMissing, !Number.isFinite(weightScore) && 'weight'].filter(Boolean);
     const reactionMissing = [!Number.isFinite(values.agility) && 'Agility', !Number.isFinite(values.intelligence) && 'Intelligence'].filter(Boolean);
+    const flexibilityMissing = [!Number.isFinite(values.agility) && 'Agility', !Number.isFinite(values.constitution) && 'Constitution', !Number.isFinite(values.coordination) && 'Coordination'].filter(Boolean);
     const humorMissing = [!Number.isFinite(values.charisma) && 'Charisma', !Number.isFinite(values.creativity) && 'Creativity', !Number.isFinite(values.intelligence) && 'Intelligence'].filter(Boolean);
     const wisdomMissing = [!Number.isFinite(age) && 'age', !Number.isFinite(values.intelligence) && 'Intelligence', !Number.isFinite(values.stability) && 'Stability'].filter(Boolean);
+    const flexibilityBase = flexibilityMissing.length ? NaN : (values.agility + values.constitution + values.coordination) / 3;
+    const flexibility = Number.isFinite(flexibilityBase)
+      ? Math.round(flexibilityBase * (normalizedCharacterSex() === 'female' ? 1.10 : 1))
+      : NaN;
 
     return {
       values: {
         power,
         bullRush: bullMissing.length ? NaN : Math.round((power + weightScore) * .532),
         reaction: reactionMissing.length ? NaN : Math.round((values.agility + values.intelligence) / 2),
+        flexibility,
         humor: humorMissing.length ? NaN : Math.round((values.charisma + values.creativity + values.intelligence) / 3),
         wisdom: wisdomMissing.length ? NaN : Math.min(100, Math.round((age + values.intelligence + values.stability) / 3))
       },
-      missing: {power:powerMissing, bullRush:bullMissing, reaction:reactionMissing, humor:humorMissing, wisdom:wisdomMissing},
+      missing: {power:powerMissing, bullRush:bullMissing, reaction:reactionMissing, flexibility:flexibilityMissing, humor:humorMissing, wisdom:wisdomMissing},
       formulaMissing: {
         power: new Set([!Number.isFinite(values.agility) && 'agility', !Number.isFinite(values.strength) && 'strength'].filter(Boolean)),
         bullRush: new Set([!Number.isFinite(power) && 'power', !Number.isFinite(weightScore) && 'weight'].filter(Boolean)),
         reaction: new Set([!Number.isFinite(values.agility) && 'agility', !Number.isFinite(values.intelligence) && 'intelligence'].filter(Boolean)),
+        flexibility: new Set([!Number.isFinite(values.agility) && 'agility', !Number.isFinite(values.constitution) && 'constitution', !Number.isFinite(values.coordination) && 'coordination'].filter(Boolean)),
         humor: new Set([!Number.isFinite(values.charisma) && 'charisma', !Number.isFinite(values.creativity) && 'creativity', !Number.isFinite(values.intelligence) && 'intelligence'].filter(Boolean)),
         wisdom: new Set([!Number.isFinite(age) && 'age', !Number.isFinite(values.intelligence) && 'intelligence', !Number.isFinite(values.stability) && 'stability'].filter(Boolean))
       }
@@ -32219,7 +32229,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
     const current = computeSide('current');
     const max = computeSide('max');
-    const labels = {power:'Power', bullRush:'Bull Rush', reaction:'Reaction', humor:'Humor', wisdom:'Wisdom'};
+    const labels = {power:'Power', bullRush:'Bull Rush', reaction:'Reaction', flexibility:'Flexibility', humor:'Humor', wisdom:'Wisdom'};
     for (const key of Object.keys(labels)) {
       setCalculationDisplay(key, 'current', current.values[key], current.missing[key], labels[key]);
       setCalculationDisplay(key, 'max', max.values[key], max.missing[key], labels[key]);
@@ -33950,16 +33960,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     openCharacterSaveDialog(false, true);
   });
 
-  function loadDemoCharacter() {
-    const demo = defaultState();
-    demo.identity = {...demo.identity, player:'Demo Player', name:'Morgan Vale', sex:'F', age:34, height:'5 ft 9 in', weight:155, skin:'Olive', hair:'Black', eyes:'Brown', voice:'Low, measured', temperament:'Patient but stubborn', goals:'Find the missing survey team', features:'Old climbing scar on left forearm; weathered field jacket.', vision:'100', hearing:'100', smell:'100'};
-    demo.attributes.body = {
+  function loadMorganValeCharacter() {
+    const morgan = defaultState();
+    morgan.identity = {...morgan.identity, player:'', name:'Morgan Vale', sex:'F', age:34, height:'5 ft 9 in', weight:155, skin:'Olive', hair:'Black', eyes:'Brown', voice:'Low, measured', temperament:'Patient but stubborn', goals:'Find the missing survey team', features:'Old climbing scar on left forearm; weathered field jacket.', vision:'100', hearing:'100', smell:'100'};
+    morgan.attributes.body = {
       'Agility':{current:65,max:65}, 'Beauty':{current:50,max:50}, 'Cardio':{current:65,max:65}, 'Constitution':{current:60,max:60}, 'Coordination':{current:70,max:70}, 'Fine Motor Control':{current:65,max:65}, 'Strength':{current:55,max:55}
     };
-    demo.attributes.mind = {
+    morgan.attributes.mind = {
       'Charisma':{current:55,max:55}, 'Creativity':{current:65,max:65}, 'Empathy':{current:60,max:60}, 'Extraversion':{current:50,max:50}, 'Intelligence':{current:75,max:75}, 'Organization':{current:70,max:70}, 'Stability':{current:70,max:70}, 'Will':{current:75,max:75}
     };
-    demo.skills = [
+    morgan.skills = [
       {id:uid(), name:"Cartography", level:"80"},
       {id:uid(), name:"Caving", level:"75"},
       {id:uid(), name:"Surveying", level:"75"},
@@ -34041,14 +34051,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(), name:"Knowledge, Regional Ghost Stories", level:"10"},
       {id:uid(), name:"Knowledge, Roadside Attractions", level:"10"}
     ];
-    while (demo.skills.length < 60) demo.skills.push({id:uid(), name:'', level:'', groupId:''});
-    demo.encumbrance={light:'',medium:'',heavy:''};
-    demo.funds = [
+    while (morgan.skills.length < 60) morgan.skills.push({id:uid(), name:'', level:'', groupId:''});
+    morgan.encumbrance={light:'',medium:'',heavy:''};
+    morgan.funds = [
       {id:uid(), type:'cash', name:'Cash', currency:'USD', balance:120, carried:true, customUnitWeightPounds:'', isDefault:true},
       {id:uid(), type:'bank', name:'Checking', currency:'USD', balance:6500, carried:false, customUnitWeightPounds:'', isDefault:false}
     ];
-    const onPersonLocation = demo.gearLocations[0];
-    const setDownLocation = demo.gearLocations[1];
+    const onPersonLocation = morgan.gearLocations[0];
+    const setDownLocation = morgan.gearLocations[1];
     const mainPackItemId = uid();
     const cavingPackItemId = uid();
     const harnessItemId = uid();
@@ -34058,8 +34068,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const harnessLocation = {id:uid(), name:'Caving Harness', isDefault:false, wet:false, dirty:true, carried:true, sourceGearItemId:harnessItemId, sourceCatalogId:'gc1887', maxWeightPounds:10};
     const helmetLocation = {id:uid(), name:'Climbing Helmet', isDefault:false, wet:false, dirty:false, carried:true, sourceGearItemId:helmetItemId, sourceCatalogId:'gc0383', maxWeightPounds:1};
     const tackleLocation = {id:uid(), name:'Caving Pack — Contents', isDefault:false, wet:false, dirty:true, carried:true, sourceGearItemId:cavingPackItemId, sourceCatalogId:'gc1892', maxWeightPounds:30};
-    demo.gearLocations = [onPersonLocation, setDownLocation, baseCampLocation, mainPackLocation, harnessLocation, helmetLocation, tackleLocation];
-    demo.gear=[
+    morgan.gearLocations = [onPersonLocation, setDownLocation, baseCampLocation, mainPackLocation, harnessLocation, helmetLocation, tackleLocation];
+    morgan.gear=[
       {id:mainPackItemId,item:'Backpack, Lightweight, 48 L',catalogId:'gc0092',color:'Green',weight:2.4,condition:'Good',wet:false,dirty:true,locationId:baseCampLocation.id,carried:false},
       {id:cavingPackItemId,item:'Caving Pack, 30 L',catalogId:'gc1892',color:'Yellow',weight:2.2,condition:'Serviceable',wet:false,dirty:true,locationId:onPersonLocation.id,carried:true},
       {id:uid(),item:'Rope, Static, 30 m',catalogId:'gc0378',color:'Blue',weight:6.5,condition:'Serviceable',wet:false,dirty:true,locationId:tackleLocation.id,carried:true},
@@ -34125,7 +34135,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),item:'Sunglasses, Lightweight',catalogId:'gc0145',color:'Black',weight:.07,condition:'Good',wet:false,dirty:false,locationId:onPersonLocation.id,carried:true},
       {id:uid(),item:'Sunscreen, 3 oz',catalogId:'gc0373',color:'Orange',quantity:1,weight:.25,condition:'Good',wet:false,dirty:false,locationId:onPersonLocation.id,carried:true},
       {id:uid(),item:'Insect Repellent, 4 oz',catalogId:'gc0371',color:'Green',quantity:1,weight:.32,condition:'Good',wet:false,dirty:false,locationId:onPersonLocation.id,carried:true}    ];
-    demo.areas=[
+    morgan.areas=[
       {id:uid(),ageFrom:0,ageTo:8,location:'North Atlantic fishing town',level:35},
       {id:uid(),ageFrom:8,ageTo:18,location:'Great Lakes industrial river city',level:55},
       {id:uid(),ageFrom:18,ageTo:22,location:'Great Lakes university district',level:60},
@@ -34133,7 +34143,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),ageFrom:26,ageTo:31,location:'High-desert watershed survey circuit',level:50},
       {id:uid(),ageFrom:30,ageTo:34,location:'Pacific Northwest volcanic and coastal field sites',level:55}
     ];
-    demo.subcultures=[
+    morgan.subcultures=[
       {id:uid(),ageFrom:0,ageTo:8,location:'Commercial fishing families',involvement:'primary',level:30},
       {id:uid(),ageFrom:8,ageTo:18,location:'Volunteer firehouse families',involvement:'medium',level:45},
       {id:uid(),ageFrom:15,ageTo:22,location:'River-cleanup and conservation volunteers',involvement:'high',level:50},
@@ -34145,13 +34155,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       {id:uid(),ageFrom:24,ageTo:31,location:'Community-radio operators and audio tinkerers',involvement:'low',level:45},
       {id:uid(),ageFrom:26,ageTo:34,location:'Mutual-aid disaster-response networks',involvement:'high',level:55}
     ];
-    demo.background.text='Morgan spent her earliest years in a North Atlantic fishing town, where weather reports, damaged gear, and neighbors helping without being asked were ordinary parts of life. After her family moved to a Great Lakes river city, she grew up around volunteer firehouse dinners, flood cleanups, abandoned industrial sites, and arguments over who was responsible for poisoned water.\n\nAt university she studied environmental science, worked late shifts in the map room, and repaired equipment for the campus community-radio station. A student caving trip led to her first difficult evacuation and then to years of training with independent cavers, cave-rescue teams, wilderness medics, and veteran survey crews.\n\nHer twenties became a patchwork of karst expeditions, high-desert watershed surveys, storm deployments, and temporary field camps. She once uncovered altered groundwater maps that concealed a contractor’s mistakes; the resulting inquiry protected a community but ended several professional friendships and left her deeply suspicious of institutional secrecy.\n\nAway from work, Morgan is a devoted cat owner, an enthusiastic tabletop role-player, and a recreational mountain biker. She cooks for friends, keeps a battered guitar beside a shelf of unfinished speculative-fiction drafts, grows herbs wherever she is living, and loses an embarrassing amount of time to geography games.\n\nMorgan now works volcanic and coastal field sites, keeps an informal network of rescuers, radio operators, cartographers, and mutual-aid volunteers, and is searching for a survey team that vanished after reporting impossible readings from an old cave system.';
-    const demoSkillOrderBeforeSort = demo.skills.map(skill => skill.id);
-    demo.skills.sort((a, b) => {
+    morgan.background.text='Morgan spent her earliest years in a North Atlantic fishing town, where weather reports, damaged gear, and neighbors helping without being asked were ordinary parts of life. After her family moved to a Great Lakes river city, she grew up around volunteer firehouse dinners, flood cleanups, abandoned industrial sites, and arguments over who was responsible for poisoned water.\n\nAt university she studied environmental science, worked late shifts in the map room, and repaired equipment for the campus community-radio station. A student caving trip led to her first difficult evacuation and then to years of training with independent cavers, cave-rescue teams, wilderness medics, and veteran survey crews.\n\nHer twenties became a patchwork of karst expeditions, high-desert watershed surveys, storm deployments, and temporary field camps. She once uncovered altered groundwater maps that concealed a contractor’s mistakes; the resulting inquiry protected a community but ended several professional friendships and left her deeply suspicious of institutional secrecy.\n\nAway from work, Morgan is a devoted cat owner, an enthusiastic tabletop role-player, and a recreational mountain biker. She cooks for friends, keeps a battered guitar beside a shelf of unfinished speculative-fiction drafts, grows herbs wherever she is living, and loses an embarrassing amount of time to geography games.\n\nMorgan now works volcanic and coastal field sites, keeps an informal network of rescuers, radio operators, cartographers, and mutual-aid volunteers, and is searching for a survey team that vanished after reporting impossible readings from an old cave system.';
+    const demoSkillOrderBeforeSort = morgan.skills.map(skill => skill.id);
+    morgan.skills.sort((a, b) => {
       const levelDifference = (Number(b.level) || -1) - (Number(a.level) || -1);
       return levelDifference || String(a.name || '').localeCompare(String(b.name || ''), undefined, {sensitivity:'base', numeric:true});
     });
-    expandCatalogBundlesInState(demo);
+    expandCatalogBundlesInState(morgan);
 
     // Demo-only color pass: bundle contents are created after the hand-authored
     // gear rows above, so multi-color components need an explicit choice here.
@@ -34160,7 +34170,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       gc0418:'Blue',   // Nitrile Gloves, Pair
       gc0361:'Orange'  // Emergency Blanket, Mylar
     });
-    for (const item of demo.gear) {
+    for (const item of morgan.gear) {
       if (!item || item.color || !item.catalogId) continue;
       const catalog = GEAR_CATALOG_BY_ID.get(item.catalogId);
       const colors = Array.isArray(catalog?.colors) ? catalog.colors : [];
@@ -34169,7 +34179,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       item.color = preferred && colors.includes(preferred) ? preferred : colors[0];
     }
 
-    state = demo;
+    state = morgan;
     setActiveLibraryCharacterId(null);
     skillHeaderSort = {key:'level', direction:'desc'};
     skillOrderBeforeSort = demoSkillOrderBeforeSort;
@@ -34713,16 +34723,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   async function renderCharacterLibrary() {
     const list = document.getElementById('characterLibraryList');
     if (!list) return;
-    const demoRow = `
-      <div class="character-library-row demo">
+    const morganRow = `
+      <div class="character-library-row built-in">
         <div class="character-library-copy">
-          <div class="character-library-name">Morgan Vale — Demo</div>
-          <div class="character-library-meta">Built-in demo character • always available</div>
+          <div class="character-library-name">Morgan Vale — Template</div>
+          <div class="character-library-meta">Built-in field-survey / exploration template • always available</div>
         </div>
-        <div class="character-library-actions"><button class="btn primary" data-library-load-demo type="button">Load</button></div>
+        <div class="character-library-actions"><button class="btn primary" data-library-load-morgan type="button">Load</button></div>
       </div>`;
     const tomRow = `
-      <div class="character-library-row demo">
+      <div class="character-library-row built-in">
         <div class="character-library-copy">
           <div class="character-library-name">Tom Mercer — Template</div>
           <div class="character-library-meta">Built-in senior underground-engineering template • always available</div>
@@ -34730,7 +34740,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         <div class="character-library-actions"><button class="btn primary" data-library-load-tom type="button">Load</button></div>
       </div>`;
     const garethRow = `
-      <div class="character-library-row demo">
+      <div class="character-library-row built-in">
         <div class="character-library-copy">
           <div class="character-library-name">Gareth Cole — Template</div>
           <div class="character-library-meta">Built-in expedition-medicine / SAR template • always available</div>
@@ -34738,14 +34748,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         <div class="character-library-actions"><button class="btn primary" data-library-load-gareth type="button">Load</button></div>
       </div>`;
     const calvinRow = `
-      <div class="character-library-row demo">
+      <div class="character-library-row built-in">
         <div class="character-library-copy">
           <div class="character-library-name">Calvin Brooks — Template</div>
           <div class="character-library-meta">Built-in field-archaeology / ancient-world template • always available</div>
         </div>
         <div class="character-library-actions"><button class="btn primary" data-library-load-calvin type="button">Load</button></div>
       </div>`;
-    const builtInRows = demoRow + tomRow + garethRow + calvinRow;
+    const builtInRows = morganRow + tomRow + garethRow + calvinRow;
     list.innerHTML = builtInRows + '<div class="character-library-empty">Loading local characters…</div>';
     try {
       const records = await listLocalCharacters();
@@ -34914,9 +34924,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const pending = pendingCharacterLoad;
     pendingCharacterLoad = null;
     if (!pending) return;
-    if (pending.type === 'demo') {
-      loadDemoCharacter();
-      setLocalSaveStatus('Loaded Morgan Vale — Demo');
+    if (pending.type === 'morgan') {
+      loadMorganValeCharacter();
+      setLocalSaveStatus('Loaded Morgan Vale — Template');
     } else if (pending.type === 'tom') {
       loadTomMercerCharacter();
       setLocalSaveStatus('Loaded Tom Mercer — Template');
@@ -34936,7 +34946,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     document.getElementById('characterLoadDialog')?.close();
     const saveStatus = await currentNamedSaveStatus();
     if (saveStatus.hasUnsavedChanges) {
-      const label = loadRequest.name || (loadRequest.type === 'demo' ? 'Morgan Vale — Demo' : loadRequest.type === 'tom' ? 'Tom Mercer — Template' : loadRequest.type === 'gareth' ? 'Gareth Cole — Template' : loadRequest.type === 'calvin' ? 'Calvin Brooks — Template' : 'the selected character');
+      const label = loadRequest.name || (loadRequest.type === 'morgan' ? 'Morgan Vale — Template' : loadRequest.type === 'tom' ? 'Tom Mercer — Template' : loadRequest.type === 'gareth' ? 'Gareth Cole — Template' : loadRequest.type === 'calvin' ? 'Calvin Brooks — Template' : 'the selected character');
       const currentSaveName = characterSaveDisplayName(saveStatus.record?.name);
       document.getElementById('characterLoadConfirmText').textContent = saveStatus.hasNamedSave
         ? `Load “${label}”? The current character has changes that have not been saved to “${currentSaveName || 'its local save'}”. Save those changes first or load without saving.`
@@ -35000,8 +35010,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   document.getElementById('characterLibraryList')?.addEventListener('click', async event => {
     const button = event.target.closest('button');
     if (!button) return;
-    if (button.hasAttribute('data-library-load-demo')) {
-      requestCharacterLoad({type:'demo', name:'Morgan Vale — Demo'});
+    if (button.hasAttribute('data-library-load-morgan')) {
+      requestCharacterLoad({type:'morgan', name:'Morgan Vale — Template'});
       return;
     }
     if (button.hasAttribute('data-library-load-tom')) {
@@ -35867,6 +35877,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Calvin Brooks — Template now loads that portrait by default.
      - No character attributes, skills, background, gear, or compatibility rules changed.
      - Visible footer synchronized to Character Sheet v759. -->
+
+
+<!-- INTERNAL v760 DERIVED FLEXIBILITY / BUILT-IN TEMPLATE NORMALIZATION — NOT USER-FACING
+     - Adds read-only Flexibility to Derived: (Agility + Constitution + Coordination) / 3.
+     - Female characters receive a ×1.10 Flexibility modifier after averaging; results use Math.round(), so .5 rounds upward.
+     - Current Flexibility uses current component attributes, so existing condition/injury penalties recalculate it dynamically; Max Flexibility uses maximum component attributes.
+     - Morgan Vale is normalized from “Demo” to “Template” in the built-in character library and load/status text.
+     - Renames Morgan's legacy loader/request terminology from demo to Morgan-specific naming and removes “Demo Player” from Morgan's Player field.
+     - Built-in character library styling uses the neutral built-in class instead of the legacy demo class.
+     - Visible footer synchronized to Character Sheet v760. -->
 
 </body>
 </html>
