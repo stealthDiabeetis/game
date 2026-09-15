@@ -10553,6 +10553,135 @@
   }
 </style>
 
+
+<style id="v762-running-calculator-styles">
+  /* v762: Running keeps the seven v761 distance anchors, but the app now uses
+     whole-number Agility/Cardio percentages (101 blend states). The range input
+     deliberately extends by half a thumb on both sides so the thumb centers can
+     reach the visual rail's true left/right edges instead of stopping inset. */
+  .running-calculator {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+  .running-calculator-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 3px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .running-calculator-head strong {
+    color: var(--text);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .running-calculator-breakdown {
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .running-distance-slider-wrap {
+    --running-slider-thumb-size: 18px;
+    position: relative;
+    height: 20px;
+    display: grid;
+    align-items: center;
+    overflow: visible;
+  }
+  .running-distance-slider-wrap::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--strong-line) 64%, transparent);
+    pointer-events: none;
+  }
+  .running-distance-slider {
+    position: relative;
+    z-index: 1;
+    width: calc(100% + var(--running-slider-thumb-size));
+    height: 20px;
+    min-height: 20px;
+    margin: 0 0 0 calc(var(--running-slider-thumb-size) / -2);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none !important;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .running-distance-slider::-webkit-slider-runnable-track {
+    height: 4px;
+    border: 0;
+    background: transparent;
+  }
+  .running-distance-slider::-webkit-slider-thumb {
+    width: var(--running-slider-thumb-size);
+    height: var(--running-slider-thumb-size);
+    margin-top: calc((4px - var(--running-slider-thumb-size)) / 2);
+    border: 1px solid color-mix(in srgb, var(--strong-line) 70%, transparent);
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .running-distance-slider::-moz-range-track {
+    height: 4px;
+    border: 0;
+    background: transparent;
+  }
+  .running-distance-slider::-moz-range-progress {
+    height: 4px;
+    border: 0;
+    background: transparent;
+  }
+  .running-distance-slider::-moz-range-thumb {
+    width: var(--running-slider-thumb-size);
+    height: var(--running-slider-thumb-size);
+    border: 1px solid color-mix(in srgb, var(--strong-line) 70%, transparent);
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  }
+  .running-distance-slider:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 28%, transparent), 0 1px 3px rgba(0,0,0,.25);
+  }
+  .running-distance-ticks {
+    position: relative;
+    height: 11px;
+    margin-top: 1px;
+    color: var(--muted);
+    font-size: 8px;
+    line-height: 1.05;
+    user-select: none;
+  }
+  .running-distance-ticks span {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    text-align: center;
+  }
+  .running-distance-ticks span:first-child { transform: none; text-align: left; }
+  .running-distance-ticks span:last-child { transform: translateX(-100%); text-align: right; }
+  @media screen and (max-width: 600px),
+         screen and (max-height: 520px) and (pointer: coarse) {
+    .running-calculator { margin-top: 7px; padding-top: 7px; }
+    .running-distance-ticks { font-size: 7px; }
+    .running-calculator-head { gap: 6px; }
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -10675,9 +10804,16 @@
 <tr><td>Bull Rush<span class="formula" data-formula="bullRush">(<span data-requirement="power">Power</span> + <span data-requirement="weight">Weight Score</span>) x 0.532</span></td><td><div class="computed" data-derived="bullRush.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="bullRush.max" tabindex="-1">0</div></td></tr>
 <tr><td>Reaction<span class="formula" data-formula="reaction">(<span data-requirement="agility">Agility</span> + <span data-requirement="intelligence">Intelligence</span>) / 2</span></td><td><div class="computed" data-derived="reaction.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="reaction.max" tabindex="-1">0</div></td></tr>
 <tr><td>Flexibility<span class="formula" data-formula="flexibility">(<span data-requirement="agility">Agility</span> + <span data-requirement="constitution">Constitution</span> + <span data-requirement="coordination">Coordination</span>) / 3; Female × 1.10</span></td><td><div class="computed" data-derived="flexibility.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="flexibility.max" tabindex="-1">0</div></td></tr>
+<tr><td>Running<span class="formula" data-formula="running"><span data-requirement="agility">Agility</span> <span data-running-agility-weight>50%</span> + <span data-requirement="cardio">Cardio</span> <span data-running-cardio-weight>50%</span> · <span data-running-distance-formula>⅜ mi</span></span></td><td><div class="computed" data-derived="running.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="running.max" tabindex="-1">0</div></td></tr>
 <tr><td>Humor<span class="formula" data-formula="humor">(<span data-requirement="charisma">Charisma</span> + <span data-requirement="creativity">Creativity</span> + <span data-requirement="intelligence">Intelligence</span>) / 3</span></td><td><div class="computed" data-derived="humor.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="humor.max" tabindex="-1">0</div></td></tr>
 <tr><td>Wisdom<span class="formula" data-formula="wisdom">(<span data-requirement="age">Age</span> + <span data-requirement="intelligence">Intelligence</span> + <span data-requirement="stability">Stability</span>) / 3; max 100</span></td><td><div class="computed" data-derived="wisdom.current" tabindex="-1">0</div></td><td><div class="computed" data-derived="wisdom.max" tabindex="-1">0</div></td></tr>
 </tbody></table>
+<div class="running-calculator no-print" aria-label="Running distance calculator">
+  <div class="running-calculator-head"><span>Running distance</span><strong id="runningDistanceLabel">⅜ mi (660 yd)</strong></div>
+  <div class="running-calculator-breakdown" id="runningWeightLabel">Agility 50% · Cardio 50%</div>
+  <div class="running-distance-slider-wrap"><input class="running-distance-slider" id="runningDistanceSlider" type="range" min="0" max="100" step="1" value="50" aria-label="Running distance"/></div>
+  <div class="running-distance-ticks" aria-hidden="true"><span style="left:0%">100 yd</span><span style="left:20%">200 yd</span><span style="left:40%">¼ mi</span><span style="left:50%">⅜ mi</span><span style="left:60%">½ mi</span><span style="left:80%">1 mi</span><span style="left:100%">3 mi+</span></div>
+</div>
 </div>
 <div aria-live="polite" class="attribute-max-total combined-attribute-total"><span>Total max attributes</span><strong id="combinedMaxTotal">750</strong></div>
 <div aria-label="Starting attribute point budgets" class="attribute-starting-points">
@@ -10818,7 +10954,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v760</div>
+<div class="footer-note no-print">Character Sheet v762</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -32039,9 +32175,79 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     warningBox.innerHTML = `<div class="compatibility-warning-row"><div>Characters over 40 must have at least 1 total point of Vision, Hearing, or Smell penalty for every year over 40.</div><ul class="compatibility-warning-options"><li>Age ${esc(fmtWhole(age))} requires ${esc(fmtWhole(requiredPenalty))} total sense penalty points; currently ${esc(fmtWhole(currentPenalty))}. Add ${esc(fmtWhole(shortfall))} more.</li></ul></div>`;
   }
 
-  function computeSide(side) {
+  const RUNNING_DISTANCE_ANCHORS = Object.freeze([
+    {cardioPercent:0,   yards:100,  agility:1.00, cardio:0.00, label:'≤100 yd', formulaLabel:'≤100 yd'},
+    {cardioPercent:20,  yards:200,  agility:0.80, cardio:0.20, label:'200 yd', formulaLabel:'200 yd'},
+    {cardioPercent:40,  yards:440,  agility:0.60, cardio:0.40, label:'¼ mi (440 yd)', formulaLabel:'¼ mi'},
+    {cardioPercent:50,  yards:660,  agility:0.50, cardio:0.50, label:'⅜ mi (660 yd)', formulaLabel:'⅜ mi'},
+    {cardioPercent:60,  yards:880,  agility:0.40, cardio:0.60, label:'½ mi (880 yd)', formulaLabel:'½ mi'},
+    {cardioPercent:80,  yards:1760, agility:0.20, cardio:0.80, label:'1 mi', formulaLabel:'1 mi'},
+    {cardioPercent:100, yards:5280, agility:0.00, cardio:1.00, label:'3 mi+', formulaLabel:'3 mi+'}
+  ]);
+
+  function runningDistanceSelection() {
+    const slider = document.getElementById('runningDistanceSlider');
+    const rawPercent = Number(slider?.value ?? 50);
+    const cardioPercent = Math.max(0, Math.min(100, Math.round(Number.isFinite(rawPercent) ? rawPercent : 50)));
+    const exact = RUNNING_DISTANCE_ANCHORS.find(anchor => anchor.cardioPercent === cardioPercent);
+    if (exact) return {...exact};
+
+    let lower = RUNNING_DISTANCE_ANCHORS[0];
+    let upper = RUNNING_DISTANCE_ANCHORS[RUNNING_DISTANCE_ANCHORS.length - 1];
+    for (let index = 0; index < RUNNING_DISTANCE_ANCHORS.length - 1; index += 1) {
+      const a = RUNNING_DISTANCE_ANCHORS[index];
+      const b = RUNNING_DISTANCE_ANCHORS[index + 1];
+      if (cardioPercent > a.cardioPercent && cardioPercent < b.cardioPercent) { lower = a; upper = b; break; }
+    }
+    const fraction = (cardioPercent - lower.cardioPercent) / (upper.cardioPercent - lower.cardioPercent);
+    const yards = lower.yards + ((upper.yards - lower.yards) * fraction);
+    const cardio = cardioPercent / 100;
+    const agility = 1 - cardio;
+    let label;
+    let formulaLabel;
+    if (yards < 1760) {
+      const roundedYards = Math.max(100, Math.round(yards));
+      label = `${roundedYards} yd`;
+      formulaLabel = label;
+    } else {
+      const miles = yards / 1760;
+      const roundedMiles = Math.round(miles * 10) / 10;
+      const mileText = Number.isInteger(roundedMiles) ? String(roundedMiles) : roundedMiles.toFixed(1);
+      label = `${mileText} mi`;
+      formulaLabel = label;
+    }
+    return {cardioPercent, yards, agility, cardio, label, formulaLabel};
+  }
+
+  function runningWeightPercent(weight) {
+    return `${Math.round(weight * 100)}%`;
+  }
+
+  function updateRunningCalculatorUi() {
+    const selection = runningDistanceSelection();
+    const agilityPercent = runningWeightPercent(selection.agility);
+    const cardioPercent = runningWeightPercent(selection.cardio);
+    const distanceLabel = document.getElementById('runningDistanceLabel');
+    const weightLabel = document.getElementById('runningWeightLabel');
+    if (distanceLabel) distanceLabel.textContent = selection.label;
+    if (weightLabel) weightLabel.textContent = `Agility ${agilityPercent} · Cardio ${cardioPercent}`;
+    document.querySelectorAll('[data-running-agility-weight]').forEach(element => { element.textContent = agilityPercent; });
+    document.querySelectorAll('[data-running-cardio-weight]').forEach(element => { element.textContent = cardioPercent; });
+    document.querySelectorAll('[data-running-distance-formula]').forEach(element => { element.textContent = selection.formulaLabel; });
+    return selection;
+  }
+
+  function bindRunningCalculator() {
+    const slider = document.getElementById('runningDistanceSlider');
+    if (!slider) return;
+    slider.addEventListener('input', calculate);
+    slider.addEventListener('change', calculate);
+  }
+
+  function computeSide(side, runningSelection = runningDistanceSelection()) {
     const values = {
       agility: attrValue('body','Agility',side),
+      cardio: attrValue('body','Cardio',side),
       constitution: attrValue('body','Constitution',side),
       coordination: attrValue('body','Coordination',side),
       strength: attrValue('body','Strength',side),
@@ -32057,6 +32263,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const power = powerMissing.length ? NaN : Math.round((values.agility + values.strength) * .588);
     const bullMissing = [...powerMissing, !Number.isFinite(weightScore) && 'weight'].filter(Boolean);
     const reactionMissing = [!Number.isFinite(values.agility) && 'Agility', !Number.isFinite(values.intelligence) && 'Intelligence'].filter(Boolean);
+    const runningMissing = [!Number.isFinite(values.agility) && 'Agility', !Number.isFinite(values.cardio) && 'Cardio'].filter(Boolean);
     const flexibilityMissing = [!Number.isFinite(values.agility) && 'Agility', !Number.isFinite(values.constitution) && 'Constitution', !Number.isFinite(values.coordination) && 'Coordination'].filter(Boolean);
     const humorMissing = [!Number.isFinite(values.charisma) && 'Charisma', !Number.isFinite(values.creativity) && 'Creativity', !Number.isFinite(values.intelligence) && 'Intelligence'].filter(Boolean);
     const wisdomMissing = [!Number.isFinite(age) && 'age', !Number.isFinite(values.intelligence) && 'Intelligence', !Number.isFinite(values.stability) && 'Stability'].filter(Boolean);
@@ -32070,15 +32277,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         power,
         bullRush: bullMissing.length ? NaN : Math.round((power + weightScore) * .532),
         reaction: reactionMissing.length ? NaN : Math.round((values.agility + values.intelligence) / 2),
+        running: runningMissing.length ? NaN : Math.round((values.agility * runningSelection.agility) + (values.cardio * runningSelection.cardio)),
         flexibility,
         humor: humorMissing.length ? NaN : Math.round((values.charisma + values.creativity + values.intelligence) / 3),
         wisdom: wisdomMissing.length ? NaN : Math.min(100, Math.round((age + values.intelligence + values.stability) / 3))
       },
-      missing: {power:powerMissing, bullRush:bullMissing, reaction:reactionMissing, flexibility:flexibilityMissing, humor:humorMissing, wisdom:wisdomMissing},
+      missing: {power:powerMissing, bullRush:bullMissing, reaction:reactionMissing, running:runningMissing, flexibility:flexibilityMissing, humor:humorMissing, wisdom:wisdomMissing},
       formulaMissing: {
         power: new Set([!Number.isFinite(values.agility) && 'agility', !Number.isFinite(values.strength) && 'strength'].filter(Boolean)),
         bullRush: new Set([!Number.isFinite(power) && 'power', !Number.isFinite(weightScore) && 'weight'].filter(Boolean)),
         reaction: new Set([!Number.isFinite(values.agility) && 'agility', !Number.isFinite(values.intelligence) && 'intelligence'].filter(Boolean)),
+        running: new Set([!Number.isFinite(values.agility) && 'agility', !Number.isFinite(values.cardio) && 'cardio'].filter(Boolean)),
         flexibility: new Set([!Number.isFinite(values.agility) && 'agility', !Number.isFinite(values.constitution) && 'constitution', !Number.isFinite(values.coordination) && 'coordination'].filter(Boolean)),
         humor: new Set([!Number.isFinite(values.charisma) && 'charisma', !Number.isFinite(values.creativity) && 'creativity', !Number.isFinite(values.intelligence) && 'intelligence'].filter(Boolean)),
         wisdom: new Set([!Number.isFinite(age) && 'age', !Number.isFinite(values.intelligence) && 'intelligence', !Number.isFinite(values.stability) && 'stability'].filter(Boolean))
@@ -32227,9 +32436,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     // explanatory hover text afterward so condition reasoning stays visible.
     syncConditionScoreEffects();
 
-    const current = computeSide('current');
-    const max = computeSide('max');
-    const labels = {power:'Power', bullRush:'Bull Rush', reaction:'Reaction', flexibility:'Flexibility', humor:'Humor', wisdom:'Wisdom'};
+    const runningSelection = updateRunningCalculatorUi();
+    const current = computeSide('current', runningSelection);
+    const max = computeSide('max', runningSelection);
+    const labels = {power:'Power', bullRush:'Bull Rush', reaction:'Reaction', running:'Running', flexibility:'Flexibility', humor:'Humor', wisdom:'Wisdom'};
     for (const key of Object.keys(labels)) {
       setCalculationDisplay(key, 'current', current.values[key], current.missing[key], labels[key]);
       setCalculationDisplay(key, 'max', max.values[key], max.missing[key], labels[key]);
@@ -35205,6 +35415,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   bindStaticFields();
   bindAutoSelectFieldSelection();
   bindCalculatedDisplays();
+  bindRunningCalculator();
   bindOverviewSteppers();
   bindAttributeLinkButtons();
   bindUniversalCharacterUndo();
@@ -35878,6 +36089,25 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - No character attributes, skills, background, gear, or compatibility rules changed.
      - Visible footer synchronized to Character Sheet v759. -->
 
+
+<!-- INTERNAL v762 WHOLE-PERCENT RUNNING SLIDER / EDGE-TO-EDGE RANGE — NOT USER-FACING
+     - Running slider now uses Cardio percentage directly: 0–100 in whole-number 1% steps; Agility is always the complementary whole-number percentage.
+     - Preserves the seven v761 anchor distances/weights exactly: ≤100 yd 0%, 200 yd 20%, ¼ mi 40%, ⅜ mi 50%, ½ mi 60%, 1 mi 80%, 3 mi+ 100% Cardio.
+     - Distances interpolate piecewise between those anchors; whole-number percentages eliminate decimal weighting readouts while retaining 101 blend states.
+     - The custom range input extends by half the thumb width on both sides so the thumb centers visually reach the rail's true left/right edges.
+     - Distance tick labels are positioned at their actual weighting percentages rather than equal-width anchor columns.
+     - Running Current/Max calculations and all other character rules remain unchanged.
+     - Visible footer synchronized to Character Sheet v762.
+-->
+
+<!-- INTERNAL v761 DISTANCE-WEIGHTED RUNNING DERIVED CALCULATOR — NOT USER-FACING
+     - Adds Running to Derived, calculated from Agility and Cardio for both Current and Max.
+     - Adds a compact distance slider beneath Derived with rule anchors at ≤100 yd, 200 yd, ¼ mi, ⅜ mi, ½ mi, 1 mi, and 3 mi+.
+     - Anchor weights are 100/0, 80/20, 60/40, 50/50, 40/60, 20/80, and 0/100 Agility/Cardio; intermediate slider positions interpolate continuously.
+     - Slider spacing is normalized between anchors so short-distance choices remain usable instead of being compressed by the 3-mile endpoint.
+     - Running Current responds to existing Current attribute penalties; Running Max uses maximum Agility/Cardio.
+     - Visible footer synchronized to Character Sheet v761.
+-->
 
 <!-- INTERNAL v760 DERIVED FLEXIBILITY / BUILT-IN TEMPLATE NORMALIZATION — NOT USER-FACING
      - Adds read-only Flexibility to Derived: (Agility + Constitution + Coordination) / 3.
