@@ -1341,6 +1341,112 @@
     .condition-stage-2 .condition-stage-value { color: var(--condition-orange); }
     .condition-stage-3 .condition-stage-value { color: var(--danger); }
     .condition-stage-4 .condition-stage-value { color: var(--condition-dark-red); }
+    .condition-anemia-stage-control {
+      display: grid;
+      gap: 4px;
+      min-width: 104px;
+    }
+    .condition-anemia-deficit {
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 6px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-2);
+      color: var(--condition-orange);
+      font-size: 11px;
+      font-weight: 750;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+    .condition-anemia-weekly-btn { min-height: 26px; padding: 3px 6px; font-size: 10px; white-space: nowrap; }
+    .condition-anemia-recovery { display: grid; gap: 10px; margin-top: 12px; }
+    .condition-anemia-recovery-slider-wrap {
+      --anemia-recovery-thumb-size: 18px;
+      position: relative;
+      height: 20px;
+      display: grid;
+      align-items: center;
+      overflow: visible;
+    }
+    .condition-anemia-recovery-slider-wrap::before,
+    .condition-anemia-recovery-slider-wrap::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      height: 4px;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+    .condition-anemia-recovery-slider-wrap::before {
+      right: 0;
+      background: color-mix(in srgb, var(--strong-line) 64%, transparent);
+    }
+    .condition-anemia-recovery-slider-wrap::after {
+      width: var(--anemia-recovery-fill, 0%);
+      background: var(--accent);
+    }
+    .condition-anemia-recovery input[type="range"] {
+      position: relative;
+      z-index: 1;
+      width: calc(100% + var(--anemia-recovery-thumb-size));
+      height: 20px;
+      min-height: 20px;
+      margin: 0 0 0 calc(var(--anemia-recovery-thumb-size) / -2);
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none !important;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .condition-anemia-recovery input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px;
+      border: 0;
+      background: transparent;
+    }
+    .condition-anemia-recovery input[type="range"]::-webkit-slider-thumb {
+      width: var(--anemia-recovery-thumb-size);
+      height: var(--anemia-recovery-thumb-size);
+      margin-top: calc((4px - var(--anemia-recovery-thumb-size)) / 2);
+      border: 1px solid color-mix(in srgb, var(--strong-line) 70%, transparent);
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 1px 3px rgba(0,0,0,.25);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .condition-anemia-recovery input[type="range"]::-moz-range-track,
+    .condition-anemia-recovery input[type="range"]::-moz-range-progress {
+      height: 4px;
+      border: 0;
+      background: transparent;
+    }
+    .condition-anemia-recovery input[type="range"]::-moz-range-thumb {
+      width: var(--anemia-recovery-thumb-size);
+      height: var(--anemia-recovery-thumb-size);
+      border: 1px solid color-mix(in srgb, var(--strong-line) 70%, transparent);
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    }
+    .condition-anemia-recovery input[type="range"]:focus-visible::-webkit-slider-thumb {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent), 0 1px 3px rgba(0,0,0,.25);
+    }
+    .condition-anemia-recovery-value {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-2);
+      font-weight: 800;
+    }
     .condition-config-intro { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
     .condition-config-section + .condition-config-section { margin-top: 18px; }
     .condition-config-section h3 { margin: 0 0 8px; font-size: 14px; }
@@ -1475,6 +1581,7 @@
     .condition-custom-text-row textarea { min-height: 54px; resize: vertical; font-size: 12px; }
     .condition-dialog-reset { margin-right: auto; }
     .condition-qualifier-row select { width: 118px; min-height: 32px; padding: 5px 7px; font-size: 11px; }
+    #conditionDysfunctionPenalty { width: 184px; max-width: 100%; }
     .condition-dialog-score {
       margin: 12px 0 0;
       padding: 10px;
@@ -10593,15 +10700,22 @@
     align-items: center;
     overflow: visible;
   }
-  .running-distance-slider-wrap::before {
+  .running-distance-slider-wrap::before,
+  .running-distance-slider-wrap::after {
     content: "";
     position: absolute;
     left: 0;
-    right: 0;
     height: 4px;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--strong-line) 64%, transparent);
     pointer-events: none;
+  }
+  .running-distance-slider-wrap::before {
+    right: 0;
+    background: color-mix(in srgb, var(--strong-line) 64%, transparent);
+  }
+  .running-distance-slider-wrap::after {
+    width: var(--running-slider-fill, 50%);
+    background: var(--green);
   }
   .running-distance-slider {
     position: relative;
@@ -10954,7 +11068,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v762</div>
+<div class="footer-note no-print">Character Sheet v776</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -11174,6 +11288,32 @@
 <h2 id="conditionNoticeTitle">Condition update</h2>
 <p id="conditionNoticeText"></p>
 <div class="dialog-actions"><button class="btn primary" id="conditionNoticeOk" type="button">OK</button></div>
+</div>
+</dialog>
+<dialog id="bloodLossRecoveryDialog">
+<div class="dialog-inner">
+<h2>Reduce Blood Loss</h2>
+<p>How was this stage of Blood Loss recovered?</p>
+<div class="dialog-actions">
+<button class="btn" id="bloodLossRecoveryCancel" type="button">Cancel</button>
+<button class="btn" id="bloodLossRecoveryNatural" type="button">Natural Recovery</button>
+<button class="btn primary" id="bloodLossRecoveryTransfusion" type="button">Blood Transfusion</button>
+</div>
+</div>
+</dialog>
+<dialog id="anemiaRecoveryDialog">
+<div class="dialog-inner">
+<h2>Weekly Anemia Test</h2>
+<p>After the weekly Constitution test, choose the number of Cardio points recovered.</p>
+<div class="condition-anemia-recovery">
+<div class="condition-anemia-recovery-slider-wrap"><input id="anemiaRecoverySlider" type="range" min="1" max="1" step="1" value="1" aria-label="Cardio points recovered"></div>
+<div class="condition-anemia-recovery-value" id="anemiaRecoveryValue">1 Cardio</div>
+</div>
+<div class="dialog-actions">
+<button class="btn" id="anemiaRecoveryCancel" type="button">Cancel</button>
+<button class="btn" id="anemiaRecoveryTransfusion" type="button">Blood Transfusion</button>
+<button class="btn primary" id="anemiaRecoveryApply" type="button">Recover</button>
+</div>
 </div>
 </dialog>
 <dialog id="conditionConfigDialog">
@@ -14374,6 +14514,13 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return `${thresholds.medium + 1}-${thresholds.heavy}`;
   }
 
+  function roundedEncumbranceCarriedWeight(gearTotal) {
+    if (!Number.isFinite(gearTotal)) return gearTotal;
+    // Carried weight is classified by ordinary nearest-pound rounding:
+    // 23.4 -> 23, 23.5 -> 24. Keep the underlying/displayed weight unchanged.
+    return Math.floor(gearTotal + 0.5 + 1e-9);
+  }
+
   function describeEncumbrance(thresholds, weight, gearTotal) {
     if (!thresholds) {
       return {
@@ -14383,35 +14530,36 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       };
     }
 
+    const encumbranceGearTotal = roundedEncumbranceCarriedWeight(gearTotal);
     const lightStart = lightEncumbranceStart(weight);
     const mediumStart = thresholds.light + 1;
     const heavyStart = thresholds.medium + 1;
     const overloadedStart = thresholds.heavy + 1;
     const heavyCap = Math.max(1, thresholds.heavy);
-    const progress = Math.max(0, Math.min(1, gearTotal / heavyCap));
+    const progress = Math.max(0, Math.min(1, encumbranceGearTotal / heavyCap));
 
-    if (gearTotal >= overloadedStart) {
+    if (encumbranceGearTotal >= overloadedStart) {
       return {
         stage:'overloaded',
         inline:'You are <strong>over the heavy encumbrance limit</strong>.',
         progress:1
       };
     }
-    if (gearTotal >= heavyStart) {
+    if (encumbranceGearTotal >= heavyStart) {
       return {
         stage:'heavy',
         inline:'You are <strong>heavily encumbered</strong>.',
         progress
       };
     }
-    if (gearTotal >= mediumStart) {
+    if (encumbranceGearTotal >= mediumStart) {
       return {
         stage:'medium',
         inline:'You are <strong>moderately encumbered</strong>.',
         progress
       };
     }
-    if (gearTotal >= lightStart) {
+    if (encumbranceGearTotal >= lightStart) {
       return {
         stage:'light',
         inline:'You are <strong>lightly encumbered</strong>.',
@@ -14520,39 +14668,40 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     let hikerPosition = geometry[0]?.left ?? 32;
 
     if (thresholds && geometry.length >= 3) {
+      const encumbranceGearTotal = roundedEncumbranceCarriedWeight(gearTotal);
       const lightStart = lightEncumbranceStart(weight);
       const lightBoundary = lightStart;
       const mediumBoundary = thresholds.light + 1;
       const heavyBoundary = thresholds.medium + 1;
       const overloadBoundary = thresholds.heavy + 1;
 
-      if (gearTotal < lightBoundary) {
+      if (encumbranceGearTotal < lightBoundary) {
         hikerPosition = interpolatePosition(
           {left:lineStart, width:lightStartPosition - lineStart},
-          gearTotal,
+          encumbranceGearTotal,
           0,
           lightBoundary
         );
-      } else if (gearTotal < mediumBoundary) {
+      } else if (encumbranceGearTotal < mediumBoundary) {
         hikerPosition = interpolatePosition(
           {left:lightStartPosition, width:gapOneMid - lightStartPosition},
-          gearTotal,
+          encumbranceGearTotal,
           lightBoundary,
           mediumBoundary
         );
-      } else if (gearTotal < heavyBoundary) {
+      } else if (encumbranceGearTotal < heavyBoundary) {
         hikerPosition = interpolatePosition(
           {left:gapOneMid, width:gapTwoMid - gapOneMid},
-          gearTotal,
+          encumbranceGearTotal,
           mediumBoundary,
           heavyBoundary
         );
-      } else if (gearTotal < overloadBoundary) {
+      } else if (encumbranceGearTotal < overloadBoundary) {
         // Reach the end of the line at the top of the Heavy range so the
         // overloaded sprite can swap in without an extra visible right-shift.
         hikerPosition = interpolatePosition(
           {left:gapTwoMid, width:lineEnd - gapTwoMid},
-          gearTotal,
+          encumbranceGearTotal,
           heavyBoundary,
           thresholds.heavy
         );
@@ -27263,15 +27412,15 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       4:{notes:[ci('Mental breakdown. Character temporarily loses partial control according to temperament.'),ci('After the breakdown, return Stress to Stage 3.')],medical:[ci('Advised')],events:[ce('breakdown')]}
     }},
     Fatigue:{stages:{
-      1:{modifiers:[cm(['Agility','Cardio','Coordination','Intelligence','Organization','Stability','Will'],10),cm(['Hearing','Vision'],10)]},
-      2:{modifiers:[cm(['Charisma','Creativity','Empathy','Extraversion','Fine Motor Control','Strength'],10),cm(['Agility','Cardio','Coordination','Intelligence','Organization','Stability','Will'],15),cm(['Hearing','Vision'],15)],events:[ce('stability')]},
-      3:{promptQualifiers:['sleepDeprived'],modifiers:[cm(['Charisma','Creativity','Empathy','Extraversion','Fine Motor Control','Strength'],15),cm(['Agility','Cardio','Coordination','Intelligence','Organization','Stability','Will'],25),cm(['Hearing','Vision'],25)],events:[ce('stability')],risks:[ci('Microsleeps','sleepDeprived'),ci('Hallucinations','sleepDeprived')]},
+      1:{modifiers:[cm(['Agility','Cardio','Coordination','Intelligence','Organization','Stability'],10),cm(['Hearing','Vision'],10)]},
+      2:{modifiers:[cm(['Charisma','Creativity','Empathy','Extraversion','Fine Motor Control','Strength','Will'],10),cm(['Agility','Cardio','Coordination','Intelligence','Organization','Stability'],15),cm(['Hearing','Vision'],15)],events:[ce('stability')]},
+      3:{promptQualifiers:['sleepDeprived'],modifiers:[cm(['Charisma','Creativity','Empathy','Extraversion','Fine Motor Control','Strength','Will'],15),cm(['Agility','Cardio','Coordination','Intelligence','Organization','Stability'],25),cm(['Hearing','Vision'],25)],events:[ce('stability')],risks:[ci('Microsleeps','sleepDeprived'),ci('Hallucinations','sleepDeprived')]},
       4:{promptQualifiers:['sleepDeprived'],notes:[ci('Extreme exhaustion; sustained purposeful activity may become impossible.')],medical:[ci('Advised')],risks:[ci('Involuntary Sleep','sleepDeprived'),ci('Microsleeps','sleepDeprived'),ci('Hallucinations','sleepDeprived')]}
     }},
     Dysfunction:{stages:{
-      1:{promptQualifiers:['suddenDistressing'],dynamicPercent:25,events:[ce('stability',null,'suddenDistressing')]},
-      2:{promptQualifiers:['suddenDistressing'],dynamicPercent:25,events:[ce('stability',null,'suddenDistressing')]},
-      3:{promptQualifiers:['suddenDistressing'],dynamicPercent:50,events:[ce('stress',null,'suddenDistressing')],medical:[ci('Advised')],risks:[ci('Permanent Dysfunction: Affected Function')]},
+      1:{promptQualifiers:['suddenDistressing'],dynamicPercent:{moderate:10,high:25},events:[ce('stability',null,'suddenDistressing')]},
+      2:{promptQualifiers:['suddenDistressing'],dynamicPercent:{moderate:15,high:25},events:[ce('stability',null,'suddenDistressing')]},
+      3:{promptQualifiers:['suddenDistressing'],dynamicPercent:{moderate:25,high:50},events:[ce('stress',null,'suddenDistressing')],medical:[ci('Advised')],risks:[ci('Permanent Dysfunction: Affected Function')]},
       4:{promptQualifiers:['lifeSustainingAffected'],notes:[ci('Affected function remains completely unavailable.'),ci('Death imminent if a life-sustaining organ or function is lost.','lifeSustainingLost')],medical:[ci('Required','lifeSustainingAffected'),ci('Required','lifeSustainingLost')],risks:[ci('Permanent Dysfunction: Affected Function')]}
     }},
     Injury:{stages:{
@@ -27283,7 +27432,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     'Blood Loss':{stages:{
       1:{modifiers:[cm('Cardio',10)],events:[ce('stability')]},
       2:{modifiers:[cm('Strength',10)],events:[ce('trigger','Dehydration'),ce('trigger','Fatigue'),ce('stability')],medical:[ci('Advised')],risks:[ci('Hypothermia')]},
-      3:{modifiers:[cm(['Beauty','Coordination'],10),cm('Cardio',15),cm(['Agility','Intelligence','Organization'],25),cm('Constitution',50)],events:[ce('trigger','Dehydration'),ce('stability')],medical:[ci('Required')],risks:[ci('Hypothermia'),ci('Incapacitation'),ci('Unconsciousness')]},
+      3:{modifiers:[cm(['Beauty','Coordination'],10),cm('Cardio',15),cm(['Agility','Intelligence','Organization'],25),cm('Constitution',50)],events:[ce('trigger','Dehydration'),ce('stress')],medical:[ci('Required')],risks:[ci('Hypothermia'),ci('Incapacitation'),ci('Unconsciousness')]},
       4:{notes:[ci('Death imminent without immediate hemorrhage control and resuscitation.')],medical:[ci('Required')],risks:[ci('Unconsciousness'),ci('Cardiac Arrest'),ci('Dysfunction: Kidneys'),ci('Permanent Dysfunction: Brain')]}
     }},
     Sickness:{stages:{
@@ -27293,7 +27442,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       4:{notes:[ci('Critical systemic illness/toxicity.'),ci('Death imminent without effective treatment.')],medical:[ci('Required')],risks:[ci('Unconsciousness'),ci('Dysfunction: Affected Organ(s)'),ci('Permanent Dysfunction: Affected Organ(s)')]}
     }},
     'Local Contamination':{stages:{
-      1:{promptQualifiers:['disfiguring','functionLimiting'],modifiers:[cm('Beauty',10,'disfiguring')],events:[ce('trigger','Dysfunction','functionLimiting'),ce('stability')]},
+      1:{promptQualifiers:['disfiguring','functionLimiting','painfulDistressing'],modifiers:[cm('Beauty',10,'disfiguring')],events:[ce('trigger','Dysfunction','functionLimiting'),ce('stability',null,'painfulDistressing')]},
       2:{promptQualifiers:['disfiguring','functionLimiting','becomingSystemic','painfulDistressing'],modifiers:[cm('Beauty',15,'disfiguring')],events:[ce('trigger','Dysfunction','functionLimiting'),ce('trigger','Sickness','becomingSystemic'),ce('stability',null,'painfulDistressing')],medical:[ci('Advised')]},
       3:{promptQualifiers:['functionLimiting','systemicWorsening','painfulDistressing','tissueThreatening'],events:[ce('trigger','Dysfunction','functionLimiting'),ce('trigger','Sickness','systemicWorsening'),ce('stability',null,'painfulDistressing')],medical:[ci('Advised'),ci('Required','tissueThreatening')],risks:[ci('Permanent Dysfunction: Affected Area'),ci('Permanent Disfigurement')]},
       4:{promptQualifiers:['systemicWorsening'],notes:[ci('Critical local tissue destruction/necrosis.')],events:[ce('trigger','Sickness','systemicWorsening')],medical:[ci('Required')],risks:[ci('Permanent Dysfunction: Affected Area'),ci('Permanent Disfigurement'),ci('Amputation')]}
@@ -27307,7 +27456,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     Burn:{stages:{
       1:{promptQualifiers:['functionLimiting'],events:[ce('trigger','Dysfunction','functionLimiting'),ce('stability')]},
       2:{promptQualifiers:['disfiguring','functionLimiting','widespread'],modifiers:[cm('Beauty',10,'disfiguring')],events:[ce('trigger','Dysfunction','functionLimiting'),ce('stability')],medical:[ci('Advised','widespread')],risks:[ci('Dehydration','widespread'),ci('Permanent Disfigurement','disfiguring')]},
-      3:{promptQualifiers:['disfiguring','widespread','functionLimiting','functionThreatening'],modifiers:[cm('Beauty',15,'disfiguring'),cm(['Cardio','Constitution'],25,'widespread')],events:[ce('trigger','Dysfunction','functionLimiting'),ce('stability'),ce('trigger','Dehydration','widespread')],medical:[ci('Advised'),ci('Required','widespread'),ci('Required','functionThreatening')],risks:[ci('Permanent Dysfunction: Affected Area'),ci('Permanent Disfigurement')]},
+      3:{promptQualifiers:['disfiguring','widespread','functionLimiting','functionThreatening'],modifiers:[cm('Beauty',15,'disfiguring'),cm(['Cardio','Constitution'],25,'widespread')],events:[ce('trigger','Dysfunction','functionLimiting'),ce('stress'),ce('trigger','Dehydration','widespread')],medical:[ci('Advised'),ci('Required','widespread'),ci('Required','functionThreatening')],risks:[ci('Permanent Dysfunction: Affected Area'),ci('Permanent Disfigurement')]},
       4:{promptQualifiers:['widespread'],notes:[ci('Deep tissue destruction extending into muscle/bone.'),ci('Death imminent without intensive treatment.','widespread')],medical:[ci('Required')],risks:[ci('Amputation'),ci('Permanent Dysfunction: Affected Area'),ci('Permanent Disfigurement')]}
     }},
     Hypothermia:{stages:{
@@ -27372,6 +27521,73 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return sourceCondition?.type === 'Frostbite';
   }
 
+  function dysfunctionPenaltyLevel(condition) {
+    return ensureConditionAutomation(condition).dysfunctionPenalty === 'moderate' ? 'moderate' : 'high';
+  }
+
+  function dysfunctionStagePercent(condition, stageRule) {
+    const value = stageRule?.dynamicPercent;
+    if (value && typeof value === 'object') return Number(value[dysfunctionPenaltyLevel(condition)]) || 0;
+    return Number(value) || 0;
+  }
+
+  function isBloodAnemiaDysfunction(condition) {
+    return !!condition && condition.type === 'Dysfunction' && ensureConditionAutomation(condition).specialKind === 'bloodAnemia';
+  }
+
+  function bloodAnemiaDeficitPoints(condition) {
+    if (!isBloodAnemiaDysfunction(condition)) return 0;
+    return Math.max(0, Math.round(Number(ensureConditionAutomation(condition).anemiaCardioDeficitPoints) || 0));
+  }
+
+  function findBloodAnemiaCondition() {
+    return state.conditions.find(isBloodAnemiaDysfunction) || null;
+  }
+
+  function createBloodAnemiaCondition() {
+    const existing = findBloodAnemiaCondition();
+    if (existing) return existing;
+    const anemia = {
+      id:uid(), type:'Dysfunction', stage:0, location:'Blood', treatment:'', progression:'Anemia',
+      builtIn:false, repeatable:true, noneCleanupFields:[],
+      automation:{qualifiers:{},targets:[],customStages:{},customConfigured:false,specialKind:'bloodAnemia',anemiaCardioDeficitPoints:0}
+    };
+    const lastIndex = state.conditions.reduce((last, condition, index) => condition.type === 'Dysfunction' ? index : last, -1);
+    state.conditions.splice(lastIndex + 1, 0, anemia);
+    return anemia;
+  }
+
+  function addBloodAnemiaDeficitPoints(points) {
+    const amount = Math.max(0, Math.round(Number(points) || 0));
+    if (!amount) return null;
+    const anemia = createBloodAnemiaCondition();
+    const automation = ensureConditionAutomation(anemia);
+    automation.specialKind = 'bloodAnemia';
+    automation.anemiaCardioDeficitPoints = bloodAnemiaDeficitPoints(anemia) + amount;
+    anemia.location = 'Blood';
+    anemia.progression = 'Anemia';
+    anemia.stage = 0;
+    return anemia;
+  }
+
+  function clearBloodAnemiaCondition() {
+    const anemia = findBloodAnemiaCondition();
+    if (!anemia) return false;
+    state.conditions = state.conditions.filter(condition => condition.id !== anemia.id);
+    return true;
+  }
+
+  function fullCardioScore() {
+    const value = numberFromText(state.attributes?.body?.Cardio?.max);
+    return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
+  }
+
+  function anemiaWeeklyRecoveryMaximum(condition) {
+    const deficit = bloodAnemiaDeficitPoints(condition);
+    const maxFromCardio = Math.max(1, Math.floor(fullCardioScore() * 0.05 + Number.EPSILON));
+    return Math.max(1, Math.min(deficit || 1, maxFromCardio));
+  }
+
   function cascadeAlreadyOwnsStressForAnotherCondition(condition, cascade) {
     return !!cascade?.stressOwnerConditionId && cascade.stressOwnerConditionId !== condition?.id;
   }
@@ -27401,6 +27617,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function conditionRuleContributionsFor(condition) {
     const result = [];
+    if (isBloodAnemiaDysfunction(condition)) {
+      const points = bloodAnemiaDeficitPoints(condition);
+      if (points > 0) result.push({target:'Cardio', percent:0, points, conditionId:condition.id, type:'Dysfunction: Blood (Anemia)', stage:0, detail:`Dysfunction: Blood (Anemia) −${points} Cardio`});
+      return result;
+    }
     const stage = Math.max(0, Math.min(4, Number(condition?.stage) || 0));
     if (!stage) return result;
     const automation = ensureConditionAutomation(condition);
@@ -27428,9 +27649,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         }
       }
       if (stageRule.dynamicPercent) {
+        const dynamicPercent = dysfunctionStagePercent(condition, stageRule);
         for (const target of automation.targets) {
           if (!CONDITION_SCORE_TARGET_BY_KEY.has(target)) continue;
-          result.push({target, percent:Number(stageRule.dynamicPercent)||0, conditionId:condition.id, type:condition.type, stage:level, detail:`${condition.type} Stage ${level} −${Number(stageRule.dynamicPercent)||0}%`});
+          result.push({target, percent:dynamicPercent, conditionId:condition.id, type:condition.type, stage:level, detail:`${condition.type} Stage ${level} −${dynamicPercent}%`});
         }
       }
     }
@@ -27443,7 +27665,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
 
   function effectiveConditionContributionsForTarget(target, entries) {
-    const normalized = (entries || []).map(entry => ({...entry, effectivePercent:Number(entry.percent)||0}));
+    const normalized = (entries || []).map(entry => ({...entry, effectivePercent:Number(entry.percent)||0, effectivePoints:Math.max(0, Number(entry.points)||0)}));
     if (target?.kind !== 'sense') return normalized;
 
     const ordinary = [];
@@ -27492,7 +27714,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const contributions = allConditionModifierContributions();
     const byTarget = new Map();
     for (const contribution of contributions) {
-      if (!(contribution.percent > 0)) continue;
+      if (!((Number(contribution.percent)||0) > 0 || (Number(contribution.points)||0) > 0)) continue;
       if (!byTarget.has(contribution.target)) byTarget.set(contribution.target, []);
       byTarget.get(contribution.target).push(contribution);
     }
@@ -27501,6 +27723,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const entries = byTarget.get(target.key) || [];
       const effectiveEntries = effectiveConditionContributionsForTarget(target, entries);
       const totalPercent = effectiveEntries.reduce((sum, entry) => sum + entry.effectivePercent, 0);
+      const directPoints = effectiveEntries.reduce((sum, entry) => sum + (Number(entry.effectivePoints)||0), 0);
       const previousApplied = Number(aggregate.appliedPoints[target.key]) || 0;
       let current = numberFromText(getPath(state, target.path));
       let base = Number(aggregate.baseScores[target.key]);
@@ -27514,10 +27737,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         if (!Number.isFinite(maxScore)) maxScore = Number.isFinite(base) ? base : current;
       }
 
-      if (totalPercent > 0 && Number.isFinite(base) && Number.isFinite(maxScore)) {
+      if ((totalPercent > 0 || directPoints > 0) && Number.isFinite(base) && Number.isFinite(maxScore)) {
         aggregate.baseScores[target.key] = base;
         if (target.kind === 'sense' && !Number.isFinite(Number(aggregate.senseMax[target.key]))) aggregate.senseMax[target.key] = maxScore;
-        const pointLoss = roundConditionPointLoss(maxScore * totalPercent / 100);
+        const pointLoss = roundConditionPointLoss(maxScore * totalPercent / 100) + Math.max(0, Math.round(directPoints));
         const nextCurrent = Math.max(0, Math.min(100, Math.round(base - pointLoss)));
         setPath(state, target.path, nextCurrent);
         aggregate.appliedPoints[target.key] = pointLoss;
@@ -27535,9 +27758,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
               conditionId:entry.conditionId,
               type:entry.type,
               percent:0,
+              points:0,
               index
             };
             existing.percent += Number(entry.percent)||0;
+            existing.points += Number(entry.points)||0;
             groupedEntries.set(key, existing);
           });
           const breakdown = [...groupedEntries.values()].map(item => {
@@ -27546,14 +27771,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
             return {
               ...item,
               sourceStage,
-              points:roundConditionPointLoss(maxScore * item.percent / 100),
+              points:roundConditionPointLoss(maxScore * item.percent / 100) + Math.max(0, Math.round(Number(item.points)||0)),
               isDysfunction:sourceCondition?.type === 'Dysfunction' && conditionIsRuleDriven(sourceCondition),
               isFullyCustom:Boolean(sourceCondition && !conditionIsRuleDriven(sourceCondition))
             };
           });
-          const titleLines = breakdown.map(item =>
-            `-${item.points} from ${item.type} ${item.sourceStage === 4 ? 'Critical' : item.sourceStage}`
-          );
+          const titleLines = breakdown.map(item => {
+            const sourceCondition = state.conditions.find(condition => condition.id === item.conditionId);
+            if (isBloodAnemiaDysfunction(sourceCondition)) return `-${item.points} from Dysfunction: Blood (Anemia)`;
+            return `-${item.points} from ${item.type} ${item.sourceStage === 4 ? 'Critical' : item.sourceStage}`;
+          });
           if (target.kind === 'sense') {
             const ordinaryPercent = breakdown
               .filter(item => !(item.isDysfunction || item.isFullyCustom))
@@ -27687,6 +27914,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function conditionAutomationTooltip(condition) {
+    if (isBloodAnemiaDysfunction(condition)) {
+      const deficit = bloodAnemiaDeficitPoints(condition);
+      const weeklyMax = anemiaWeeklyRecoveryMaximum(condition);
+      return `Automated Effects:\n- Cardio: -${deficit} points\n\nRecovery:\n- Weekly Constitution Test\n- Recover 1–${weeklyMax} Cardio point${weeklyMax === 1 ? '' : 's'}`;
+    }
     const stage = Math.max(0, Math.min(4, Number(condition.stage)||0));
     if (!stage) return '';
     const lines = [];
@@ -27744,6 +27976,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   let conditionQualifierResolve = null;
   let conditionStabilityResolve = null;
   let conditionNoticeResolve = null;
+  let bloodLossRecoveryResolve = null;
+  let anemiaRecoveryResolve = null;
+  let anemiaRecoveryConditionId = null;
   let conditionConfigResolve = null;
   let conditionConfigWorkingId = null;
 
@@ -27780,6 +28015,40 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       document.getElementById('conditionNoticeTitle').textContent = title;
       document.getElementById('conditionNoticeText').textContent = text;
       document.getElementById('conditionNoticeDialog').showModal();
+    });
+  }
+
+  function requestBloodLossRecoveryMethod() {
+    return new Promise(resolve => {
+      bloodLossRecoveryResolve = resolve;
+      document.getElementById('bloodLossRecoveryDialog').showModal();
+    });
+  }
+
+  function updateAnemiaRecoverySliderFill() {
+    const slider = document.getElementById('anemiaRecoverySlider');
+    const wrap = slider?.closest('.condition-anemia-recovery-slider-wrap');
+    if (!slider || !wrap) return;
+    const min = Number(slider.min) || 1;
+    const max = Number(slider.max) || min;
+    const value = Math.max(min, Math.min(max, Number(slider.value) || min));
+    const percent = max <= min ? 100 : ((value - min) / (max - min)) * 100;
+    wrap.style.setProperty('--anemia-recovery-fill', `${Math.max(0, Math.min(100, percent))}%`);
+  }
+
+  function requestAnemiaWeeklyRecovery(condition) {
+    if (!isBloodAnemiaDysfunction(condition) || bloodAnemiaDeficitPoints(condition) <= 0) return Promise.resolve(null);
+    return new Promise(resolve => {
+      anemiaRecoveryResolve = resolve;
+      anemiaRecoveryConditionId = condition.id;
+      const slider = document.getElementById('anemiaRecoverySlider');
+      slider.min = '1';
+      slider.max = String(anemiaWeeklyRecoveryMaximum(condition));
+      slider.step = '1';
+      slider.value = '1';
+      document.getElementById('anemiaRecoveryValue').textContent = '1 Cardio';
+      updateAnemiaRecoverySliderFill();
+      document.getElementById('anemiaRecoveryDialog').showModal();
     });
   }
 
@@ -27866,7 +28135,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
     const sections = [];
     if (ruleDriven && condition.type === 'Dysfunction') {
-      const selected = new Set(ensureConditionAutomation(condition).targets);
+      const automation = ensureConditionAutomation(condition);
+      const selected = new Set(automation.targets);
+      const penaltyLevel = dysfunctionPenaltyLevel(condition);
+      sections.push(`<div class="condition-config-section"><h3>Penalty</h3><div class="condition-qualifier-list"><div class="condition-qualifier-row"><label for="conditionDysfunctionPenalty">Penalty level</label><select id="conditionDysfunctionPenalty" data-dysfunction-penalty><option value="moderate" ${penaltyLevel==='moderate'?'selected':''}>Moderate (10 / 15 / 25%)</option><option value="high" ${penaltyLevel==='high'?'selected':''}>High (25 / 25 / 50%)</option></select></div></div></div>`);
       sections.push(`<div class="condition-config-section"><h3>Affected scores</h3><div class="condition-target-list">${CONDITION_SCORE_TARGETS.map(target => `
         <div class="condition-target-row"><label for="${esc(conditionTargetDomId(target.key))}">${esc(target.label)}</label><div class="condition-target-control dysfunction-target"><input id="${esc(conditionTargetDomId(target.key))}" type="checkbox" data-condition-target="${esc(target.key)}" ${selected.has(target.key)?'checked':''}></div></div>`).join('')}</div></div>`);
     } else if (!ruleDriven) {
@@ -27916,6 +28188,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!condition) return;
     const body = document.getElementById('conditionConfigBody');
     if (conditionIsRuleDriven(condition) && condition.type === 'Dysfunction') {
+      const penaltySelect = body.querySelector('[data-dysfunction-penalty]');
+      if (penaltySelect) penaltySelect.value = 'high';
       body.querySelectorAll('[data-condition-target]').forEach(input => { input.checked = false; });
       body.querySelectorAll('[data-condition-qualifier-edit]').forEach(select => { select.value = 'unknown'; });
       return;
@@ -27933,6 +28207,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const automation = ensureConditionAutomation(condition);
     const body = document.getElementById('conditionConfigBody');
     if (conditionIsRuleDriven(condition) && condition.type === 'Dysfunction') {
+      const penaltySelect = body.querySelector('[data-dysfunction-penalty]');
+      automation.dysfunctionPenalty = penaltySelect?.value === 'moderate' ? 'moderate' : 'high';
       automation.targets = [...body.querySelectorAll('[data-condition-target]:checked')].map(input => input.dataset.conditionTarget);
     } else if (!conditionIsRuleDriven(condition)) {
       for (const level of [1,2,3,4]) {
@@ -28003,9 +28279,16 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (type === 'Dysfunction' && sourceCondition) target = findOrCreateLinkedDysfunction(sourceCondition);
     else target = findPrimaryCondition(type);
     if (!target) return;
-    const next = Math.min(4, (Number(target.stage)||0) + 1);
-    if (next === (Number(target.stage)||0)) return;
+    const beforeStage = Math.max(0, Math.min(4, Number(target.stage)||0));
+    const next = Math.min(4, beforeStage + 1);
+    if (next === beforeStage) return;
     await changeConditionStage(target, next, {triggered:true, cascadeContext:cascadeContext || newConditionCascadeContext()});
+    const afterStage = Math.max(0, Math.min(4, Number(target.stage)||0));
+    if (sourceCondition?.type === 'Blood Loss' && type === 'Fatigue' && afterStage > beforeStage) {
+      const automation = ensureConditionAutomation(sourceCondition);
+      automation.bloodLossFatigueLinked = true;
+      automation.bloodLossFatigueConditionId = target.id;
+    }
   }
 
   async function processConditionStageEntry(condition, stage, cascadeContext=null) {
@@ -28061,8 +28344,61 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
   }
 
+  function lowerLinkedBloodLossFatigue(condition, oldBloodLossStage, newBloodLossStage) {
+    const automation = ensureConditionAutomation(condition);
+    const crossedBelowFatigueThreshold = condition.type === 'Blood Loss' && oldBloodLossStage >= 2 && newBloodLossStage < 2;
+    if (!crossedBelowFatigueThreshold) return false;
+    const fatigue = state.conditions.find(item => item.id === automation.bloodLossFatigueConditionId) || findPrimaryCondition('Fatigue');
+    automation.bloodLossFatigueLinked = false;
+    delete automation.bloodLossFatigueConditionId;
+    if (!fatigue) return false;
+    const oldFatigueStage = Math.max(0, Math.min(4, Number(fatigue.stage)||0));
+    if (!oldFatigueStage) return false;
+    const nextFatigueStage = oldFatigueStage - 1;
+    fatigue.stage = nextFatigueStage;
+    if (nextFatigueStage === 0) {
+      fatigue.noneCleanupFields = ['location','treatment','progression'].filter(field => Boolean(String(fatigue[field] || '').trim()));
+      resetConditionAutomation(fatigue);
+    }
+    return true;
+  }
+
+  async function reduceBloodLossStage(condition, newStage, method) {
+    syncConditionScoreEffects();
+    const aggregate = ensureConditionAutomationAggregate();
+    const beforeCardioLoss = Math.max(0, Number(aggregate.appliedPoints.Cardio) || 0);
+    const oldStage = Math.max(0, Math.min(4, Number(condition.stage)||0));
+
+    condition.stage = newStage;
+    lowerLinkedBloodLossFatigue(condition, oldStage, newStage);
+
+    if (newStage === 0) {
+      const isSystemic = condition.builtIn && SYSTEMIC_CONDITION_TYPES.has(condition.type);
+      condition.noneCleanupFields = ['location','treatment','progression'].filter(field =>
+        !(field === 'location' && isSystemic) && Boolean(String(condition[field] || '').trim())
+      );
+    }
+
+    if (method === 'transfusion') {
+      clearBloodAnemiaCondition();
+      if (newStage === 0) resetConditionAutomation(condition);
+      syncConditionScoreEffects();
+      return;
+    }
+
+    syncConditionScoreEffects();
+    const afterCardioLoss = Math.max(0, Number(ensureConditionAutomationAggregate().appliedPoints.Cardio) || 0);
+    const restoredPoints = Math.max(0, Math.round(beforeCardioLoss - afterCardioLoss));
+    if (restoredPoints > 0) {
+      addBloodAnemiaDeficitPoints(restoredPoints);
+      syncConditionScoreEffects();
+    }
+    if (newStage === 0) resetConditionAutomation(condition);
+  }
+
   async function changeConditionStage(condition, rawStage, {triggered=false, cascadeContext=null}={}) {
     if (!condition) return;
+    const conditionUndoSnapshot = !triggered ? cloneCharacterStateForUndo() : null;
     const oldStage = Math.max(0, Math.min(4, Number(condition.stage)||0));
     const newStage = Math.max(0, Math.min(4, Number(rawStage)||0));
     if (newStage === oldStage) return;
@@ -28075,18 +28411,36 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       }
     }
     if (newStage < oldStage) {
-      condition.stage = newStage;
-      if (newStage === 0) {
-        const isSystemic = condition.builtIn && SYSTEMIC_CONDITION_TYPES.has(condition.type);
-        condition.noneCleanupFields = ['location','treatment','progression'].filter(field =>
-          !(field === 'location' && isSystemic) && Boolean(String(condition[field] || '').trim())
-        );
-        resetConditionAutomation(condition);
+      // Critical Blood Loss is intentionally a manual/roleplay tier.
+      // Dropping Critical -> Stage 3 does not invoke recovery-method logic
+      // and therefore does not create/clear Anemia. Natural/transfusion
+      // handling begins only when reducing from Stage 3 or lower.
+      const usesBloodLossRecovery = !triggered && condition.type === 'Blood Loss' && oldStage <= 3;
+      if (usesBloodLossRecovery) {
+        const method = await requestBloodLossRecoveryMethod();
+        if (!method) {
+          renderConditions();
+          applyMode();
+          return;
+        }
+        await reduceBloodLossStage(condition, newStage, method);
+      } else {
+        condition.stage = newStage;
+        if (newStage === 0) {
+          const isSystemic = condition.builtIn && SYSTEMIC_CONDITION_TYPES.has(condition.type);
+          condition.noneCleanupFields = ['location','treatment','progression'].filter(field =>
+            !(field === 'location' && isSystemic) && Boolean(String(condition[field] || '').trim())
+          );
+          resetConditionAutomation(condition);
+        }
       }
       calculate();
       renderConditions();
       applyMode();
       queueSave();
+      if (conditionUndoSnapshot) {
+        showCharacterChangeUndo(conditionUndoSnapshot, `${condition.type || 'Condition'} → ${conditionStageLabel(newStage)}`);
+      }
       return;
     }
     if (oldStage === 0) condition.noneCleanupFields = [];
@@ -28104,6 +28458,9 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     renderConditions();
     applyMode();
     queueSave();
+    if (conditionUndoSnapshot) {
+      showCharacterChangeUndo(conditionUndoSnapshot, `${condition.type || 'Condition'} → ${conditionStageLabel(Number(condition.stage)||0)}`);
+    }
   }
 
   document.getElementById('conditionQualifierYes')?.addEventListener('click', () => {
@@ -28129,9 +28486,54 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const resolve = conditionNoticeResolve; conditionNoticeResolve = null; dialog.close(); resolve?.();
   });
   document.getElementById('conditionNoticeDialog')?.addEventListener('cancel', event => event.preventDefault());
+
+  document.getElementById('bloodLossRecoveryCancel')?.addEventListener('click', () => {
+    const dialog = document.getElementById('bloodLossRecoveryDialog');
+    const resolve = bloodLossRecoveryResolve; bloodLossRecoveryResolve = null; dialog.close(); resolve?.(null);
+  });
+  document.getElementById('bloodLossRecoveryNatural')?.addEventListener('click', () => {
+    const dialog = document.getElementById('bloodLossRecoveryDialog');
+    const resolve = bloodLossRecoveryResolve; bloodLossRecoveryResolve = null; dialog.close(); resolve?.('natural');
+  });
+  document.getElementById('bloodLossRecoveryTransfusion')?.addEventListener('click', () => {
+    const dialog = document.getElementById('bloodLossRecoveryDialog');
+    const resolve = bloodLossRecoveryResolve; bloodLossRecoveryResolve = null; dialog.close(); resolve?.('transfusion');
+  });
+  document.getElementById('bloodLossRecoveryDialog')?.addEventListener('cancel', event => {
+    event.preventDefault();
+    const resolve = bloodLossRecoveryResolve; bloodLossRecoveryResolve = null; event.currentTarget.close(); resolve?.(null);
+  });
+
+  document.getElementById('anemiaRecoverySlider')?.addEventListener('input', event => {
+    const value = Math.max(1, Math.round(Number(event.currentTarget.value)||1));
+    document.getElementById('anemiaRecoveryValue').textContent = `${value} Cardio`;
+    updateAnemiaRecoverySliderFill();
+  });
+  document.getElementById('anemiaRecoveryCancel')?.addEventListener('click', () => {
+    const dialog = document.getElementById('anemiaRecoveryDialog');
+    const resolve = anemiaRecoveryResolve; anemiaRecoveryResolve = null; anemiaRecoveryConditionId = null; dialog.close(); resolve?.(null);
+  });
+  document.getElementById('anemiaRecoveryTransfusion')?.addEventListener('click', () => {
+    const dialog = document.getElementById('anemiaRecoveryDialog');
+    const resolve = anemiaRecoveryResolve; anemiaRecoveryResolve = null; dialog.close(); resolve?.('transfusion');
+  });
+  document.getElementById('anemiaRecoveryApply')?.addEventListener('click', () => {
+    const dialog = document.getElementById('anemiaRecoveryDialog');
+    const value = Math.max(1, Math.round(Number(document.getElementById('anemiaRecoverySlider').value)||1));
+    const resolve = anemiaRecoveryResolve; anemiaRecoveryResolve = null; dialog.close(); resolve?.(value);
+  });
+  document.getElementById('anemiaRecoveryDialog')?.addEventListener('cancel', event => {
+    event.preventDefault();
+    const resolve = anemiaRecoveryResolve; anemiaRecoveryResolve = null; anemiaRecoveryConditionId = null; event.currentTarget.close(); resolve?.(null);
+  });
+
   document.getElementById('conditionConfigReset')?.addEventListener('click', resetConditionConfigUi);
   document.getElementById('conditionConfigSave')?.addEventListener('click', () => {
+    const previousState = cloneCharacterStateForUndo();
+    const condition = state.conditions.find(item => item.id === conditionConfigWorkingId);
+    const label = String(condition?.type || 'Condition');
     const saved = saveConditionConfig();
+    if (saved) showCharacterChangeUndo(previousState, `${label} details updated.`);
     const dialog = document.getElementById('conditionConfigDialog');
     const resolve = conditionConfigResolve; conditionConfigResolve = null; dialog.close(); resolve?.(saved);
   });
@@ -28152,19 +28554,23 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     return `Stage ${value}`;
   }
   function isRepeatableCondition(c) {
-    return !!c && REPEATABLE_CONDITION_TYPES.has(c.type) && (c.builtIn || c.repeatable === true);
+    return !!c && !isBloodAnemiaDysfunction(c) && REPEATABLE_CONDITION_TYPES.has(c.type) && (c.builtIn || c.repeatable === true);
   }
   function renderConditions() {
     const body = document.getElementById('conditionsBody');
-    const hasDeleteRows = state.conditions.some(c => !c.builtIn);
+    const hasDeleteRows = state.conditions.some(c => !c.builtIn && !isBloodAnemiaDysfunction(c));
     const lastRepeatableIdByType = new Map();
     state.conditions.forEach(c => {
       const automation = ensureConditionAutomation(c);
-      if (c.type === 'Dysfunction') {
+      if (c.type === 'Dysfunction' && !isBloodAnemiaDysfunction(c)) {
         const source = automation.sourceConditionId ? state.conditions.find(item => item.id === automation.sourceConditionId) : null;
         const sourcePrefix = source ? `From ${source.type}` : '';
         const currentNote = cleanLegacyDysfunctionProgression(c.progression);
         c.progression = currentNote || sourcePrefix;
+      } else if (isBloodAnemiaDysfunction(c)) {
+        c.location = 'Blood';
+        c.progression = 'Anemia';
+        c.stage = 0;
       }
       if (isRepeatableCondition(c)) lastRepeatableIdByType.set(c.type, c.id);
     });
@@ -28178,22 +28584,25 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const isSystemic = c.builtIn && SYSTEMIC_CONDITION_TYPES.has(c.type);
       if (isSystemic && c.location !== 'Systemic') c.location = 'Systemic';
       const noneCleanupFields = new Set(Array.isArray(c.noneCleanupFields) ? c.noneCleanupFields : []);
-      const configButton = stage > 0
+      const isAnemia = isBloodAnemiaDysfunction(c);
+      const configButton = stage > 0 && !isAnemia
         ? `<button type="button" class="condition-inline-action condition-config-btn no-print" data-condition-config title="Condition details and automated effects" aria-label="Condition details and automated effects"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M 5.60 3.84 L 6.36 3.49 L 6.52 2.08 L 9.48 2.08 L 9.64 3.49 L 10.40 3.84 L 11.09 4.32 L 12.39 3.76 L 13.86 6.32 L 12.73 7.17 L 12.80 8.00 L 12.73 8.83 L 13.86 9.68 L 12.39 12.24 L 11.09 11.68 L 10.40 12.16 L 9.64 12.51 L 9.48 13.92 L 6.52 13.92 L 6.36 12.51 L 5.60 12.16 L 4.91 11.68 L 3.61 12.24 L 2.14 9.68 L 3.27 8.83 L 3.20 8.00 L 3.27 7.17 L 2.14 6.32 L 3.61 3.76 L 4.91 4.32 Z" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/><circle cx="8" cy="8" r="2.05" fill="none" stroke="currentColor" stroke-width="1.15"/></svg></button>`
         : '';
       const actions = `${duplicateButton}${configButton}`;
       const actionCount = (duplicateButton ? 1 : 0) + (configButton ? 1 : 0);
-      const deleteButton = c.builtIn ? '' : `<button class="icon-btn condition-delete-btn" data-delete title="Delete condition" aria-label="Delete condition">×</button>`;
+      const deleteButton = (c.builtIn || isAnemia) ? '' : `<button class="icon-btn condition-delete-btn" data-delete title="Delete condition" aria-label="Delete condition">×</button>`;
       const typeFieldClass = actionCount ? `condition-type-field has-${actionCount === 2 ? 'two' : 'one'}-action` : 'condition-type-field';
       const tooltip = conditionAutomationTooltip(c);
       const locationPlaceholder = stage > 0 && REPEATABLE_CONDITION_TYPES.has(c.type) ? ' placeholder="(list body part)"' : '';
-      const stageControl = `<div class="condition-stage-stepper condition-stage-${stage}" title="${esc(tooltip)}"><div class="condition-stage-value" data-condition-stage-value>${esc(conditionStageLabel(stage))}</div><div class="condition-stage-buttons no-print"><button type="button" class="condition-stage-step-button" data-condition-stage-step="1" aria-label="Increase ${esc(c.type || 'condition')} stage" ${stage>=4?'disabled':''}>▲</button><button type="button" class="condition-stage-step-button" data-condition-stage-step="-1" aria-label="Decrease ${esc(c.type || 'condition')} stage" ${stage<=0?'disabled':''}>▼</button></div></div>`;
+      const stageControl = isAnemia
+        ? `<div class="condition-anemia-stage-control" title="${esc(tooltip)}"><div class="condition-anemia-deficit">−${bloodAnemiaDeficitPoints(c)} Cardio</div><button type="button" class="btn condition-anemia-weekly-btn no-print" data-anemia-weekly>Weekly Test</button></div>`
+        : `<div class="condition-stage-stepper condition-stage-${stage}" title="${esc(tooltip)}"><div class="condition-stage-value" data-condition-stage-value>${esc(conditionStageLabel(stage))}</div><div class="condition-stage-buttons no-print"><button type="button" class="condition-stage-step-button" data-condition-stage-step="1" aria-label="Increase ${esc(c.type || 'condition')} stage" ${stage>=4?'disabled':''}>▲</button><button type="button" class="condition-stage-step-button" data-condition-stage-step="-1" aria-label="Decrease ${esc(c.type || 'condition')} stage" ${stage<=0?'disabled':''}>▼</button></div></div>`;
       const clearButton = field => `<button type="button" class="condition-field-clear-btn no-print section-edit-only" data-condition-clear-field="${field}" title="Clear ${field === 'progression' ? 'Subtype / Progression Notes' : field[0].toUpperCase() + field.slice(1)}" aria-label="Clear ${field === 'progression' ? 'Subtype / Progression Notes' : field[0].toUpperCase() + field.slice(1)}"></button>`;
       const showLocationClear = stage === 0 && !isSystemic && noneCleanupFields.has('location') && Boolean(String(c.location || '').trim());
       const showTreatmentClear = stage === 0 && noneCleanupFields.has('treatment') && Boolean(String(c.treatment || '').trim());
       let showProgressionClear = stage === 0 && noneCleanupFields.has('progression') && Boolean(String(c.progression || '').trim());
       let progressionCell = `<div class="condition-clearable-field ${showProgressionClear ? 'has-clear-button' : ''}"><input value="${esc(c.progression)}" data-field="progression">${showProgressionClear ? clearButton('progression') : ''}</div>`;
-      if (c.type === 'Dysfunction') {
+      if (c.type === 'Dysfunction' && !isAnemia) {
         const automation = ensureConditionAutomation(c);
         const source = automation.sourceConditionId ? state.conditions.find(item => item.id === automation.sourceConditionId) : null;
         const sourcePrefix = source ? `From ${source.type}` : '';
@@ -28205,12 +28614,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         }
         showProgressionClear = stage === 0 && noneCleanupFields.has('progression') && Boolean(editableProgression.trim());
         progressionCell = `<div class="condition-clearable-field ${showProgressionClear ? 'has-clear-button' : ''}"><div class="condition-progression-composite ${sourcePrefix ? '' : 'no-source'}">${sourcePrefix ? `<span class="condition-progression-source">${esc(sourcePrefix)} —</span>` : ''}<input value="${esc(editableProgression)}" data-dysfunction-progression></div>${showProgressionClear ? clearButton('progression') : ''}</div>`;
+      } else if (isAnemia) {
+        progressionCell = `<div class="condition-clearable-field"><input value="Anemia" readonly aria-readonly="true"></div>`;
       }
       return `
       <tr class="${!c.type.trim() && !c.location.trim() && !c.treatment.trim() && !c.progression.trim() && !Number(c.stage) ? 'print-empty' : ''}" data-id="${c.id}">
         <td><div class="${typeFieldClass}"><input value="${esc(c.type)}" data-field="type" ${(c.builtIn || c.repeatable === true)?'readonly':''}><span class="condition-type-actions">${actions}</span></div></td>
         <td>${stageControl}</td>
-        <td><div class="condition-clearable-field ${showLocationClear ? 'has-clear-button' : ''}"><input value="${esc(c.location)}" data-field="location"${locationPlaceholder}${isSystemic ? ' readonly' : ''}>${showLocationClear ? clearButton('location') : ''}</div></td>
+        <td><div class="condition-clearable-field ${showLocationClear && !isAnemia ? 'has-clear-button' : ''}"><input value="${esc(c.location)}" data-field="location"${locationPlaceholder}${(isSystemic || isAnemia) ? ' readonly' : ''}>${showLocationClear && !isAnemia ? clearButton('location') : ''}</div></td>
         <td><div class="condition-clearable-field ${showTreatmentClear ? 'has-clear-button' : ''}"><input value="${esc(c.treatment)}" data-field="treatment">${showTreatmentClear ? clearButton('treatment') : ''}</div></td>
         ${hasDeleteRows
           ? `<td>${progressionCell}</td><td class="no-print delete-cell">${deleteButton}</td>`
@@ -28246,7 +28657,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         });
       });
       const dysfunctionProgressionInput = row.querySelector('[data-dysfunction-progression]');
-      if (dysfunctionProgressionInput && item.type === 'Dysfunction') {
+      if (dysfunctionProgressionInput && item.type === 'Dysfunction' && !isBloodAnemiaDysfunction(item)) {
         const automation = ensureConditionAutomation(item);
         const source = automation.sourceConditionId ? state.conditions.find(c => c.id === automation.sourceConditionId) : null;
         const sourcePrefix = source ? `From ${source.type}` : '';
@@ -28278,20 +28689,50 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
           await changeConditionStage(item, (Number(item.stage)||0) + direction);
         });
       });
+      row.querySelector('[data-anemia-weekly]')?.addEventListener('click', async () => {
+        const previousState = cloneCharacterStateForUndo();
+        const recovered = await requestAnemiaWeeklyRecovery(item);
+        if (recovered === 'transfusion') {
+          clearBloodAnemiaCondition();
+          anemiaRecoveryConditionId = null;
+          calculate();
+          renderConditions();
+          applyMode();
+          queueSave();
+          showCharacterChangeUndo(previousState, 'Blood transfusion applied.');
+          return;
+        }
+        if (!(recovered > 0)) return;
+        const anemia = state.conditions.find(condition => condition.id === item.id && isBloodAnemiaDysfunction(condition));
+        if (!anemia) return;
+        const automation = ensureConditionAutomation(anemia);
+        automation.anemiaCardioDeficitPoints = Math.max(0, bloodAnemiaDeficitPoints(anemia) - recovered);
+        if (automation.anemiaCardioDeficitPoints <= 0) state.conditions = state.conditions.filter(condition => condition.id !== anemia.id);
+        anemiaRecoveryConditionId = null;
+        calculate();
+        renderConditions();
+        applyMode();
+        queueSave();
+        showCharacterChangeUndo(previousState, `Anemia recovery: +${recovered} Cardio.`);
+      });
       row.querySelector('[data-condition-config]')?.addEventListener('click', async () => { await openConditionConfig(item); });
       row.querySelectorAll('[data-condition-clear-field]').forEach(button => {
         button.addEventListener('click', () => {
           const field = button.dataset.conditionClearField;
           if (!['location','treatment','progression'].includes(field)) return;
+          const previousState = cloneCharacterStateForUndo();
           item[field] = '';
           if (Array.isArray(item.noneCleanupFields)) item.noneCleanupFields = item.noneCleanupFields.filter(cleanupField => cleanupField !== field);
           calculate();
           renderConditions();
           applyMode();
           queueSave();
+          const labels = {location:'Location', treatment:'Treatment', progression:'Subtype / Progression Notes'};
+          showCharacterChangeUndo(previousState, `${labels[field] || 'Condition field'} cleared.`);
         });
       });
       row.querySelector('[data-duplicate]')?.addEventListener('click', () => {
+        const previousState = cloneCharacterStateForUndo();
         const lastGroupIndex = state.conditions.reduce((last, c, index) =>
           isRepeatableCondition(c) && c.type === item.type ? index : last, -1);
         const duplicate = {
@@ -28302,13 +28743,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
         renderConditions();
         applyMode();
         queueSave();
+        showCharacterChangeUndo(previousState, `${String(item.type || 'Condition')} duplicated.`);
       });
       row.querySelector('[data-delete]')?.addEventListener('click', () => {
+        const previousState = cloneCharacterStateForUndo();
+        const removedType = String(item.type || '').trim() || 'Condition';
         state.conditions = state.conditions.filter(c => c.id !== item.id);
         calculate();
         renderConditions();
         applyMode();
         queueSave();
+        showCharacterChangeUndo(previousState, `${removedType} removed.`);
       });
     });
     bindEnterToNextRow(body, state.conditions,
@@ -29146,6 +29591,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     document.addEventListener('pointerdown', event => {
       const actionable = event.target?.closest?.('button, [role="button"], input[type="checkbox"], input[type="radio"]');
       if (!actionable || actionable.id === 'gearUndoButton' || undoEventIsCharacterManagement(actionable)) return;
+      if (actionable.closest('#conditions') && actionable.matches('[data-delete], [data-condition-stage-step], [data-anemia-weekly], [data-condition-clear-field], [data-duplicate], #addConditionBtn')) return;
       const previousState = cloneCharacterStateForUndo();
       scheduleCharacterUndoCheck(previousState, actionable);
     }, true);
@@ -29156,6 +29602,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (!['Enter', ' '].includes(event.key)) return;
       const actionable = event.target?.closest?.('button, [role="button"]');
       if (!actionable || actionable.id === 'gearUndoButton' || undoEventIsCharacterManagement(actionable)) return;
+      if (actionable.closest('#conditions') && actionable.matches('[data-delete], [data-condition-stage-step], [data-anemia-weekly], [data-condition-clear-field], [data-duplicate], #addConditionBtn')) return;
       const previousState = cloneCharacterStateForUndo();
       scheduleCharacterUndoCheck(previousState, actionable);
     }, true);
@@ -32229,6 +32676,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const cardioPercent = runningWeightPercent(selection.cardio);
     const distanceLabel = document.getElementById('runningDistanceLabel');
     const weightLabel = document.getElementById('runningWeightLabel');
+    const sliderWrap = document.getElementById('runningDistanceSlider')?.closest('.running-distance-slider-wrap');
+    sliderWrap?.style.setProperty('--running-slider-fill', `${selection.cardioPercent}%`);
     if (distanceLabel) distanceLabel.textContent = selection.label;
     if (weightLabel) weightLabel.textContent = `Agility ${agilityPercent} · Cardio ${cardioPercent}`;
     document.querySelectorAll('[data-running-agility-weight]').forEach(element => { element.textContent = agilityPercent; });
@@ -32312,11 +32761,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
   function getSkillExperienceCalculation() {
     const values = {
-      intelligence: attrValue('mind','Intelligence','current'),
-      creativity: attrValue('mind','Creativity','current'),
-      organization: attrValue('mind','Organization','current'),
-      stability: attrValue('mind','Stability','current'),
-      will: attrValue('mind','Will','current')
+      intelligence: attrValue('mind','Intelligence','max'),
+      creativity: attrValue('mind','Creativity','max'),
+      organization: attrValue('mind','Organization','max'),
+      stability: attrValue('mind','Stability','max'),
+      will: attrValue('mind','Will','max')
     };
     const ageMultiplier = ageMultiplierFromAge(numberFromText(state.identity.age));
     const missing = [
@@ -33349,10 +33798,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     queueSave();
   });
   document.getElementById('addConditionBtn').addEventListener('click', () => {
+    const previousState = cloneCharacterStateForUndo();
     const condition = {id:uid(), type:'', stage:0, location:'', treatment:'', progression:'', builtIn:false, automation:{qualifiers:{},targets:[],customEffects:{},customConfigured:false}};
     state.conditions.push(condition);
     renderConditions();
     queueSave();
+    showCharacterChangeUndo(previousState, 'Custom condition added.');
     requestAnimationFrame(() => {
       const row = document.querySelector(`#conditionsBody tr[data-id="${CSS.escape(condition.id)}"]`);
       const input = row?.querySelector('[data-field="type"]');
@@ -36090,6 +36541,14 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Visible footer synchronized to Character Sheet v759. -->
 
 
+<!-- INTERNAL v763 FATIGUE WILL ADJUSTMENT — NOT USER-FACING
+     - Will moved from Fatigue's heavily impaired attribute group to the gentler group.
+     - Stage 1 Fatigue no longer penalizes Will.
+     - Stage 2 adds −10% Will; Stage 3 adds −15% Will (−25% total).
+     - All other Fatigue effects and character rules remain unchanged.
+     - Visible footer synchronized to Character Sheet v763.
+-->
+
 <!-- INTERNAL v762 WHOLE-PERCENT RUNNING SLIDER / EDGE-TO-EDGE RANGE — NOT USER-FACING
      - Running slider now uses Cardio percentage directly: 0–100 in whole-number 1% steps; Agility is always the complementary whole-number percentage.
      - Preserves the seven v761 anchor distances/weights exactly: ≤100 yd 0%, 200 yd 20%, ¼ mi 40%, ⅜ mi 50%, ½ mi 60%, 1 mi 80%, 3 mi+ 100% Cardio.
@@ -36118,5 +36577,111 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Built-in character library styling uses the neutral built-in class instead of the legacy demo class.
      - Visible footer synchronized to Character Sheet v760. -->
 
+
+<!-- INTERNAL v765 MANUAL ALIGNMENT — NOT USER-FACING
+     - Local Contamination Stage 1 Stability Check is now conditional on painful/distressing, matching the manual.
+     - Blood Loss Stage 3 and Burn Stage 3 now apply automatic Stress +1 to match the authoritative manual; no Stability check at those stages.
+     - Injury Stage 1 remains unchanged.
+     - Visible footer synchronized to Character Sheet v765.
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- INTERNAL v776 CRITICAL BLOOD LOSS REDUCTION — NOT USER-FACING
+     - Reducing Blood Loss from Critical (Stage 4) to Stage 3 is treated as
+       manual/roleplay tuning: no Natural Recovery/Blood Transfusion prompt.
+     - Critical -> Stage 3 does not create or clear Dysfunction: Blood (Anemia).
+     - Special Blood Loss recovery handling begins when reducing from Stage 3
+       or lower. Undo behavior remains intact.
+     - Visible footer synchronized to Character Sheet v776.
+-->
+<!-- INTERNAL v775 CONDITIONS UNDO COVERAGE — NOT USER-FACING
+     - Manual condition stage changes now explicitly snapshot before async prompts
+       and expose Undo after the entire stage/cascade transaction completes.
+     - Blood Loss natural recovery/transfusion and Anemia Weekly Test/transfusion
+       are therefore undoable as complete transactions.
+     - Added explicit Undo snapshots for custom-condition add, duplicate, delete
+       (retained), clear-field actions, and saved condition configuration changes.
+     - Condition text/select edits and Conditions-tab sustenance edits continue to
+       use the universal input/change Undo system.
+     - Cancel/view-only dialog controls do not create Undo entries.
+     - Visible footer synchronized to Character Sheet v775.
+-->
+<!-- INTERNAL v774 ENCUMBRANCE ROUNDING — NOT USER-FACING
+     - Encumbrance classification now uses nearest whole carried pound:
+       23.4 -> 23 and 23.5 -> 24.
+     - The encumbrance hiker position uses the same rounded classification value.
+     - The Carried Weight readout and hiker tooltip retain the actual decimal total.
+     - Visible footer synchronized to Character Sheet v774.
+-->
+<!-- INTERNAL v773 LATE ANEMIA TRANSFUSION — NOT USER-FACING
+     - Added Blood Transfusion to the Dysfunction: Blood (Anemia) Weekly Test dialog.
+     - A later transfusion clears the entire Anemia Cardio deficit immediately.
+     - This action does not change the current Blood Loss stage; acute Blood Loss
+       continues to use its own down-arrow recovery flow.
+     - Visible footer synchronized to Character Sheet v773.
+-->
+<!-- INTERNAL v772 SLIDER FILLS + BLOOD LOSS FATIGUE RECOVERY — NOT USER-FACING
+     - Restored colored progress fills on Running distance and Anemia Weekly Test sliders while preserving true endpoint thumb travel.
+     - Blood Loss recovery now removes exactly one Fatigue stage whenever Blood Loss crosses from Stage 2+ to below Stage 2, even if legacy/source-link metadata is absent.
+     - Existing unrelated Fatigue is preserved because only one stage is removed.
+     - Visible footer synchronized to Character Sheet v772.
+-->
+<!-- INTERNAL v771 CONDITION DELETE UNDO + ANEMIA DELETE LOCK — NOT USER-FACING
+     - Deleting a custom/duplicate condition now explicitly snapshots character data and
+       presents the standard bottom Undo toast after removal.
+     - Condition delete buttons are excluded from the universal pointer/keyboard Undo
+       capture so the dedicated delete snapshot/message is not overwritten.
+     - Dysfunction: Blood (Anemia) no longer shows or contributes a red delete X; it is
+       removed only through its special recovery/transfusion mechanics.
+     - Visible footer synchronized to Character Sheet v771.
+-->
+<!-- INTERNAL v770 ANEMIA RECOVERY SLIDER ENDPOINTS — NOT USER-FACING
+     - Anemia Weekly Test slider now extends by half the thumb width on both sides,
+       so the thumb centers reach the visual rail's true left/right endpoints.
+     - Recovery values and Blood Loss/Anemia mechanics are unchanged.
+     - Visible footer synchronized to Character Sheet v770.
+-->
+<!-- INTERNAL v769 SKILL EXPERIENCE MAX ATTRIBUTES — NOT USER-FACING
+     - Starter Skill Experience budget now uses Max Intelligence, Creativity,
+       Organization, Stability, and Will instead of their Current values.
+     - Temporary condition/injury penalties therefore do not change the
+       character's underlying starter skill-point budget.
+     - Visible footer synchronized to Character Sheet v769.
+-->
+<!-- INTERNAL v768 BLOOD LOSS NATURAL RECOVERY / ANEMIA — NOT USER-FACING
+     - Reducing Blood Loss now asks whether recovery was Natural Recovery or Blood Transfusion.
+     - Natural recovery preserves the exact Cardio points that would otherwise return from the Blood Loss reduction and from removal of the Blood-Loss-linked Fatigue stage, transferring those points to a special Dysfunction: Blood (Anemia).
+     - Dehydration remains independent and is not reduced by Blood Loss recovery.
+     - Blood Transfusion does not create anemia and clears any existing Blood (Anemia) recovery deficit.
+     - Dysfunction: Blood (Anemia) does not use Dysfunction stages. Its Stage cell shows the exact Cardio deficit and a Weekly Test button.
+     - Weekly Test recovery uses a whole-number slider from 1 Cardio up to 5% of Max Cardio (floored, minimum 1), capped by the remaining anemia deficit.
+     - Location is fixed to Blood and Subtype / Progression Notes to Anemia.
+     - Visible footer synchronized to Character Sheet v768.
+-->
+
+<!-- INTERNAL v767 DYSFUNCTION PENALTY DROPDOWN WIDTH — NOT USER-FACING
+     - Widened the Dysfunction Penalty level selector so the full option text
+       (e.g., "Moderate (10 / 15 / 25%)") remains visible without truncation.
+     - Left the rest of the Conditions dialog layout unchanged.
+     - Visible footer synchronized to Character Sheet v767.
+-->
+<!-- INTERNAL v766 DYSFUNCTION PENALTY RANGE — NOT USER-FACING
+     - Rule-driven Dysfunction now supports Moderate or High penalty endpoints from the manual's ranges.
+     - Moderate applies Stage 1 / 2 / 3 penalties of 10% / 15% / 25% (25% / 50% cumulative by Stages 2 / 3).
+     - High applies 25% / 25% / 50% (50% / 100% cumulative), preserving prior app behavior for existing Dysfunction conditions.
+     - Dysfunction details now include a Penalty level selector; affected-score targeting and all Stress/treatment/risk logic are unchanged.
+     - Visible footer synchronized to Character Sheet v766.
+-->
 </body>
 </html>
