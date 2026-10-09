@@ -214,7 +214,7 @@
     .btn.danger { color: var(--danger); }
     .btn.small { min-height: 32px; padding: 5px 9px; font-size: 13px; }
     .mode-toggle { display: inline-flex; align-items: center; gap: 6px; min-width: 112px; justify-content: center; }
-    .mode-toggle.play { background: var(--accent); color: #fff; border-color: transparent; }
+    .mode-toggle.play { background: color-mix(in srgb, var(--muted) 12%, var(--panel-2)); color: var(--text); border-color: var(--strong-line); box-shadow: inset 0 0 0 1px var(--strong-line); }
     .mode-toggle .mode-icon { font-size: 14px; line-height: 1; }
     body.play-mode input[readonly], body.play-mode textarea[readonly],
     .section-locked input[readonly], .section-locked textarea[readonly] { opacity: .72; cursor: default; }
@@ -10814,6 +10814,57 @@
   }
 </style>
 
+<style id="v791-custom-name-badges">
+  /* Purely visual origin markers: never inside input values or exported saves. */
+  .skill-name-highlight-wrap > .custom-name-badge,
+  .gear-item-name-highlight-wrap > .custom-name-badge {
+    display: none;
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 4px;
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 750;
+    letter-spacing: .025em;
+    line-height: 13px;
+  }
+  body:not(.play-mode) #skills:not(.section-locked) .skill-name-highlight-wrap.has-custom-name > .custom-name-badge,
+  body:not(.play-mode) #gear:not(.section-locked) .gear-item-name-highlight-wrap.has-custom-name > .custom-name-badge {
+    display: inline-flex;
+  }
+  /* Only show badges (and reserve their space) when this section is unlocked.
+     A locked section is a local Play Mode even if global Edit Mode is active. */
+  /* Padding limits the input's editable text viewport without altering its value.
+     Truncate/scroll long text within that viewport, never underneath the badge. */
+  body:not(.play-mode) #skills:not(.section-locked) .skill-entry .skill-name-highlight-wrap.has-custom-name > input,
+  body:not(.play-mode) #gear:not(.section-locked) .gear-item-name-highlight-wrap.has-custom-name > input {
+    box-sizing: border-box;
+    padding-right: 61px !important;
+  }
+  /* The separate highlighted (specific) text overlay needs the same boundary. */
+  body:not(.play-mode) #skills:not(.section-locked) .skill-name-highlight-wrap.has-custom-name > .skill-name-highlight,
+  body:not(.play-mode) #gear:not(.section-locked) .gear-item-name-highlight-wrap.has-custom-name > .gear-item-name-highlight {
+    right: 60px !important;
+  }
+  @media print {
+    .skill-name-highlight-wrap > .custom-name-badge,
+    .gear-item-name-highlight-wrap > .custom-name-badge { display: none !important; }
+    body:not(.play-mode) #skills:not(.section-locked) .skill-entry .skill-name-highlight-wrap.has-custom-name > input,
+    body:not(.play-mode) #gear:not(.section-locked) .gear-item-name-highlight-wrap.has-custom-name > input { padding-right: 6px !important; }
+  }
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -11086,7 +11137,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v789</div>
+<div class="footer-note no-print">Character Sheet v791</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -14639,6 +14690,56 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       )
     ).values()
   ).sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity:'base'}));
+
+
+  // v790: Identify entries genuinely outside the built-in names/templates.
+  // The badge is a view only; no custom-origin marker is written to saved data.
+  let catalogNameMatchCache = null;
+  function normalizeCatalogMatchName(value) {
+    return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+  }
+  function makeSpecificCatalogNameMatcher(template) {
+    const parts = normalizeCatalogMatchName(template).split(/\(\s*specific\s*\)/i);
+    if (parts.length < 2) return null;
+    const escaped = parts.map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    return new RegExp('^' + escaped.join('(.+?)') + '$', 'i');
+  }
+  function ensureCatalogNameMatchCache() {
+    if (catalogNameMatchCache) return catalogNameMatchCache;
+    const build = names => {
+      const exact = new Set(), templates = [];
+      for (const name of names) {
+        const normalized = normalizeCatalogMatchName(name);
+        if (!normalized || exact.has(normalized)) continue;
+        exact.add(normalized);
+        const matcher = makeSpecificCatalogNameMatcher(normalized);
+        if (matcher) templates.push(matcher);
+        // For 'Knowledge, Other (specific)' and 'Tool/Machine, Special (specific)',
+        // the user may replace the entire Other/Special placeholder label.
+        if (/(?:other|special)\s+\(\s*specific\s*\)/i.test(normalized)) {
+          const alternate = normalized.replace(/(?:other|special)\s+\(\s*specific\s*\)/i, '(specific)');
+          const alternateMatcher = makeSpecificCatalogNameMatcher(alternate);
+          if (alternateMatcher) templates.push(alternateMatcher);
+        }
+      }
+      return {exact, templates};
+    };
+    catalogNameMatchCache = {
+      skills: build(SKILL_SUGGESTIONS.map(item => item.name)),
+      gear: build(GEAR_CATALOG.map(item => item.name))
+    };
+    return catalogNameMatchCache;
+  }
+  function isCustomCatalogName(value, kind) {
+    const name = normalizeCatalogMatchName(value);
+    if (!name) return false;
+    const lookup = ensureCatalogNameMatchCache()[kind];
+    return !lookup.exact.has(name) && !lookup.templates.some(pattern => pattern.test(name));
+  }
+  function updateCustomNameAppearance(input, kind) {
+    const wrap = input?.closest('.skill-name-highlight-wrap, .gear-item-name-highlight-wrap');
+    if (wrap) wrap.classList.toggle('has-custom-name', isCustomCatalogName(input.value, kind));
+  }
 
   // Hidden conversion tables supplied with the character-creation rules.
   const WEIGHT_SCORE_TABLE = [
@@ -19715,6 +19816,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!wrap) return;
     const hasPlaceholder = hasSpecificGearPlaceholder(input.value);
     wrap.classList.toggle('has-specific-placeholder', hasPlaceholder);
+    updateCustomNameAppearance(input, 'gear');
     const content = wrap.querySelector('.gear-item-name-highlight-content');
     if (content) {
       content.innerHTML = specificGearNameMarkup(input.value);
@@ -24809,6 +24911,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (!wrap) return;
     const hasPlaceholder = hasSpecificSkillPlaceholder(input.value);
     wrap.classList.toggle('has-specific-placeholder', hasPlaceholder);
+    updateCustomNameAppearance(input, 'skills');
     const content = wrap.querySelector('.skill-name-highlight-content');
     if (content) {
       content.innerHTML = specificSkillNameMarkup(input.value);
@@ -24958,7 +25061,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     const finished=!!state.ui.starterSkillsFinished, skillsSection=document.getElementById('skills'); skillsSection?.classList.toggle('starter-skills-finished',finished); updateSpecificSkillWarning(); updateSkillGroupControls();
     const starterButton=document.getElementById('starterSkillsBtn'); if(starterButton){starterButton.textContent=finished?'Revert to starter skills':'Finish starter skills';starterButton.title=finished?'Restore starter-skill level menus and experience totals':'Finish character creation and switch skill levels to one-point adjustment controls';}
     const grid=document.getElementById('skillsGrid'),columnCount=getSkillColumnCount();renderedSkillColumnCount=columnCount;const indexedSkills=state.skills.map((skill,absoluteIndex)=>({skill,absoluteIndex}));
-    const renderSkillColumns=(entries,groupId='',requestedColumnCount=columnCount)=>{const activeColumnCount=Math.max(1,Math.min(columnCount,requestedColumnCount));const base=Math.floor(entries.length/activeColumnCount),extra=entries.length%activeColumnCount;let start=0;return Array.from({length:activeColumnCount},(_,columnIndex)=>{const size=base+(columnIndex<extra?1:0),skills=entries.slice(start,start+size);start+=size;if(!skills.length)return '';return `<div class="skill-column"><div class="skill-column-header"><span>#</span><button type="button" class="sort-header-btn" data-skill-sort="name" title="Sort skills by name">Skill <span class="sort-indicator">${sortArrow(skillHeaderSort,'name')}</span></button><button type="button" class="sort-header-btn level-sort-btn" data-skill-sort="level" title="Sort skills by level">Level <span class="sort-indicator">${sortArrow(skillHeaderSort,'level')}</span></button><span class="no-print delete-cell"></span></div>${skills.map(({skill,absoluteIndex})=>{const invalidStarterLevel=!finished&&skill.level!==''&&!Object.prototype.hasOwnProperty.call(SKILL_POINTS,String(skill.level));const levelControl=finished?`<div class="skill-level-stepper"><input type="number" inputmode="numeric" min="0" max="100" step="1" class="skill-level-number" value="${esc(skill.level)}" data-skill-field="level" aria-label="Skill ${absoluteIndex+1} level"><span class="skill-level-step-buttons no-print"><button type="button" class="skill-level-step-button" data-level-adjust="1" aria-label="Increase skill ${absoluteIndex+1} level">▲</button><button type="button" class="skill-level-step-button" data-level-adjust="-1" aria-label="Decrease skill ${absoluteIndex+1} level">▼</button></span></div>`:`<button type="button" class="skill-level-button ${invalidStarterLevel?'invalid-starter-level':''}" data-skill-field="level" aria-label="Skill ${absoluteIndex+1} level${invalidStarterLevel?', not counted toward starter skill points because it is not a five-point increment':''}" title="${invalidStarterLevel?'This level is not counted toward starter skill points. Choose an increment of 5.':''}" aria-haspopup="listbox" aria-expanded="false">${skill.level||'-'}</button>`;return `<div class="skill-entry ${!skill.name.trim()&&!skill.level?'print-empty':''}" data-id="${skill.id}" data-group-id="${esc(groupId)}"><span class="skill-order-cell"><button type="button" class="skill-drag-handle no-print" aria-label="Drag skill ${absoluteIndex+1} to reorder${isSkillGroupView()?' or move between groups':''}" title="Drag to reorder${isSkillGroupView()?' or move between groups':''}">⋮⋮</button><span class="skill-number">${absoluteIndex+1}</span></span><div class="skill-name-highlight-wrap ${hasSpecificSkillPlaceholder(skill.name)?'has-specific-placeholder':''}"><div class="skill-name-highlight" aria-hidden="true"><span class="skill-name-highlight-content">${specificSkillNameMarkup(skill.name)}</span></div><input value="${esc(skill.name)}" data-skill-field="name" placeholder="Skill" aria-label="Skill ${absoluteIndex+1} name"></div>${levelControl}<button class="icon-btn no-print delete-cell" data-delete-skill title="Delete skill slot">×</button></div>`;}).join('')}</div>`;}).join('');};
+    const renderSkillColumns=(entries,groupId='',requestedColumnCount=columnCount)=>{const activeColumnCount=Math.max(1,Math.min(columnCount,requestedColumnCount));const base=Math.floor(entries.length/activeColumnCount),extra=entries.length%activeColumnCount;let start=0;return Array.from({length:activeColumnCount},(_,columnIndex)=>{const size=base+(columnIndex<extra?1:0),skills=entries.slice(start,start+size);start+=size;if(!skills.length)return '';return `<div class="skill-column"><div class="skill-column-header"><span>#</span><button type="button" class="sort-header-btn" data-skill-sort="name" title="Sort skills by name">Skill <span class="sort-indicator">${sortArrow(skillHeaderSort,'name')}</span></button><button type="button" class="sort-header-btn level-sort-btn" data-skill-sort="level" title="Sort skills by level">Level <span class="sort-indicator">${sortArrow(skillHeaderSort,'level')}</span></button><span class="no-print delete-cell"></span></div>${skills.map(({skill,absoluteIndex})=>{const invalidStarterLevel=!finished&&skill.level!==''&&!Object.prototype.hasOwnProperty.call(SKILL_POINTS,String(skill.level));const levelControl=finished?`<div class="skill-level-stepper"><input type="number" inputmode="numeric" min="0" max="100" step="1" class="skill-level-number" value="${esc(skill.level)}" data-skill-field="level" aria-label="Skill ${absoluteIndex+1} level"><span class="skill-level-step-buttons no-print"><button type="button" class="skill-level-step-button" data-level-adjust="1" aria-label="Increase skill ${absoluteIndex+1} level">▲</button><button type="button" class="skill-level-step-button" data-level-adjust="-1" aria-label="Decrease skill ${absoluteIndex+1} level">▼</button></span></div>`:`<button type="button" class="skill-level-button ${invalidStarterLevel?'invalid-starter-level':''}" data-skill-field="level" aria-label="Skill ${absoluteIndex+1} level${invalidStarterLevel?', not counted toward starter skill points because it is not a five-point increment':''}" title="${invalidStarterLevel?'This level is not counted toward starter skill points. Choose an increment of 5.':''}" aria-haspopup="listbox" aria-expanded="false">${skill.level||'-'}</button>`;return `<div class="skill-entry ${!skill.name.trim()&&!skill.level?'print-empty':''}" data-id="${skill.id}" data-group-id="${esc(groupId)}"><span class="skill-order-cell"><button type="button" class="skill-drag-handle no-print" aria-label="Drag skill ${absoluteIndex+1} to reorder${isSkillGroupView()?' or move between groups':''}" title="Drag to reorder${isSkillGroupView()?' or move between groups':''}">⋮⋮</button><span class="skill-number">${absoluteIndex+1}</span></span><div class="skill-name-highlight-wrap ${hasSpecificSkillPlaceholder(skill.name)?'has-specific-placeholder':''}"><div class="skill-name-highlight" aria-hidden="true"><span class="skill-name-highlight-content">${specificSkillNameMarkup(skill.name)}</span></div><input value="${esc(skill.name)}" data-skill-field="name" placeholder="Skill" aria-label="Skill ${absoluteIndex+1} name"><span class="custom-name-badge no-print" aria-hidden="true">CUSTOM</span></div>${levelControl}<button class="icon-btn no-print delete-cell" data-delete-skill title="Delete skill slot">×</button></div>`;}).join('')}</div>`;}).join('');};
     if(isSkillGroupView()){
       grid.classList.add('grouped');
       const sections=[];
@@ -30831,7 +30934,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
       return `
       <tr class="gear-row${extraClass ? ` ${extraClass}` : ''} ${draft ? 'gear-draft-row no-print section-edit-only' : ''}${embeddedDepth ? ' gear-embedded-row' : ''} ${!draft && !String(g.item || '').trim() && !String(g.weight || '').trim() && !g.wet && !g.dirty ? 'print-empty' : ''}" ${rowAttributes}${embeddedDepth ? ` style="--gear-embedded-depth:${embeddedDepth}" data-embedded-parent-id="${esc(g.embeddedInGearId || '')}"` : ''}>
-        <td class="gear-item-col"${itemSpecsTitle ? ` title="${esc(itemSpecsTitle)}"` : ''}><div class="gear-item-input-wrap${liveStatus ? ' vehicle-item-input-wrap' : ''}">${dragControl}<div class="gear-item-name-highlight-wrap ${!draft && hasSpecificGearPlaceholder(g.item) ? 'has-specific-placeholder' : ''}"><div class="gear-item-name-highlight" aria-hidden="true"><span class="gear-item-name-highlight-content">${specificGearNameMarkup(g.item)}</span></div><input value="${esc(g.item)}" data-field="item" placeholder="${draft ? 'Add item…' : 'Item'}" autocomplete="off" aria-autocomplete="list" aria-controls="gearItemAutocompleteMenu" aria-expanded="false"${itemSpecsTitle ? ` title="${esc(itemSpecsTitle)}"` : ''}></div>${liveStatus}<span class="gear-print-value print-only">${esc(g.item || '')}</span></div></td>
+        <td class="gear-item-col"${itemSpecsTitle ? ` title="${esc(itemSpecsTitle)}"` : ''}><div class="gear-item-input-wrap${liveStatus ? ' vehicle-item-input-wrap' : ''}">${dragControl}<div class="gear-item-name-highlight-wrap ${!draft && hasSpecificGearPlaceholder(g.item) ? 'has-specific-placeholder' : ''}"><div class="gear-item-name-highlight" aria-hidden="true"><span class="gear-item-name-highlight-content">${specificGearNameMarkup(g.item)}</span></div><input value="${esc(g.item)}" data-field="item" placeholder="${draft ? 'Add item…' : 'Item'}" autocomplete="off" aria-autocomplete="list" aria-controls="gearItemAutocompleteMenu" aria-expanded="false"${itemSpecsTitle ? ` title="${esc(itemSpecsTitle)}"` : ''}><span class="custom-name-badge no-print" aria-hidden="true">CUSTOM</span></div>${liveStatus}<span class="gear-print-value print-only">${esc(g.item || '')}</span></div></td>
         <td class="gear-color-cell">${gearColorSelectMarkup(g, draft)}<span class="gear-print-value print-only">${esc(g.color || '')}</span></td>
         <td class="gear-quantity-cell"><div class="gear-quantity-with-unit"><div class="numeric-stepper gear-numeric-stepper"><input type="number" min="0.01" max="9999.99" step="0.01" inputmode="decimal" value="${esc(quantityDisplayValue)}" data-field="quantity" aria-label="Quantity${quantityUnitLabel ? ` (${quantityUnitLabel})` : ''}"><div class="numeric-stepper-buttons no-print"><button class="numeric-stepper-button" type="button" ${quantityUpAttrs} aria-label="Increase quantity">▲</button><button class="numeric-stepper-button" type="button" ${quantityDownAttrs} aria-label="Decrease quantity">▼</button></div></div>${quantityUnitLabel ? (waterUnitToggle ? `<button type="button" class="gear-quantity-unit gear-liquid-unit-toggle no-print" data-liquid-gear-unit-toggle="${esc(g.id)}" aria-label="Switch water quantity between liters and US gallons" title="Switch between liters and US gallons">${esc(quantityUnitLabel)}</button>` : `<span class="gear-quantity-unit no-print">${esc(quantityUnitLabel)}</span>`) : ''}</div><span class="gear-print-value print-only">${esc(quantityDisplayValue)}${quantityUnitLabel ? ` ${esc(quantityUnitLabel)}` : ''}</span></td>
         <td class="gear-weight-cell" data-weight-label="Weight each (${esc(weightUnit)})" data-mobile-weight-label="Wt (${esc(weightUnit)})"${currentWeightTitle ? ` title="${esc(currentWeightTitle)}"` : ''}><div class="numeric-stepper gear-numeric-stepper${displayWeightLocked ? ' gear-weight-fixed' : ''}"><input type="number" min="0" step="${esc(weightConfig.step)}" inputmode="decimal" value="${esc(displayedWeight)}" data-field="weight" aria-label="${draft ? 'Dry weight per item' : loadedBreakdown?.isContainer ? 'Loaded container weight per item' : stockWeightLocked ? 'Fixed catalog weight per item' : 'Current weight per item'} (${esc(weightUnit)})"${displayWeightLocked ? ' readonly aria-readonly="true"' : ''}${currentWeightTitle ? ` title="${esc(currentWeightTitle)}"` : ''}>${displayWeightLocked ? '' : '<div class="numeric-stepper-buttons no-print"><button class="numeric-stepper-button" type="button" data-input-step data-step-direction="1" aria-label="Increase weight">▲</button><button class="numeric-stepper-button" type="button" data-input-step data-step-direction="-1" aria-label="Decrease weight">▼</button></div>'}</div><span class="gear-print-value print-only">${esc(displayedWeight)}</span></td>
@@ -33343,7 +33446,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     if (starterButton) {
       starterButton.classList.toggle('starter-budget-ready', !finished && remainingIsZero);
       starterButton.classList.toggle('starter-budget-blocked', !finished && remainingIsNegative);
-      const locked = isPlayMode() || isSectionLocked('skills');
+      const locked = isSectionLocked('skills');
       starterButton.disabled = locked || (!finished && remainingIsNegative);
       if (finished) {
         starterButton.title = 'Restore starter-skill level menus, experience totals, and quantity guidance';
@@ -33759,7 +33862,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     updateSkillGroupControls();
     const starterSkillStatus = getStarterSkillSetupStatus();
     const starterSkillsOverBudget = !state.ui.starterSkillsFinished && Number.isFinite(starterSkillStatus.remaining) && starterSkillStatus.remaining < 0;
-    setLockedControl(document.getElementById('starterSkillsBtn'), skillsLocked || play || starterSkillsOverBudget);
+    setLockedControl(document.getElementById('starterSkillsBtn'), skillsLocked || starterSkillsOverBudget);
 
     const overviewLocked = isSectionLocked('overview');
     updateAttributeLinkButtons();
@@ -34275,7 +34378,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   updateSkillQuickSortControls();
 
   document.getElementById('starterSkillsBtn').addEventListener('click', async () => {
-    if (isPlayMode() || isSectionLocked('skills')) return;
+    if (isSectionLocked('skills')) return;
     ensureUiState();
 
     if (state.ui.starterSkillsFinished) {
@@ -37285,5 +37388,17 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
      - Existing Archaeology Field Kit, Full and other equipment remain unchanged.
      - Visible footer synchronized to Character Sheet v789.
 -->
+<!-- INTERNAL v790 SELECTIVE SKILL REVERT + CUSTOM NAME MARKERS — NOT USER-FACING
+     - Skills starter/revert action now follows the Skills section lock, even in Play Mode.
+     - Play Mode toggle has a neutral, visibly active style instead of a green background.
+     - Custom Skills and Gear names gain a non-persisted, in-field CUSTOM badge in Edit Mode only.
+     - Catalog matches include exact names and valid (specific) template substitutions.
+     - Badges are hidden in Play Mode and print output; input text reserves space only while visible.
+     - Visible footer synchronized to Character Sheet v790.
+-->
 </body>
+<!-- INTERNAL v791 CUSTOM BADGE SECTION LOCK FIX — NOT USER-FACING
+     Custom badges and their reserved name-field padding now require Skills/Gear
+     to be unlocked as well as global Edit Mode. No data format changes.
+-->
 </html>
