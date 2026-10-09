@@ -11137,7 +11137,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v791</div>
+<div class="footer-note no-print">Character Sheet v792</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -11606,8 +11606,24 @@
   const ACTIVE_LIBRARY_CHARACTER_KEY = 'corys-weird-game-active-library-character-v1';
   const ACTIVE_CHARACTER_BASELINE_KEY = 'corys-weird-game-active-character-baseline-v1';
   const CHARACTER_DB_NAME = 'corys-weird-game-character-library';
-  const CHARACTER_DB_VERSION = 1;
+  // v792: keep named saves unchanged, but isolate durable working copies by tab.
+  const CHARACTER_DB_VERSION = 1;  // Do not change the existing named-save DB schema.
   const CHARACTER_STORE = 'characters';
+  const WORKSPACE_DB_NAME = 'corys-weird-game-tab-workspaces';
+  const WORKSPACE_DB_VERSION = 1;
+  const WORKSPACE_STORE = 'tab-workspaces';
+  const WORKSPACE_SESSION_KEY = 'corys-weird-game-tab-workspace-v2';
+  const FALLBACK_WORKSPACE_PREFIX = 'corys-weird-game-tab-autosave-fallback-v2:';
+  let workspaceBackend = 'indexeddb';
+  const WORKSPACE_CHANNEL_NAME = 'corys-weird-game-tab-ownership-v2';
+  let workspaceId = null;
+  let workspaceReady = false;
+  let workspaceChannel = null;
+  let proposedWorkspaceId = null;
+  const pageInstanceId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID() : String(Date.now()) + '-' + Math.random();
+  let activeNamedSaveRevision = null;
+
   const BODY_ATTRIBUTES = ['Agility','Beauty','Cardio','Constitution','Coordination','Fine Motor Control','Strength'];
   const MIND_ATTRIBUTES = ['Charisma','Creativity','Empathy','Extraversion','Intelligence','Organization','Stability','Will'];
 
@@ -23168,6 +23184,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   let pendingCharacterLoad = null;
   let pendingCharacterDeleteId = null;
   let pendingCharacterLibraryImport = null;
+  // Read legacy metadata only for the initial v791 -> v792 migration.
+  // All subsequent working metadata is persisted with this tab's workspace.
   let activeLibraryCharacterId = (() => {
     try { return String(localStorage.getItem(ACTIVE_LIBRARY_CHARACTER_KEY) || '').trim() || null; }
     catch (_) { return null; }
@@ -23180,11 +23198,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   let pendingNewAfterSave = false;
 
   function setActiveLibraryCharacterId(id) {
-    activeLibraryCharacterId = String(id || '').trim() || null;
-    try {
-      if (activeLibraryCharacterId) localStorage.setItem(ACTIVE_LIBRARY_CHARACTER_KEY, activeLibraryCharacterId);
-      else localStorage.removeItem(ACTIVE_LIBRARY_CHARACTER_KEY);
-    } catch (_) {}
+    const nextId = String(id || '').trim() || null;
+    if (activeLibraryCharacterId !== nextId) activeNamedSaveRevision = null;
+    activeLibraryCharacterId = nextId;
+    // No shared localStorage writes: another tab must never change this tab's active save.
   }
 
   function normalizedCharacterSaveName(value) {
@@ -23217,6 +23234,30 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       throw error;
     });
     return characterDbPromise;
+  }
+
+  let workspaceDbPromise = null;
+  function openWorkspaceDatabase() {
+    if (workspaceDbPromise) return workspaceDbPromise;
+    workspaceDbPromise = new Promise((resolve, reject) => {
+      if (!('indexedDB' in window)) {
+        reject(new Error('IndexedDB is unavailable.'));
+        return;
+      }
+      const request = indexedDB.open(WORKSPACE_DB_NAME, WORKSPACE_DB_VERSION);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(WORKSPACE_STORE)) db.createObjectStore(WORKSPACE_STORE, {keyPath:'id'});
+      };
+      request.onsuccess = () => {
+        const db = request.result;
+        db.onversionchange = () => db.close();
+        resolve(db);
+      };
+      request.onerror = () => reject(request.error || new Error('Could not open tab autosaves.'));
+      request.onblocked = () => reject(new Error('Tab autosaves are blocked by another browser tab.'));
+    }).catch(error => { workspaceDbPromise = null; throw error; });
+    return workspaceDbPromise;
   }
 
   function idbRequestPromise(request) {
@@ -23263,14 +23304,10 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 
   function setActiveCharacterBaselineFromCurrent() {
     activeCharacterBaselineFingerprint = characterStateFingerprint(state);
-    try { localStorage.setItem(ACTIVE_CHARACTER_BASELINE_KEY, activeCharacterBaselineFingerprint); }
-    catch (_) {}
   }
 
   function clearActiveCharacterBaseline() {
     activeCharacterBaselineFingerprint = null;
-    try { localStorage.removeItem(ACTIVE_CHARACTER_BASELINE_KEY); }
-    catch (_) {}
   }
 
   async function currentNamedSaveStatus() {
@@ -23317,6 +23354,44 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
   }
 
+  function namedSaveRevision(record) {
+    return record?._saveRevision || ('legacy-' + String(record?.updatedAt || 0));
+  }
+
+  // A check and put in the SAME IndexedDB transaction prevents two open tabs
+  // from silently overwriting the same named save even if they click together.
+  async function putNamedCharacterWithRevision(record, expectedRevision) {
+    const db = await openCharacterDatabase();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(CHARACTER_STORE, 'readwrite');
+      const store = tx.objectStore(CHARACTER_STORE);
+      let conflict = null;
+      const request = store.getAll();
+      request.onsuccess = () => {
+        const rows = Array.isArray(request.result) ? request.result : [];
+        const existing = rows.find(row => row.id === record.id);
+        if ((existing ? namedSaveRevision(existing) : null) !== expectedRevision) {
+          conflict = new Error('This named character was changed or deleted in another tab.');
+          conflict.code = 'SAVE_CONFLICT';
+          tx.abort();
+          return;
+        }
+        if (rows.some(row => row.id !== record.id && normalizedCharacterSaveName(row.name) === normalizedCharacterSaveName(record.name))) {
+          conflict = new Error('Another named save already uses this name.');
+          conflict.code = 'SAVE_NAME_CONFLICT';
+          tx.abort();
+          return;
+        }
+        store.put(record);
+      };
+      request.onerror = () => reject(request.error || new Error('Could not check named save.'));
+      tx.oncomplete = resolve;
+      tx.onabort = () => reject(conflict || tx.error || new Error('Named save was canceled.'));
+      tx.onerror = () => { /* tx.onabort reports the failure */ };
+    });
+    void refreshExportControlAvailability();
+  }
+
   async function putLocalCharacter(record) {
     const db = await openCharacterDatabase();
     const transaction = db.transaction(CHARACTER_STORE, 'readwrite');
@@ -23356,34 +23431,224 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   }
 
   function localCharacterStorageError(error) {
+    if (error?.code === 'SAVE_CANCELLED') return;
+    if (error?.code === 'SAVE_NAME_CONFLICT') {
+      alert('Another named save already uses that name. Choose a different save name.');
+      return;
+    }
     console.error(error);
     setLocalSaveStatus('Named local saves are unavailable - Export still works', 3200);
     alert('Named local saves are not available in this browser right now. You can still use Export to save a character file.');
   }
 
   function loadState() {
+    // Synchronous legacy read is retained for migration and browsers without IDB.
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? deepMerge(defaultState(), migrateState(JSON.parse(raw))) : defaultState();
     } catch (error) {
-      console.warn('Could not load saved state', error);
+      console.warn('Could not load legacy saved state', error);
       return defaultState();
     }
   }
+
+  function workspaceSnapshot() {
+    return {
+      id:workspaceId,
+      state:JSON.parse(JSON.stringify(state)),
+      activeLibraryCharacterId,
+      activeCharacterBaselineFingerprint,
+      activeNamedSaveRevision,
+      updatedAt:Date.now()
+    };
+  }
+
+  async function getWorkspace(id) {
+    const db = await openWorkspaceDatabase();
+    const tx = db.transaction(WORKSPACE_STORE, 'readonly');
+    return idbRequestPromise(tx.objectStore(WORKSPACE_STORE).get(id));
+  }
+
+  async function listWorkspaces() {
+    const db = await openWorkspaceDatabase();
+    const tx = db.transaction(WORKSPACE_STORE, 'readonly');
+    const list = await idbRequestPromise(tx.objectStore(WORKSPACE_STORE).getAll());
+    return list.filter(entry => entry?.state && typeof entry.state === 'object')
+      .sort((a,b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0));
+  }
+
+  async function getMostRecentWorkspace() {
+    return (await listWorkspaces())[0] || null;
+  }
+
+  async function putWorkspace(snapshot) {
+    const db = await openWorkspaceDatabase();
+    const tx = db.transaction(WORKSPACE_STORE, 'readwrite');
+    tx.objectStore(WORKSPACE_STORE).put(snapshot);
+    await idbTransactionPromise(tx);
+  }
+
+  // Best-effort duplicate-tab fallback when BroadcastChannel cannot communicate
+  // (some offline/file contexts). Leases contain NO character data.
+  function workspaceLeaseKey(id) { return 'corys-weird-game-workspace-owner-v2:' + id; }
+  function existingWorkspaceLease(id) {
+    if (!id) return false;
+    try {
+      const raw = localStorage.getItem(workspaceLeaseKey(id));
+      const lease = raw && JSON.parse(raw);
+      return !!(lease && lease.instance !== pageInstanceId && Date.now() - Number(lease.at) < 5000);
+    } catch (_) { return false; }
+  }
+  function updateWorkspaceLease() {
+    if (!workspaceReady || !workspaceId) return;
+    try { localStorage.setItem(workspaceLeaseKey(workspaceId), JSON.stringify({instance:pageInstanceId,at:Date.now()})); }
+    catch (_) {}
+  }
+  function clearWorkspaceLease() {
+    if (!workspaceId) return;
+    try {
+      const raw = localStorage.getItem(workspaceLeaseKey(workspaceId));
+      if (raw && JSON.parse(raw)?.instance === pageInstanceId) localStorage.removeItem(workspaceLeaseKey(workspaceId));
+    } catch (_) {}
+  }
+
+  // Browsers commonly duplicate sessionStorage when a tab is duplicated.
+  // Probe the live owner and fork the working copy before any autosave happens.
+  async function workspaceAlreadyOpen(id) {
+    if (!id || typeof BroadcastChannel === 'undefined') return false;
+    if (!workspaceChannel) return false;
+    return new Promise(resolve => {
+      const ticket = pageInstanceId + ':' + Math.random();
+      let owned = false;
+      const listener = event => {
+        if (event.data?.type === 'owner' && event.data.ticket === ticket && event.data.instance !== pageInstanceId) owned = true;
+      };
+      workspaceChannel.addEventListener('message', listener);
+      workspaceChannel.postMessage({type:'probe', id, ticket, instance:pageInstanceId});
+      setTimeout(() => {
+        workspaceChannel.removeEventListener('message', listener);
+        resolve(owned);
+      }, 120);
+    });
+  }
+
+  async function initializeWorkspace() {
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          workspaceChannel = new BroadcastChannel(WORKSPACE_CHANNEL_NAME);
+          workspaceChannel.addEventListener('message', event => {
+            const data = event.data;
+            if (data?.type === 'probe' && data.instance !== pageInstanceId &&
+                data.id && (data.id === workspaceId || data.id === proposedWorkspaceId)) {
+              workspaceChannel.postMessage({type:'owner', ticket:data.ticket, instance:pageInstanceId});
+            }
+          });
+        } catch (error) { console.warn('Tab duplication detection unavailable', error); }
+      }
+      let tabId = null;
+      try { tabId = String(sessionStorage.getItem(WORKSPACE_SESSION_KEY) || '').trim() || null; } catch (_) {}
+      proposedWorkspaceId = tabId;
+      const duplicatedTab = (await workspaceAlreadyOpen(tabId)) || existingWorkspaceLease(tabId);
+      const originalId = tabId;
+      if (!tabId || duplicatedTab) tabId = uid();
+      workspaceId = tabId;
+      proposedWorkspaceId = null;
+      try { sessionStorage.setItem(WORKSPACE_SESSION_KEY, tabId); } catch (_) {}
+
+      // Reload: restore this tab. Duplicate/new tab: fork the last known working
+      // character into a NEW workspace, never attach to the existing tab's ID.
+      const source = originalId
+        ? (await getWorkspace(originalId) || await getMostRecentWorkspace())
+        : await getMostRecentWorkspace();
+      if (source?.state) {
+        state = deepMerge(defaultState(), migrateState(JSON.parse(JSON.stringify(source.state))));
+        activeLibraryCharacterId = String(source.activeLibraryCharacterId || '').trim() || null;
+        activeCharacterBaselineFingerprint = source.activeCharacterBaselineFingerprint || null;
+        activeNamedSaveRevision = source.activeNamedSaveRevision || null;
+      } else if (activeLibraryCharacterId) {
+        // Existing v791 data is migrated by reading only; legacy keys are not deleted.
+        const record = await getLocalCharacter(activeLibraryCharacterId);
+        activeNamedSaveRevision = record ? namedSaveRevision(record) : null;
+      }
+      workspaceReady = true;
+      renderAll();
+      refreshVisibleEncumbranceLayout();
+      saveNow();
+      updateWorkspaceLease();
+      setInterval(updateWorkspaceLease, 1800);
+    } catch (error) {
+      console.warn('IndexedDB tab autosave is unavailable; trying isolated localStorage fallback', error);
+      // Retain v791's ability to autosave when IndexedDB is unavailable.
+      // The fallback still uses a different key for each tab, never STORAGE_KEY.
+      workspaceBackend = 'localStorage';
+      workspaceId ||= uid();
+      try {
+        const raw = localStorage.getItem(FALLBACK_WORKSPACE_PREFIX + workspaceId);
+        if (raw) {
+          const copy = JSON.parse(raw);
+          if (copy?.state) {
+            state = deepMerge(defaultState(), migrateState(copy.state));
+            activeLibraryCharacterId = copy.activeLibraryCharacterId || null;
+            activeCharacterBaselineFingerprint = copy.activeCharacterBaselineFingerprint || null;
+            activeNamedSaveRevision = copy.activeNamedSaveRevision || null;
+          }
+        }
+        workspaceReady = true;
+        renderAll();
+        refreshVisibleEncumbranceLayout();
+        saveNow();
+      } catch (fallbackError) {
+        workspaceReady = false;
+        renderAll();
+        console.error('No working autosave storage available', fallbackError);
+        document.getElementById('saveState').textContent = 'Autosave unavailable - export a backup';
+      }
+    }
+  }
+
   function queueSave() {
     document.getElementById('saveState').textContent = 'Saving...';
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveNow, 250);
   }
   function saveNow() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      document.getElementById('saveState').textContent = 'Working character autosaved locally';
-    } catch (error) {
+    if (!workspaceReady || !workspaceId) return;
+    clearTimeout(saveTimer);
+    let snapshot;
+    try { snapshot = workspaceSnapshot(); }
+    catch (error) {
       document.getElementById('saveState').textContent = 'Could not autosave locally - export a backup';
       console.error(error);
+      return;
     }
+    if (workspaceBackend === 'localStorage') {
+      try {
+        localStorage.setItem(FALLBACK_WORKSPACE_PREFIX + workspaceId, JSON.stringify(snapshot));
+        document.getElementById('saveState').textContent = 'Working character autosaved locally';
+      } catch (error) {
+        document.getElementById('saveState').textContent = 'Could not autosave locally - export a backup';
+        console.error(error);
+      }
+      return;
+    }
+    // Serialize writes so an older, slower save cannot overwrite a newer one.
+    workspaceSaveChain = workspaceSaveChain.catch(() => {}).then(() => putWorkspace(snapshot));
+    workspaceSaveChain.then(() => {
+      if (snapshot.updatedAt >= lastWorkspaceSaveTimestamp) {
+        lastWorkspaceSaveTimestamp = snapshot.updatedAt;
+        if (document.getElementById('saveState')?.textContent === 'Saving...' ||
+            document.getElementById('saveState')?.textContent === 'Working character autosaved locally') {
+          document.getElementById('saveState').textContent = 'Working character autosaved locally';
+        }
+      }
+    }).catch(error => {
+      document.getElementById('saveState').textContent = 'Could not autosave locally - export a backup';
+      console.error(error);
+    });
   }
+  let workspaceSaveChain = Promise.resolve();
+  let lastWorkspaceSaveTimestamp = 0;
   function getPath(obj, path) {
     return path.split('.').reduce((acc, part) => acc?.[part], obj);
   }
@@ -35955,23 +36220,58 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     saveNow();
   }
 
-  async function saveNamedCharacter(saveName, existingId = '') {
+  async function saveNamedCharacter(saveName, existingId = '', confirmedRevision = undefined) {
     const name = characterSaveDisplayName(saveName);
     if (!name) throw new Error('Enter a save name.');
     const now = Date.now();
-    const existing = existingId ? await getLocalCharacter(existingId) : null;
+    let existing = existingId ? await getLocalCharacter(existingId) : null;
+    let expectedRevision = existingId
+      ? (confirmedRevision !== undefined ? confirmedRevision
+        : existingId === activeLibraryCharacterId && activeNamedSaveRevision
+          ? activeNamedSaveRevision : (existing ? namedSaveRevision(existing) : null))
+      : null;
+    const stateAtSaveStart = JSON.parse(JSON.stringify(state));
     const record = {
-      id: existing?.id || uid(),
+      id: existingId || uid(),
       name,
       createdAt: Number(existing?.createdAt) || now,
       updatedAt: now,
-      state: JSON.parse(JSON.stringify(state))
+      _saveRevision:uid(),
+      state: stateAtSaveStart
     };
-    await putLocalCharacter(record);
-    setActiveLibraryCharacterId(record.id);
-    setActiveCharacterBaselineFromCurrent();
-    setLocalSaveStatus(`Saved “${name}” locally`);
-    return record;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        await putNamedCharacterWithRevision(record, expectedRevision);
+        setActiveLibraryCharacterId(record.id);
+        activeNamedSaveRevision = record._saveRevision;
+        activeCharacterBaselineFingerprint = characterStateFingerprint(stateAtSaveStart);
+        saveNow();
+        setLocalSaveStatus(`Saved “${name}” locally`);
+        return record;
+      } catch (error) {
+        if (error?.code !== 'SAVE_CONFLICT') throw error;
+        const latest = await getLocalCharacter(record.id);
+        if (!latest) {
+          const canceled = new Error('The named save was deleted in another tab. Save under a different name.');
+          canceled.code = 'SAVE_CANCELLED';
+          alert(canceled.message);
+          throw canceled;
+        }
+        if (!confirm(`“${name}” was saved in another tab since this tab loaded it. Overwrite that newer saved version with this tab's character? Cancel keeps both tabs' current working copies unchanged.`)) {
+          const canceled = new Error('Save canceled to protect another tab’s changes.');
+          canceled.code = 'SAVE_CANCELLED';
+          setLocalSaveStatus('Save canceled - another tab has newer saved changes', 3800);
+          throw canceled;
+        }
+        existing = latest;
+        expectedRevision = namedSaveRevision(latest);
+        record.createdAt = Number(latest.createdAt) || now;
+      }
+    }
+    const repeated = new Error('Another tab keeps changing this named save. Please try saving again.');
+    repeated.code = 'SAVE_CANCELLED';
+    alert(repeated.message);
+    throw repeated;
   }
 
   function formatLocalCharacterDate(timestamp) {
@@ -36049,7 +36349,25 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
             </div>
           </div>`;
       }).join('');
-      list.innerHTML = builtInRows + savedRows;
+      let recoveryRows = '';
+      try {
+        const workspaces = (await listWorkspaces()).filter(entry => entry.id !== workspaceId);
+        if (workspaces.length) {
+          recoveryRows = `<div class="character-library-empty"><strong>Other tab autosaves</strong> — Recover working copies from closed tabs or earlier sessions. Restoring copies does not overwrite a named save.</div>`;
+          recoveryRows += workspaces.map(entry => {
+            const person = String(entry.state?.identity?.name || '').trim() || 'Unnamed character';
+            const date = formatLocalCharacterDate(entry.updatedAt);
+            return `<div class="character-library-row" data-workspace-row="${esc(entry.id)}">
+              <div class="character-library-copy">
+                <div class="character-library-name">${esc(person)} — Working copy</div>
+                <div class="character-library-meta">${esc(date)}</div>
+              </div>
+              <div class="character-library-actions"><button class="btn" data-workspace-load="${esc(entry.id)}" type="button">Recover</button></div>
+            </div>`;
+          }).join('');
+        }
+      } catch (error) { console.warn('Could not list other tab autosaves', error); }
+      list.innerHTML = builtInRows + savedRows + recoveryRows;
     } catch (error) {
       console.error(error);
       list.innerHTML = builtInRows + '<div class="character-library-empty">Named local saves are unavailable in this browser. Import and Export still work.</div>';
@@ -36137,7 +36455,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       const records = await listLocalCharacters();
       const existing = records.find(record => normalizedCharacterSaveName(record.name) === normalizedCharacterSaveName(name));
       if (existing) {
-        pendingCharacterSaveOverwrite = {name, id:existing.id};
+        pendingCharacterSaveOverwrite = {name, id:existing.id, revision:existing.id === activeLibraryCharacterId && activeNamedSaveRevision ? activeNamedSaveRevision : namedSaveRevision(existing)};
         dialog.close();
         document.getElementById('characterSaveOverwriteText').textContent = `A locally saved character named “${name}” already exists. Replace it with the current character?`;
         document.getElementById('characterSaveOverwriteDialog').showModal();
@@ -36173,6 +36491,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       if (!record?.state) throw new Error('That saved character could not be found.');
       state = deepMerge(defaultState(), migrateState(record.state));
       setActiveLibraryCharacterId(record.id);
+      activeNamedSaveRevision = namedSaveRevision(record);
       clearSkillSortState();
       renderAll();
       setActiveCharacterBaselineFromCurrent();
@@ -36201,6 +36520,19 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
       setLocalSaveStatus('Loaded Calvin Brooks — Template');
     } else if (pending.type === 'saved') {
       await loadNamedCharacter(pending.id);
+    } else if (pending.type === 'workspace') {
+      try {
+        const copy = await getWorkspace(pending.id);
+        if (!copy?.state) throw new Error('That working copy could not be found.');
+        state = deepMerge(defaultState(), migrateState(JSON.parse(JSON.stringify(copy.state))));
+        setActiveLibraryCharacterId(copy.activeLibraryCharacterId || null);
+        activeNamedSaveRevision = copy.activeNamedSaveRevision || null;
+        activeCharacterBaselineFingerprint = copy.activeCharacterBaselineFingerprint || null;
+        clearSkillSortState();
+        renderAll();
+        saveNow();
+        setLocalSaveStatus('Recovered working character in this tab');
+      } catch (error) { console.error(error); alert('That tab autosave could not be restored.'); }
     }
   }
 
@@ -36248,7 +36580,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     document.getElementById('characterSaveOverwriteDialog')?.close();
     if (!pending) return;
     try {
-      await saveNamedCharacter(pending.name, pending.id);
+      await saveNamedCharacter(pending.name, pending.id, pending.revision);
       if (pendingLoadAfterSave) {
         pendingLoadAfterSave = false;
         await executePendingCharacterLoad();
@@ -36287,6 +36619,12 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     }
     if (button.hasAttribute('data-library-load-calvin')) {
       requestCharacterLoad({type:'calvin', name:'Calvin Brooks — Template'});
+      return;
+    }
+    const recoveryId = button.dataset.workspaceLoad;
+    if (recoveryId) {
+      const copy = await getWorkspace(recoveryId).catch(() => null);
+      requestCharacterLoad({type:'workspace', id:recoveryId, name:String(copy?.state?.identity?.name || 'working copy')});
       return;
     }
     const loadId = button.dataset.libraryLoad;
@@ -36462,6 +36800,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
     } catch (error) { localCharacterStorageError(error); }
   });
 
+  window.addEventListener('pagehide', () => { saveNow(); clearWorkspaceLease(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveNow(); });
   window.addEventListener('beforeunload', saveNow);
   window.addEventListener('focus', () => { void refreshExportControlAvailability(); });
   buildAttributeRows();
@@ -36472,8 +36812,7 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
   bindOverviewSteppers();
   bindAttributeLinkButtons();
   bindUniversalCharacterUndo();
-  renderAll();
-  refreshVisibleEncumbranceLayout();
+  void initializeWorkspace();
   void refreshExportControlAvailability();
 })();
 
