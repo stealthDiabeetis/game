@@ -2677,7 +2677,6 @@
       .skills-summary, .skills-grid { grid-template-columns: 1fr; }
       .skill-groups-list { grid-template-columns: minmax(0, 1fr); }
       .skill-group, .skill-group.skill-group-span-2, .skill-group.skill-group-span-3 { grid-column: 1 / -1; }
-      .bulk-skill-list { column-count: 1; column-rule: 0; padding: 12px; }
       .bulk-search-row { grid-template-columns: 1fr; padding: 12px; }
       .bulk-search-actions { justify-content: space-between; flex-wrap: wrap; }
       .bulk-selection-count { margin-left: auto; }
@@ -6178,9 +6177,67 @@
       }
     }
 
-    @media screen and (max-width: 640px) {
-      .bulk-skill-list,
-      .bulk-skill-list.bulk-scroll-end { background-image: none; }
+    @media screen and (max-width: 640px), screen and (max-height: 520px) and (pointer: coarse) {
+      #bulkSkillsDialog .bulk-dialog-header {
+        flex-shrink: 0;
+      }
+
+      #bulkSkillsDialog .bulk-search-row,
+      #bulkSkillsDialog .bulk-actions {
+        flex-shrink: 0;
+        gap: 8px;
+        padding: 8px 12px;
+      }
+
+      #bulkSkillsDialog .bulk-search-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      #bulkSkillsDialog .bulk-search-actions {
+        flex-wrap: nowrap;
+        gap: 8px;
+      }
+
+      #bulkSkillSearch {
+        width: 100%;
+        min-width: 0;
+        padding-inline: 8px;
+        font-size: 16px;
+      }
+
+      #bulkSkillSearch,
+      #bulkToggleAll {
+        min-height: 44px;
+      }
+
+      #bulkSkillsDialog .bulk-skill-list {
+        flex: 1 1 auto;
+        min-height: 0;
+        columns: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        overflow-wrap: anywhere;
+        padding: 12px;
+        background-image: none;
+      }
+
+      #bulkSkillsDialog .bulk-category {
+        display: block;
+      }
+
+      #bulkSkillsDialog .bulk-actions {
+        grid-template-columns: repeat(3, minmax(max-content, 1fr));
+        grid-template-rows: auto;
+      }
+
+      #bulkSkillsDialog .bulk-actions > .btn {
+        grid-column: auto;
+        min-height: 44px;
+        padding: 6px 7px;
+        font-size: clamp(12px, 3.35vw, 14px);
+        white-space: nowrap;
+      }
     }
 
     @media screen and (max-width: 600px), screen and (max-height: 520px) and (pointer: coarse) {
@@ -11141,7 +11198,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v793</div>
+<div class="footer-note no-print">Character Sheet v794</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -11284,7 +11341,7 @@
 <button aria-label="Close bulk skill picker" class="icon-btn" id="bulkClose" type="button">×</button>
 </div>
 <div class="bulk-search-row">
-<input autocomplete="off" id="bulkSkillSearch" placeholder="Search skills or categories" type="search"/>
+<input aria-label="Search skills or categories" autocomplete="off" id="bulkSkillSearch" placeholder="Search skills" type="search"/>
 <div class="bulk-search-actions">
 <div class="bulk-tree-controls" aria-label="Bulk skill subgroup controls">
 <button class="btn small" id="bulkToggleAll" type="button">+ Expand all</button>
