@@ -2677,6 +2677,7 @@
       .skills-summary, .skills-grid { grid-template-columns: 1fr; }
       .skill-groups-list { grid-template-columns: minmax(0, 1fr); }
       .skill-group, .skill-group.skill-group-span-2, .skill-group.skill-group-span-3 { grid-column: 1 / -1; }
+      .bulk-skill-list { column-count: 1; column-rule: 0; padding: 12px; }
       .bulk-search-row { grid-template-columns: 1fr; padding: 12px; }
       .bulk-search-actions { justify-content: space-between; flex-wrap: wrap; }
       .bulk-selection-count { margin-left: auto; }
@@ -6177,67 +6178,9 @@
       }
     }
 
-    @media screen and (max-width: 640px), screen and (max-height: 520px) and (pointer: coarse) {
-      #bulkSkillsDialog .bulk-dialog-header {
-        flex-shrink: 0;
-      }
-
-      #bulkSkillsDialog .bulk-search-row,
-      #bulkSkillsDialog .bulk-actions {
-        flex-shrink: 0;
-        gap: 8px;
-        padding: 8px 12px;
-      }
-
-      #bulkSkillsDialog .bulk-search-row {
-        grid-template-columns: minmax(0, 1fr) auto;
-      }
-
-      #bulkSkillsDialog .bulk-search-actions {
-        flex-wrap: nowrap;
-        gap: 8px;
-      }
-
-      #bulkSkillSearch {
-        width: 100%;
-        min-width: 0;
-        padding-inline: 8px;
-        font-size: 16px;
-      }
-
-      #bulkSkillSearch,
-      #bulkToggleAll {
-        min-height: 44px;
-      }
-
-      #bulkSkillsDialog .bulk-skill-list {
-        flex: 1 1 auto;
-        min-height: 0;
-        columns: auto;
-        overflow-x: hidden;
-        overflow-y: auto;
-        overscroll-behavior-y: contain;
-        overflow-wrap: anywhere;
-        padding: 12px;
-        background-image: none;
-      }
-
-      #bulkSkillsDialog .bulk-category {
-        display: block;
-      }
-
-      #bulkSkillsDialog .bulk-actions {
-        grid-template-columns: repeat(3, minmax(max-content, 1fr));
-        grid-template-rows: auto;
-      }
-
-      #bulkSkillsDialog .bulk-actions > .btn {
-        grid-column: auto;
-        min-height: 44px;
-        padding: 6px 7px;
-        font-size: clamp(12px, 3.35vw, 14px);
-        white-space: nowrap;
-      }
+    @media screen and (max-width: 640px) {
+      .bulk-skill-list,
+      .bulk-skill-list.bulk-scroll-end { background-image: none; }
     }
 
     @media screen and (max-width: 600px), screen and (max-height: 520px) and (pointer: coarse) {
@@ -10071,6 +10014,109 @@
       .gear-location-mount-rider-load { margin-left:0; width:100%; }
     }
 
+
+
+    /* v794 — iPhone / short touch-screen Bulk Add Skills picker.
+       A multicolumn list with break-inside:avoid creates sideways columns when
+       the viewport is short. Make only this picker a vertical scroll region;
+       leave larger-screen layouts and the Bulk Add Gear dialog unchanged. */
+    @media screen and (max-width: 640px), screen and (max-height: 520px) and (pointer: coarse) {
+      #bulkSkillsDialog .dialog-inner {
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      /* Search | Expand/Collapse all | selected count: one fixed toolbar row. */
+      #bulkSkillsDialog .bulk-search-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 10px;
+        min-width: 0;
+      }
+      #bulkSkillsDialog #bulkSkillSearch {
+        min-width: 0;
+        width: 100%;
+        min-height: 40px;
+        padding: 6px 7px;
+        font-size: 16px; /* avoid iOS auto-zoom on focus */
+      }
+      #bulkSkillsDialog .bulk-search-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        min-width: 0;
+        gap: 6px;
+      }
+      #bulkSkillsDialog .bulk-tree-controls { flex: 0 0 auto; }
+      #bulkSkillsDialog #bulkToggleAll {
+        min-height: 40px;
+        padding: 6px 5px;
+        font-size: clamp(10px, 2.9vw, 12px);
+        white-space: nowrap;
+      }
+      #bulkSkillsDialog #bulkSelectionCount {
+        flex: 0 0 auto;
+        margin: 0;
+        font-size: clamp(10px, 2.8vw, 12px);
+        white-space: nowrap;
+      }
+
+      /* A genuine vertical list, not height-balanced CSS columns. */
+      #bulkSkillsDialog #bulkSkillList {
+        display: block;
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
+        width: 100%;
+        column-count: auto;
+        column-width: auto;
+        columns: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+        overflow-wrap: anywhere;
+        padding: 12px;
+        background-image: none;
+      }
+      #bulkSkillsDialog #bulkSkillList.bulk-scroll-end {
+        background-image: none;
+      }
+      #bulkSkillsDialog .bulk-category {
+        display: block;
+        width: 100%;
+        break-inside: auto;
+      }
+
+      /* Clear selection | Cancel | Add selected: one even, aligned footer row. */
+      #bulkSkillsDialog .bulk-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1.12fr) minmax(0, .72fr) minmax(0, 1.16fr);
+        grid-template-rows: auto;
+        align-items: stretch;
+        justify-items: stretch;
+        gap: 6px;
+        padding: 8px 10px max(8px, env(safe-area-inset-bottom));
+        min-width: 0;
+      }
+      #bulkSkillsDialog .bulk-actions > .btn,
+      #bulkSkillsDialog .bulk-actions > .btn:last-child {
+        grid-column: auto;
+        grid-row: 1;
+        justify-self: stretch;
+        width: 100%;
+        min-width: 0;
+        min-height: 40px;
+        margin: 0;
+        padding: 7px 3px;
+        font-size: clamp(10.5px, 3.05vw, 13px);
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+    }
 </style>
 
 <!-- INTERNAL v717 PHONE SKILL INDEX FIT — NOT USER-FACING
@@ -37919,5 +37965,11 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 <!-- INTERNAL v791 CUSTOM BADGE SECTION LOCK FIX — NOT USER-FACING
      Custom badges and their reserved name-field padding now require Skills/Gear
      to be unlocked as well as global Edit Mode. No data format changes.
+-->
+<!-- INTERNAL v794 BULK SKILLS MOBILE LAYOUT — NOT USER-FACING
+     - Bulk Add Skills uses vertical scrolling instead of horizontal multicolumn flow on iPhone-width / short touch viewports.
+     - Search, Expand/Collapse all and selected count share one row.
+     - Clear selection, Cancel and Add selected are aligned on one row.
+     - Changes are scoped to the skill picker; no catalog/data/storage changes.
 -->
 </html>
