@@ -10846,8 +10846,10 @@
     position: relative;
     z-index: 1;
     width: calc(100% + var(--running-slider-thumb-size));
-    height: 20px;
-    min-height: 20px;
+    /* v797: Override phone-wide 44px input min-height, which displaced
+       the WebKit range thumb below the separately painted running rail. */
+    height: 20px !important;
+    min-height: 20px !important;
     margin: 0 0 0 calc(var(--running-slider-thumb-size) / -2);
     padding: 0;
     border: 0;
@@ -11244,7 +11246,7 @@
 </div>
 </section>
 </main>
-<div class="footer-note no-print">Character Sheet v796</div>
+<div class="footer-note no-print">Character Sheet v797</div>
 </div>
 <input accept="application/json,.json" hidden="" id="importFile" type="file"/>
 <input accept="image/*" hidden="" id="portraitFile" type="file"/>
@@ -37984,4 +37986,8 @@ const GEAR_CATALOG = [{"id":"gc0819","name":"Piercing Forceps","category":"Arts,
 <!-- INTERNAL v796 ARCHITECTURE SKILL CATALOG CLEANUP — NOT USER-FACING
      - Removed Architecture, Educational; Architecture, Healthcare; Architecture, Sustainable.
      - Preserved all other skills and existing character data behavior.
+-->
+<!-- INTERNAL v797 iOS RUNNING RANGE ALIGNMENT — NOT USER-FACING
+     - Override phone-wide 44px input minimum for the running range only.
+     - Preserve thumb sizing, visual rail endpoints and running math.
 -->
